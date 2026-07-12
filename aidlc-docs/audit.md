@@ -161,3 +161,19 @@
 
 ---
 
+## U1 NFR Requirements - Post-generation Fix (記録漏れ Q8)
+**Timestamp**: 2026-07-12T08:20:00Z
+**User Input**: "記録漏れ: Q8(スナップショット競合の許容)が nfr-requirements.md に落ちていません。回答済みプランには「許容・ロックなし・監査完全性は保持」と決めた記録がありますが、生成された nfr-requirements.md の信頼性セクション(U1-NFR-03〜06)にはこの決定が現れていません。「要件を課さない」という決定も、意図的な非要件として記録しないと、後で誰か(将来の自分含む)が「同時開始の競合、考慮漏れでは?」と再燃させます。対処は一行で済みます — §2 信頼性の「非目標」段落に次を追記: 同時セッション開始時の露出スナップショット競合は許容する(ロック・直列化は設けない)。鮮度ズレは P-1 の累積収束で吸収され、各セッションの exposure_snapshot は「実際に参照した値」として保存されるため監査リプレイの完全性は損なわれない(Q8=A)。差し戻し不要、次の push のついでで結構。"
+**AI Response**: 指摘妥当(意図的な非要件の明示化)。nfr-requirements.md §2 の「非目標」段落を箇条書き化し、Q8=A のスナップショット競合許容を非要件として追記。ユーザー指示に従い本修正はこの場では commit/push せず working tree に保持し、次回 push(NFR Design 承認時のコミット等)にまとめて含める。監査に記録。
+**Context**: CONSTRUCTION - U1 NFR Requirements (生成後の記録漏れ Q8 を追記, push は次回まとめ)
+
+---
+
+## U1 NFR Requirements - Approval & Commit
+**Timestamp**: 2026-07-12T08:30:00Z
+**User Input**: "承認します"
+**AI Response**: U1 NFR Requirements を承認完了。保留していた Q8 記録漏れ修正(nfr-requirements.md §2 非目標)+ 承認に伴う state 更新をまとめてコミット・プッシュ。aidlc-state.md の U1 NFR Requirements を承認済みに更新し、per-unit ループ次段の NFR Design(U1)へ移行。NFR Design Part 1(Plan + 質問)を作成し回答待機(GATE)予定。
+**Context**: CONSTRUCTION - U1 NFR Requirements 承認 → NFR Design(U1) 開始
+
+---
+
