@@ -61,8 +61,8 @@ nazokake-judge/
 
 各 step は完了時に `[x]` を付ける（Part 2 実行時）。
 
-- [ ] **Step 1 — Project Structure Setup**: 上記ディレクトリ雛形、`pyproject.toml`（schema/ の packages 解決）、`wrangler.toml`（python_workers flag・D1 binding `DB`・dev/prod 環境・実験用サブドメインルート）、`.dev.vars.example` 作成、`.gitignore` に `.dev.vars` 追加（INF §6 チェック項目）。
-- [ ] **Step 2 — Smoke Test（R-1/R-2 ゲート, INF §2）**: 最小 Worker で ①python_workers 起動 ②FastAPI ルーティング応答 ③**Pydantic v2 import+validate/serialize**（TSD-02 検証）④D1 binding 最小クエリ ⑤**D1 batch 原子適用**（R-2）。結果を `aidlc-docs/construction/u1/code/smoke-test-result.md` に記録。**分岐**: 全OK→続行 / Pydantic v2 不可→TSD-02 フォールバック（v1 pure-python → dataclasses）を Step 3 に反映 / FastAPI・Workers 不可→案 B（PHP+SQLite）エスカレーション（ユーザー判断ゲート）。
+- [ ] **Step 1 — Project Structure Setup**: 上記ディレクトリ雛形。**ツールチェーン = uv + pywrangler**（smoke test §2.1 で確定）: 依存は **`pyproject.toml` の `dependencies`**（`requirements.txt` は不可）、`wrangler.toml`（python_workers flag・D1 binding `DB`・dev/prod 環境・実験用サブドメインルート、`main` はソース隔離ディレクトリ）、**エントリポイントはモジュールレベル `on_fetch(request, env, ctx)`**（クラス `WorkerEntrypoint.fetch` は不可）、`.dev.vars.example` 作成、`.gitignore` に `.dev.vars` 追加（INF §6 チェック項目）。
+- [ ] **Step 2 — smoke test 参照 / G-1 ゲート（INF §2.1/§2.2）**: R-1/R-2/TSD-02 の**ローカル smoke test は実施済み・全 5 項目 PASS**（`smoke-test/`, `result-local.json`）。本 Step で smoke を再実施せず、確定事項（Pydantic v2.10.6・D1 batch 原子性・ON CONFLICT・上記ツールチェーン規約）を本実装に流用する。**権威ある R-1 判定は G-1**（本番 smoke test 全 PASS = U1 実デプロイの前提, §2.2）に置く — `smoke-test/` は G-1 クローズまで温存。**失敗時分岐**（G-1）: 項目3のみ FAIL→TSD-02 フォールバック（DP-07 隔離）/ それ以外（Workers/FastAPI・D1/batch・deploy 固有=bundle/snapshot/remote binding）→案 B エスカレーション（純粋ロジック+schema のみ生存, Repository/API 書き直し）。
 - [ ] **Step 3 — C-SCHEMA 生成**（`schema/`）: Pydantic モデル（Item / Token / Session / Pair・PairSequence / Judgment / LikertResponse / SurveyResponse / ExposureCounts / AssignmentParams）+ D1 DDL(.sql) + エクスポート形式バージョン番号 + トークン契約定数。DDL 制約: `Judgment (token,pair_id)` 一意（DP-02）、`Item.layer` NOT NULL（BR-11）、`token` 一意・128bit 契約（DP-05/TSD-05）、状態 enum。**公開面は「モデル型 + 明示バリデート関数」のみ**（DP-07, 実装は内部隠蔽）。
 - [ ] **Step 4 — C-SCHEMA 単体テスト**（`tests/unit/u1/`）: モデル検証・トークン契約（長さ/文字集合/エントロピー）・バリデート関数の境界。
 - [ ] **Step 5 — C-SCHEMA サマリ**（`aidlc-docs/construction/u1/code/`）。
@@ -101,7 +101,7 @@ U1 は横断制約と基盤を担う（個別の US-P/US-R は U2〜U4 で実装
 
 前段設計でほぼ確定済み。Code Generation 固有の残決定のみ（NFR §7 の申し送り）。特記なければ **★A** を採用。
 
-- **Q1（生成順とゲート）**: ★**A** = Step 2 smoke test を**コード生成の最初**に実行し、Pydantic v2/FastAPI/D1 batch の実可用性を先に確定してから本生成（INF Q1=A と整合、R-1 前倒し解消）。B=モデル先行生成し後で smoke（フォールバック時に手戻り）。
+- **Q1（生成順とゲート）**: ★**A** = smoke test は**ローカル実施済み・全 PASS**（§2.1）につき本生成をそのまま進める。Pydantic v2/FastAPI/D1 batch の実可用性は確定済み。権威ある R-1 判定は **G-1（本番 smoke, §2.2）を U1 実デプロイ前ゲート**として残す。B=本番 smoke まで Code Generation 全体を保留（方針 A 合意により不採用＝ゲートは位置移動）。
 - **Q2（serialize 形式）**: ★**A** = **JSON**（可読・監査リプレイ突合容易・Pydantic と親和）。対象は確定 PairSequence + 次未回答 index（seed/snapshot 非対象, H-3）。B=bytes（コンパクトだが可読性・デバッグ性で劣る）。
 - **Q3（LogEmitter フィールド規約）**: ★**A** = `event/level/ts/unit` 固定 + 相関キー `session_id`/`token`、発行点は `emit()` 一箇所に集約（DP-06）。B=呼び出し側任意（規約強制点が分散）。
 - **Q4（pyproject packages レイアウト）**: ★**A** = `schema/` を独立パッケージとして backend も scripts も**同一モジュール import**で解決（単一データ契約, Q6=A/TSD-08）。B=相対 import / パス操作（脆く scripts 実行時に壊れやすい）。
@@ -116,6 +116,6 @@ U1 は横断制約と基盤を担う（個別の US-P/US-R は U2〜U4 で実装
 - [ ] schema/ 公開面・domain 純粋関数・repo I/O 境界・LogEmitter が生成され、層逆流なし。
 - [ ] PBT（P-1〜P-7）+ ドメインジェネレータ + 較正ハーネスが生成（実行は Build & Test）。
 - [ ] migrations（versioned .sql）・wrangler.toml・pyproject.toml・.dev.vars.example・.gitignore(.dev.vars) が揃う。
-- [ ] smoke test 結果が記録され、フォールバック分岐が確定。
+- [ ] smoke test ローカル結果が記録済み（§2.1）。**G-1（本番 smoke 全 PASS）は U1 実デプロイ前の未クローズゲートとして追跡**（`aidlc-state.md` Open Gates）。
 - [ ] `aidlc-docs/construction/u1/code/` にサマリ・デプロイ手順・公開面ドキュメント。
 - [ ] U1 が Build & Test へ引き渡せる状態。
