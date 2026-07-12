@@ -215,3 +215,19 @@
 **Status**: Awaiting approval（Request Changes / Continue → Code Generation Part 2）
 **Context**: CONSTRUCTION - U1 Code Generation Part 1（Planning）承認待ち（GATE）
 
+---
+
+## U1 Infrastructure Design - smoke test 実施（R-1/R-2/TSD-02 先行検証, ローカル全 PASS）
+**Timestamp**: 2026-07-12T13:45:00Z
+**User Input**: "smoke-test を確認して実行" →（README を pywrangler/uv ワークフローに更新・pyproject.toml 追加）→ "再実行" → "ローカル PASS を今すぐ §2 に記録・TSD-01 に uv+pywrangler を波及。本番は自分で実行、後片付けは記録後"
+**AI Response**: `smoke-test/`（使い捨て Python Worker, 5 項目）をローカル実行。第1回（素の npx wrangler・認証なし）はブート実質 PASS + DDL 適用 PASS だが fastapi 未ロードで項目2〜5 未了。原因＝依存ロード方式。**pywrangler/uv 導入 + beta API ドリフト修正**で解消: (1) `requirements.txt` 削除（pywrangler 1.15.0 は存在で起動拒否、依存は pyproject.toml）、(2) エントリポイントを **モジュールレベル `on_fetch(request, env, ctx)`** に修正（クラス `WorkerEntrypoint.fetch` は未認識）、(3) `main=src/entry.py` にソース隔離（root 直置きは node_modules/.venv を巻き込みハング）。第2回（`uv run pywrangler dev`）で **全 5 項目 PASS**（`overall_pass=true`, `result-local.json`）: python_workers ブート / FastAPI / **Pydantic v2.10.6 validate 双方向** / D1 binding / **D1 batch 原子性ロールバック + ON CONFLICT DO NOTHING**。記録: `infrastructure-design.md §2.1`（第3回=本番 pending の空欄付き）、`tech-stack-decisions.md` TSD-01（ツールチェーン=uv+pywrangler）/ TSD-02（Pydantic v2 ローカル確認）。**第3回=本番デプロイ**（deploy 経路固有: 依存バンドル/import スナップショット/D1 remote binding）はユーザー環境で実行 → `result-prod.json` を受領後に §2.1 第3回欄を確定し R-1 正式クローズ。**後片付け（wrangler delete）は §2 記録 + result-prod.json 保存後**まで保留（再検証可能性の保持）。
+**Context**: CONSTRUCTION - U1 Infrastructure Design smoke test（ローカル全 PASS・本番 pending, 中間記録）
+
+---
+
+## U1 Infrastructure Design - 方針 A 合意 + ゲート G-1 設定
+**Timestamp**: 2026-07-12T14:10:00Z
+**User Input**: "A で進めることに同意。ただし (1) ゲートを追跡可能に明文化(G-1: 本番 smoke test 全 PASS を U1 最初の実デプロイの前提, §2 と aidlc-state に番号付き記録, H-1/H-2/H-3 と同じ管理), (2) smoke-test/ を G-1 クローズまで削除しない(検証手段を smoke worker 側に保持, 本実装初回デプロイで兼ねない), (3) 根拠の訂正=DP-07 が隔離するのは Pydantic 起因のみ、deploy 固有(バンドル/スナップショット/remote binding)の失敗は案 B エスカレーション(生き残るのは純粋ロジック+schema, Repository/API は書き直し)、失敗時分岐を G-1 に記録(項目3のみ→TSD-02 / それ以外→案 B)。中間記録+G-1 を同一コミットで。第3回 deploy は Code Generation 進行中の隙間時間に済ませれば G-1 即クローズ。"
+**AI Response**: 方針 A（ローカル PASS 暫定エビデンスで Code Generation 先行、権威ある R-1 判定は本番へ位置移動）を採用。指摘3点を反映: (1) `infrastructure-design.md §2.2` に G-1 を新設 + `aidlc-state.md` に「Open Gates / Blockers」欄を新設し G-1 を記載（H-1/H-2/H-3 方式）、(2) G-1 検証手段=使い捨て `smoke-test/`、G-1 クローズまで温存（初回デプロイで代替しない=beta vs アプリバグの切り分け保持）、(3) 失敗時分岐を正確に記録=項目3のみ FAIL→TSD-02（DP-07 隔離は Pydantic 起因限定）/ それ以外（Workers/FastAPI・D1/batch・deploy 固有の bundle/snapshot/remote binding）→案 B エスカレーション（純粋ロジック+schema のみ生存、Repository/API 書き直し）。TSD-01（uv+pywrangler ツールチェーン）/ TSD-02（Pydantic v2 ローカル確認）波及済み。中間記録一式（§2.1/§2.2/TSD/state/audit）を 1 コミットで確定。次段=U1 Code Generation Part 1 計画の承認 GATE。
+**Context**: CONSTRUCTION - U1 方針 A + G-1 ゲート明文化（中間記録コミット, Code Generation へ）
+

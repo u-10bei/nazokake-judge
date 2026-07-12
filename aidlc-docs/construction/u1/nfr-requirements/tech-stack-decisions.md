@@ -9,12 +9,13 @@
 ## TSD-01: 言語・ランタイム
 - **言語**: Python。
 - **ランタイム**: **Cloudflare Python Workers（Pyodide ベース）**。Web フレームワークは **FastAPI**（Cloudflare Python Workers のサポート対象）。
+- **ツールチェーン（smoke test で確定, 2026-07-12）**: **uv + pywrangler**（`uv run pywrangler dev|deploy`）。サードパーティ依存は **`pyproject.toml` の `dependencies` に宣言**（`requirements.txt` は pywrangler 1.15.0 が起動拒否＝不可）。エントリポイントは**モジュールレベル `async def on_fetch(request, env, ctx)`**（クラスベース `WorkerEntrypoint.fetch` は未認識）。`main` はワーカーソースを隔離したディレクトリに置き `node_modules`/`.venv` を巻き込ませない。→ `infrastructure-design.md §2.1`。
 - **含意**: U1 の `backend/domain`（AssignmentEngine）・`backend/repo`（Repository）は Pyodide 上で動作可能な pure-Python 依存に留める。重い C 拡張依存は避ける。
-- 根拠: 案 A′（`aidlc-state.md`）。
+- 根拠: 案 A′（`aidlc-state.md`）、Infrastructure Design §2.1 smoke test。
 
 ## TSD-02: モデル層（データ契約）— ★リスク管理付き決定
 - **第一候補**: **Pydantic v2**（`schema/` の Pydantic モデルを Worker と `scripts/` で共有する**単一データ契約**。Application Design Q6=A）。
-- **可用性検証**: Pydantic v2 の Pyodide/Workers 上での動作を **Infrastructure Design / Code Generation で確認**する（`pydantic-core` は Pyodide 公式パッケージセットに含まれ、Cloudflare のドキュメントでも FastAPI と並び挙げられているため**通る見込みは高い**。本決定の実質は「確認の儀式 + beta 環境への保険」）。
+- **可用性検証**: Pydantic v2 の Pyodide/Workers 上での動作を **Infrastructure Design / Code Generation で確認**する（`pydantic-core` は Pyodide 公式パッケージセットに含まれ、Cloudflare のドキュメントでも FastAPI と並び挙げられているため**通る見込みは高い**。本決定の実質は「確認の儀式 + beta 環境への保険」）。→ **smoke test ローカル PASS（2026-07-12, Cloudflare 同梱 pydantic v2.10.6 で validate 双方向 OK, `infrastructure-design.md §2.1`）。本番デプロイ確認で正式クローズ。フォールバック発動の兆候なし。**
 - **フォールバック**（検証が通らない場合のみ）:
   1. **pydantic v1（pure-Python）** — API 差はあるが単一契約の思想を維持できる。
   2. **`dataclasses` + 手書きバリデーション** — 依存最小。共有契約は型注釈 + 明示バリデータで表現。

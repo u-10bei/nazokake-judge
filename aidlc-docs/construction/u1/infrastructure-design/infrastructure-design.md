@@ -39,6 +39,47 @@
 - Pydantic v2 不可 → **TSD-02 フォールバック**（pydantic v1 pure-python / dataclasses+手書き検証）。LC-01 の狭い公開面（DP-07）により上位無波及。
 - FastAPI/Workers 自体が不可 → **案 B（PHP+SQLite）へエスカレーション**（Application Design のフォールバック温存）。
 
+### 2.1 smoke test 実施結果（2026-07-12・中間記録）
+
+**実行環境**: `smoke-test/`（使い捨て。`pyproject.toml` + `uv run pywrangler`）。
+
+| 回 | 環境 | 結果 | 備考 |
+|---|---|---|---|
+| 第1回 | エージェント環境・素の `npx wrangler`（認証なし） | 部分 | 項目1 ブート=実質 PASS（`from fastapi` 行で失敗＝Pyodide/stdlib は起動）、DDL `wrangler d1 migrations` 適用=PASS。項目2〜5 未了 |
+| 第2回 | ローカル（miniflare, `uv run pywrangler dev`） | **全 5 項目 PASS**（`overall_pass=true`） | 詳細は下表。生データ `smoke-test/result-local.json` |
+| 第3回 | **本番デプロイ**（`pywrangler deploy` → `*.workers.dev`） | **結果待ち（pending）** | Cloudflare 認証が必要（ユーザー環境で実行）。deploy 経路固有の**依存バンドル・import のメモリスナップショット化・D1 remote binding**を検証。通れば R-1 を正式クローズ。生データ予定 `result-prod.json` |
+
+**第2回（ローカル全 PASS）詳細**:
+
+| # | 項目 | 結果 | 詳細 |
+|---|---|---|---|
+| 1 | python_workers ブート | ✅ PASS | — |
+| 2 | FastAPI ルーティング | ✅ PASS | ASGI 応答 |
+| 3 | Pydantic v2（TSD-02） | ✅ PASS | **v2.10.6**（Cloudflare 同梱）、validate 双方向・不正値 reject |
+| 4 | D1 binding | ✅ PASS | `SELECT 1`=1、insert/select roundtrip |
+| 5 | D1 batch（DP-01/DP-02, R-2） | ✅ PASS | commit / **失敗時ロールバック（原子性）** / **ON CONFLICT DO NOTHING（既存維持）** |
+
+**依存ロード方式の確定（第1〜2回で判明・TSD-01 に波及）**:
+- Cloudflare Python Workers のサードパーティ依存（fastapi/pydantic）は **`requirements.txt` では不可**（pywrangler 1.15.0 は存在すると起動拒否）。**`pyproject.toml` の `dependencies` + `uv run pywrangler` でベンダリング**するのが正。→ **ツールチェーン = uv + pywrangler**（TSD-01 に明記）。
+- デフォルト fetch ハンドラは **モジュールレベル `async def on_fetch(request, env, ctx)`**（クラスベース `WorkerEntrypoint.fetch` は現行ランタイムで未認識 = "Method on_fetch does not exist"）。
+- ワーカーソースは `main` を独立ディレクトリ（`src/`）に隔離し、`node_modules`/`.venv` をバンドルに巻き込ませない。
+- 以上は open beta ランタイムで確認した現行 API 形。**本番実装（U1 Code Generation）でも同一規約を用いる**。
+
+**判定（暫定）**: R-1 / R-2 / TSD-02 はローカルで全 PASS。**第3回（本番）成功をもって R-1 を正式クローズ**し、本節の第3回欄と判定を確定する。フォールバック（TSD-02 / 案 B）発動の兆候は現時点でなし。
+
+### 2.2 ゲート G-1（U1 実デプロイの前提条件）
+
+**方針 A（合意 2026-07-12）**: ローカル PASS を暫定エビデンスとして U1 Code Generation を先行させ、**権威ある R-1 判定は本番 smoke test に置く**（放棄ではなく位置の移動）。この Claude 環境からは Cloudflare 認証不可（アカウント別）のため、本番検証はユーザーのマシンで手動実行する。
+
+- **G-1（OPEN）**: **§2.1 第3回（`pywrangler deploy` → `*.workers.dev/smoke/all`）の全 5 項目 PASS を、U1 の最初の実デプロイの前提条件**とする。H-1/H-2/H-3 と同じ申し送り方式で追跡（`aidlc-state.md` Open Gates 欄にも記載）。
+- **検証手段の分離**: G-1 の検証は**使い捨て `smoke-test/` で行い、本実装の初回デプロイでは代替しない**。初回デプロイで兼ねると、失敗時に「beta ランタイムの問題」か「アプリのバグ」かが切り分け不能になるため。→ **`smoke-test/` は G-1 クローズまで削除しない**（`wrangler delete` も同）。
+- **失敗時分岐**（README §結果の解釈 の判定表を流用）:
+  - **項目3のみ FAIL（Pydantic v2 不可）→ TSD-02 フォールバック**（pydantic v1 / dataclasses）。**DP-07 の狭い公開面で隔離**され上位無波及。
+  - **それ以外の FAIL → 案 B（PHP+SQLite）へエスカレーション**。対象＝項目1/2（Workers/FastAPI 自体）、項目4/5（D1/batch）、および **deploy 固有リスク（依存バンドル / import メモリスナップショット化 / D1 remote binding）**。この受け皿は **DP-07 ではない**（DP-07 の隔離は Pydantic 起因の失敗に限定）。案 B 移行時、U1 で生き残るのは**純粋ロジック（LC-02/04）＋ schema 設計**のみで、**Repository/API 層は書き直し**。
+- **クローズ**: 本番 deploy → `result-prod.json` 受領 → §2.1 第3回欄・判定を確定 → G-1 CLOSED → `smoke-test/` 削除可。
+
+---
+
 ## 3. R-2: D1 の制約と対処
 
 | 制約 | 対処 |
@@ -93,6 +134,7 @@
 | U1-NFR-10（ログ） | §1 LC-05 |
 
 ## 8. 後続申し送り（Code Generation）
-- smoke test（§2）の実施と結果追記。
+- smoke test（§2）: ローカル全 PASS 記録済み。**ゲート G-1（§2.2）= 本番 smoke test 全 PASS を U1 実デプロイ前に必須**。`smoke-test/` は G-1 クローズまで温存。失敗時分岐は §2.2（項目3のみ→TSD-02 / それ以外→案 B）。
+- **ツールチェーン**: 依存は `pyproject.toml`（`requirements.txt` 不可）、実行は **`uv run pywrangler`**。エントリポイントは**モジュールレベル `on_fetch(request, env, ctx)`**。`main` はソース隔離ディレクトリに置く（§2.1 確定）。
 - `.dev.vars` gitignore、`wrangler.toml`（bindings/flags/routes）、migrations ディレクトリ構成。
 - `α`/`S` 較正（DP-08 ハーネス共有）。
