@@ -177,3 +177,11 @@
 
 ---
 
+## U1 NFR Design - Answers & Approval (Part 1 → Part 2)
+**Timestamp**: 2026-07-12T08:45:00Z
+**User Input**: "U1 NFR Design 全 5 問回答済み・承認。全問★推奨デフォルト A、パターン適用性評価(Resilience/Scalability=N/A, Performance=最小限, Security/Observability/Reliability/Testability=適用, 専用インフラ論理部品=なし)にも同意。 Q1=A(Session+PairSequence+exposure_snapshot を単一 D1 batch で all-or-nothing。半端状態が原理的に消滅、検出・補修ロジックを持たない。B は NFR Req Q3 で退けた事後補修の再来で不採用) / Q2=A(INSERT ON CONFLICT DO NOTHING+200 で既存 choice 返却=冪等の可観測化。再送クライアントは保存済み値を確認でき US-P03 対応の U2 API 契約が単純化) / Q3=A(契約を schema/ 単一モジュール集約、上位はモデル型+明示バリデート関数の狭い公開面のみ import、フォールバック時は schema/ 内実装差し替えで吸収。B では発動時に上位波及し beta リスク緩和が機能しない、公開面を狭く保つ追加コストほぼゼロ) / Q4=A(単一ログヘルパ emit(event,level,**fields) で JSON stdout、標準 event/level/ts/unit+文脈、相関キー session_id/token。フィールド規約強制点がヘルパ一箇所に集約、監査ログとリプレイ突合に相関キー必須) / Q5=A(ステートフル累積ハーネス: 固定シードで S セッション逐次生成・updated_exposure でフィードバック・都度 P-5 オラクル一致確認・最終露出で P-1 述語評価。B は同じ累積ループを P-1 用に重複実装。 追加申し送り(Code Generation): α/S 較正シミュレーションは本ハーネスと同一の累積ループを共有実装し、較正ループと検証ループの乖離・二重実装を防ぐ)"
+**AI Response**: 回答分析(Step 5) → 全 5 問明確・矛盾なし、追加質問不要。補足の追加確定(較正ループと PBT ハーネスの共有=Code Generation 申し送り)を設計に取り込み。Part 2 実行: nfr-design-patterns.md(DP-01〜08)/ logical-components.md(LC-01〜05 + 依存方向)を生成。標準 2 択完了メッセージ(Request Changes / Continue → Infrastructure Design)を提示予定。
+**Context**: CONSTRUCTION - U1 NFR Design (Part 1 承認 → Part 2 生成)
+
+---
+

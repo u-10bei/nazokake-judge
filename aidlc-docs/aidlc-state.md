@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U1 (共有基盤) NFR Design (Plan 提示・回答待ち)
+- **Current Stage**: CONSTRUCTION - U1 (共有基盤) NFR Design (生成完了・承認待ち)
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -42,7 +42,7 @@
 #### U1: 共有基盤
 - [x] Functional Design (承認済み 2026-07-12)
 - [x] NFR Requirements (承認済み 2026-07-12)
-- [ ] NFR Design (Plan 提示・回答待ち)
+- [x] NFR Design (生成完了・承認待ち 2026-07-12)
 - [ ] Infrastructure Design
 - [ ] Code Generation
 
@@ -59,8 +59,8 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U1）
-- **Current Stage**: U1 NFR Design — Part 1（Plan + 質問）提示・回答待ち
+- **Current Stage**: U1 NFR Design — 生成完了・承認待ち（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1 Functional Design（承認済み, commit cb57583）／U1 NFR Requirements（承認済み, commit c5216b1 + Q8 追記）
-- **Next Stage**: U1 NFR Design 回答分析 → 成果物生成 → Infrastructure Design
-- **Status**: Awaiting user answers（u1-nfr-design-plan.md の [Answer]: タグ）
+- **Completed**: U1 Functional Design（承認済み, cb57583）／U1 NFR Requirements（承認済み, c70340a）／U1 NFR Design（生成完了・承認待ち）
+- **Next Stage**: U1 Infrastructure Design（NFR Design 承認後）
+- **Status**: Awaiting approval（Request Changes / Continue → Infrastructure Design）
