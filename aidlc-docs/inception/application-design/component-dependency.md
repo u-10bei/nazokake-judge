@@ -15,15 +15,15 @@
 | C-SVC-EXPORT | | | | | | | | | ● | ● |
 | C-DOM-ASSIGN | | | | | | | | | | ○ |
 | C-REPO | | | | | | | | | | ● |
-| C-SCRIPT-TOKEN | | | | | | | | | ● | ● |
-| C-SCRIPT-POOL | | | | | | | | | ● | ● |
+| C-SCRIPT-TOKEN | ● | | | | | | | | | ● |
+| C-SCRIPT-POOL | ● | | | | | | | | | ● |
 | C-SCRIPT-BT | | | | | | | | | | ● |
 
 （● = 直接依存 / ○ = 型・データのみ参照。C-AUTH は C-API がミドルウェアとして適用）
 
 **要点**
 - ドメイン（C-DOM-ASSIGN）は Service/Repo に依存しない**純粋関数**（依存の向きが内側）。
-- scripts/ は C-REPO と C-SCHEMA を共有し、アプリ本体と同じデータ契約を使う（Q6=A）。
+- scripts/（token_issue/pool_ingest）は **C-SCHEMA を共有**し、**実行時の D1 アクセスは Worker 管理 API（C-API, Basic 認証）経由**（H-1=(c) 確定, U1 Infrastructure Design）。C-REPO は Worker 内専用。
 - C-SCRIPT-BT は DB に直接依存せず、ExportService 出力（schema/ 準拠）を入力に取る（US-R02↔R04）。
 
 ---
@@ -35,10 +35,10 @@
 | Participant UI → Backend | HTTPS / JSON（REST） | なし（トークンで識別） |
 | Admin UI → Backend | HTTPS / JSON（REST） | Basic 認証（Q5=B） |
 | Backend → D1 | D1 バインディング / パラメータ化クエリ | — |
-| scripts/ → D1 | **暫定・要確定（H-1）**: D1 はマネージド DB のため直接接続不可。経路候補 (a) `wrangler d1 execute` / (b) D1 HTTP API / (c) Worker 管理エンドポイント経由 | 方式により変動 |
+| scripts/ → Worker 管理 API → D1 | **確定（H-1=(c)）**: 実行時の D1 アクセスは Worker に集約。token_issue/pool_ingest は Worker 管理エンドポイントを叩く（HTTPS/JSON） | Basic 認証 |
 | scripts/bt_aggregate ← Export | ファイル（CSV/JSON, schema/ 準拠） | — |
 
-> **⚠️ H-1（Infrastructure Design で確定）**: `scripts/ → D1` は当初「直接接続」と記していたが、D1 はマネージド DB でローカル Python から SQLite ファイルのように直接開けないため不正確。有力案は (c) **Worker に Basic 認証背後の管理用エンドポイントを設け token_issue/pool_ingest がそれを叩く**方式。採用時は依存マトリクスの `C-SCRIPT-TOKEN / C-SCRIPT-POOL → C-REPO` が **`→ C-API`** に変わる。詳細は application-design.md §8。
+> **✅ H-1 確定（U1 Infrastructure Design, 2026-07-12）= 案 (c)**: 実行時の `scripts/ → D1` アクセスは **Worker に Basic 認証背後の管理用エンドポイントを設け token_issue/pool_ingest がそれを叩く**方式に確定。依存マトリクスの `C-SCRIPT-TOKEN / C-SCRIPT-POOL` は `→ C-REPO` から **`→ C-API`** に更新済み。C-REPO は Worker 内専用。なお **DDL 適用（`wrangler d1 migrations`）はデプロイ時操作**であり本原則（実行時アクセスの Worker 集約）の例外ではない。詳細は `construction/u1/infrastructure-design/infrastructure-design.md` §4、`construction/shared-infrastructure.md`。
 
 ---
 
@@ -95,8 +95,8 @@ flowchart TD
     REPO --> SCH
     REPO --> D1
     ASG -.型.-> SCH
-    TOK --> REPO
-    POOL --> REPO
+    TOK -->|HTTPS+Basic| API
+    POOL -->|HTTPS+Basic| API
     BT -.schema準拠 file.-> SCH
 
     style ASG fill:#FFE0B2,stroke:#E65100,stroke-width:2px,color:#000

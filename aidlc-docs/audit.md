@@ -185,3 +185,19 @@
 
 ---
 
+## U1 NFR Design - Approval & Infrastructure Design Start
+**Timestamp**: 2026-07-12T09:00:00Z
+**User Input (先行 commit 指示)**: "先にコミット・プッシュを" / **User Input (承認)**: "承認します"
+**AI Response**: U1 NFR Design 成果物(nfr-design-patterns.md / logical-components.md + plan/state/audit)を 1 コミット `9cf22aa` にまとめ `origin/main` へプッシュ(c70340a..9cf22aa)後、ユーザーが U1 NFR Design を明示承認。aidlc-state.md の U1 NFR Design を承認済みに更新し、per-unit ループ次段の Infrastructure Design(U1)へ移行。主論点は申し送り H-1(scripts→D1 接続方式)と App Design リスク R-1(Python Workers beta 互換)/R-2(D1 制約)。Infrastructure Design Part 1(Plan + 質問)を作成し回答待機(GATE)。
+**Context**: CONSTRUCTION - U1 NFR Design 承認 → Infrastructure Design(U1) 開始
+
+---
+
+## U1 Infrastructure Design - Answers & Approval (Part 1 → Part 2), H-1 確定
+**Timestamp**: 2026-07-12T09:20:00Z
+**User Input**: "U1 Infrastructure Design 全 5 問回答済み・承認。全問★推奨デフォルト A、H-1=案(c)確定、適用性評価(Messaging=N/A, Networking/Monitoring=最小限, 他=適用)同意。 Q1=A(smoke test を Infrastructure Design で先行=python_workers+FastAPI 起動+Pydantic v2 import/validate+D1 binding 疎通、結果を infrastructure-design.md に記録、不可なら TSD-02 フォールバック/案 B。前倒しで R-1 大半が消え U1→U4a と H-1 確定タイミング競合も解消、TSD-02 の確認の儀式を兼ねる) / Q2=A(H-1=(c)確定。Worker 管理エンドポイント Basic 認証背後、SCRIPT→API。認証境界一本化=管理/エクスポート/スクリプトが同一 Basic 認証背後、I/O 境界維持=Repository は Worker 内専用、データ契約共有=HTTP ペイロードにも schema/ Pydantic、投入規模 約95件=1 POST。明確化: DDL 適用(wrangler d1 migrations)は管理 API を通らないがデプロイ時操作でありスクリプト実行時接続の例外ではない、infrastructure-design.md に明記) / Q3=A(D1 dev/prod 分離 prod=実験サブドメイン dev=miniflare、D1+schema/ を shared-infrastructure.md に共有記録) / Q4=A(wrangler d1 migrations versioned .sql、一意制約 DP-02・NOT NULL BR-11 を DDL に含める、raw execute は適用履歴不可で不採用) / Q5=A(wrangler secret、秘密はリポジトリ外、ローカル .dev.vars gitignore、NFR-08 実装形、.dev.vars gitignore を Code Generation チェック項目に)。 波及: component-dependency の通信パターン scripts/→D1 直接接続 を scripts/→Worker 管理 API(Basic 認証)→D1 に更新、C-SCRIPT-TOKEN/POOL の依存を REPO→API に。U4a/U4b Functional Design はこの前提で。"
+**AI Response**: 回答分析(Step 5) → 全 5 問明確・矛盾なし、追加質問不要。H-1=(c) を確定として記録。Part 2 実行: infrastructure-design.md / deployment-architecture.md / shared-infrastructure.md を生成。波及反映として App Design component-dependency.md の通信パターン表・依存マトリクス(C-SCRIPT-TOKEN/POOL: REPO→API)・H-1 注記・mermaid エッジを (c) 確定版に更新。標準 2 択完了メッセージ(Request Changes / Continue → Code Generation)を提示予定。
+**Context**: CONSTRUCTION - U1 Infrastructure Design (Part 1 承認 → Part 2 生成 + H-1 波及反映)
+
+---
+
