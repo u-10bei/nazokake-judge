@@ -97,3 +97,19 @@
 
 ---
 
+## Application Design - Approval
+**Timestamp**: 2026-07-12T03:20:00Z
+**User Input**: "承認します。"
+**AI Response**: Application Design(案 A′ + 5 設計成果物 + 申し送り H-1/H-2/H-3)を承認完了。Units Generation(Part 1: Planning)へ移行。
+**Context**: INCEPTION - Application Design 承認 → Units Generation 開始
+
+---
+
+## Units Generation - Planning Answers & Approval
+**Timestamp**: 2026-07-12T03:35:00Z
+**User Input**: "全 5 問回答済み・承認。 Q1=A(4 ユニット U1 基盤/U2 参加者/U3 研究者管理/U4 スクリプト。境界が bounded context と対応。U3+U4 統合 B は Web と CLI で実行モデル・認証境界が異なるため退ける。細分化 C は単独開発で管理オーバーヘッド過大) / Q2=X(U1→U4 の pool_ingest/token_issue 部分先行→U2→U3→U4 残り bt_aggregate。pool_ingest/token_issue は U2 動作確認に不可欠なテストデータ供給のため U2 前、bt_aggregate はエクスポート U3 が入力のため最後。この順序で H-1 を早期検証) / Q3=A(直接 import、境界はディレクトリ。U1→上位の一方向依存を維持、上位は schema/ Pydantic モデルと Repository/AssignmentEngine 公開関数に import=層の逆流禁止) / Q4=A(frontend/ backend/(+domain/) schema/ scripts/ tests/ で確定。schema/ は backend も scripts も import するので両者から解決可能なパスへ、pyproject で対応) / Q5=X(tests/unit/{u1,u2,u3,u4}/ 集約 + PBT は tests/pbt/ 分離、各プロパティテストが対応する受入基準 XC-01/XC-02 をテスト名・docstring に明記。PBT-10 相補と重点箇所追跡のため)"
+**AI Response**: (プロセス注記) 直前の Units Generation Planning 提示ブロックがファイル未反映だったため、unit-of-work-plan.md を回答反映版として遡及作成。回答分析 → 明確・矛盾なし、追加質問不要。Part 2 実行: unit-of-work.md / unit-of-work-dependency.md / unit-of-work-story-map.md を生成。
+**Context**: INCEPTION - Units Generation (Part 1 承認 → Part 2 生成)
+
+---
+
