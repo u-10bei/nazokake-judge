@@ -201,3 +201,17 @@
 
 ---
 
+## U1 Infrastructure Design - Approval & Code Generation Start
+**Timestamp**: 2026-07-12T10:05:00Z
+**User Input**: "承認します"
+**AI Response**: U1 Infrastructure Design（infrastructure-design.md / deployment-architecture.md / shared-infrastructure.md + component-dependency.md 波及反映, 既に 8a4dc6f にコミット済み）を明示承認。aidlc-state.md の U1 Infrastructure Design を承認済みに更新し、per-unit ループ次段の Code Generation(U1) へ移行。code-generation.md ルールをロードし、Part 1(Planning): 番号付き生成ステップ・プロジェクト構造・ストーリートレーサビリティを含む `construction/plans/u1-code-generation-plan.md` を作成、標準 2 択完了メッセージで承認待機(GATE)。commit/push はユーザー指示があるまで保留（working tree 保持）。
+**Context**: CONSTRUCTION - U1 Infrastructure Design 承認 → Code Generation(U1) Part 1 開始
+
+---
+
+## U1 Code Generation - Part 1 Plan Approval Prompt
+**Timestamp**: 2026-07-12T10:15:00Z
+**AI Prompt**: "U1 Code Generation Plan（Part 1）を `construction/plans/u1-code-generation-plan.md` に作成。17 ステップ（Structure Setup → smoke test ゲート → C-SCHEMA → domain 純粋関数 → α/S 較正ハーネス → Repository → LogEmitter → migrations → deployment artifacts → docs、API/Frontend は U1 スコープ外で N/A スキップ）、スコープ境界（U1=計算関数+永続化窓口+データ契約、Worker ルート=U2、管理 API=U4a 前提）、ストーリートレーサビリティ（XC-01/02/03・U1-NFR-04/08/10/15）、Part 1 決定点 Q1〜Q6（全★推奨デフォルト A）を含む。Continue で Part 2（生成）へ。"
+**Status**: Awaiting approval（Request Changes / Continue → Code Generation Part 2）
+**Context**: CONSTRUCTION - U1 Code Generation Part 1（Planning）承認待ち（GATE）
+
