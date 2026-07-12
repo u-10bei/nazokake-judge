@@ -73,3 +73,19 @@
 
 ---
 
+## Application Design - Start (Plan + Questions)
+**Timestamp**: 2026-07-12T02:50:00Z
+**User Input**: "Application Design を始めてください"
+**AI Response**: application-design.md ルールをロード。requirements.md / stories.md を分析し、application-design-plan.md を作成。最重要のアーキテクチャ案 A/B 決定を含む 6 問(アーキ / フロント実装形態 / 割当ペア生成の権威とタイミング / セッション状態の権威的保持先 / 管理保護方式 / スキーマ・型共有)をトレードオフ表付きで埋め込みユーザー回答を待機(GATE)。
+**Context**: INCEPTION - Application Design (Plan 提示・回答待ち)
+
+---
+
+## Application Design - Answers & Approval
+**Timestamp**: 2026-07-12T03:00:00Z
+**User Input**: "全 6 問回答済み・承認。 Q1=X(案 A′: 静的フロント + Cloudflare Python Workers(FastAPI) + D1。案 A の骨格維持で実装言語を Python に。PBT は Hypothesis(PBT-07/08 を標準機能でほぼ充足、requirements §6 の Python→Hypothesis と整合)。割当/エクスポート/BT 集計/投入/発行が全て Python になり Pydantic モデルでデータ契約を単一定義共有。リスク: Python Workers は open beta(python_workers flag 必須)。緩和: 規模小で TS 書き直しコスト限定、FastAPI+SQLite は Workers 外へほぼ無改修移設可。案 B(PHP+SQLite/Xserver)はフォールバック温存) / Q2=A(バニラ JS + 最小 CSS。参加者フローは線形ウィザードでクライアント状態は表示用のみ。SSR(Jinja2)併用は画面ごとに Functional Design で判断可) / Q3=A(セッション開始時にバックエンドで露出カウントを読み当該セッション分のペア列を確定し DB 保存。XC-01 シグネチャと本番パス一致、中断再開は保存済み列の未回答位置から。逐次生成 B は同時数名規模で無意味、事前バッチ C は参加者数確定前提で XC-01 動機と矛盾のため不採用) / Q4=A(サーバ DB 単一の真実。逐次保存があるためクライアント権威は不要、オフライン耐性 B は同期競合の複雑さと PBT 対象増を招く。通信断は送信失敗→再試行の冪等処理で対処) / Q5=B(Basic 認証。Worker ミドルウェアで Authorization 検査、シークレットは wrangler secret。管理トークン A は漏洩経路増、スクリプト寄せ C は FR-09 と矛盾) / Q6=A(schema/ 単一仕様。データ契約を Pydantic モデルで定義し Worker と scripts/ が同一モジュール import で共有。schema/ に D1 DDL・Pydantic モデル・エクスポート形式バージョン番号を置く)"
+**AI Response**: 回答分析(Step 8) → 全て明確・矛盾なし、追加質問不要。Python Workers/FastAPI が open beta である点を設計リスクとして記録(Infrastructure Design/NFR で互換性実地検証、緩和策=TS 書換/VPS 移設を併記)。Part 2 実行: components.md / component-methods.md / services.md / component-dependency.md / application-design.md を生成。plan チェックリストと aidlc-state.md を更新。
+**Context**: INCEPTION - Application Design (Part 2 設計成果物生成)
+
+---
+

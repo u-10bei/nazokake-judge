@@ -3,7 +3,8 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: INCEPTION - Workflow Planning 承認済み → Application Design 開始予定
+- **Current Stage**: INCEPTION - Application Design (成果物生成完了・承認待ち)
+- **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
 - **Existing Code**: No
@@ -34,7 +35,7 @@
 - [x] Requirements Analysis
 - [x] User Stories
 - [x] Workflow Planning
-- [ ] Application Design - EXECUTE
+- [x] Application Design (承認待ち)
 - [ ] Units Generation - EXECUTE
 
 ### 🟢 CONSTRUCTION PHASE
