@@ -129,3 +129,19 @@
 
 ---
 
+## U1 Functional Design - Session Resume & Approval Gate
+**Timestamp**: 2026-07-12T07:28:44Z
+**User Input**: "ai-dlcを使った実行を続けたいです"
+**AI Response**: セッション再開。aidlc-state.md + U1 Functional Design 成果物(domain-entities / business-logic-model / business-rules)+ 依存コンテキストを読み込み。現在地は U1 Functional Design の承認ゲート(Step 7)。未コミットの P-1 述語精緻化差分(露出偏り許容範囲を `max−min ≤ max(2, α×mean)` の S セッション累積統計的不変条件として定義、`α`/`S` は Code Generation 較正で確定)を確認・整合性 OK と判断。標準 2 択完了メッセージ(Request Changes / Continue to Next Stage → NFR Requirements)を提示し承認待機(GATE)。
+**Context**: CONSTRUCTION - U1 Functional Design (承認ゲート・再開)
+
+---
+
+## U1 Functional Design - Review Feedback (照合結果・残ギャップ指摘)
+**Timestamp**: 2026-07-12T07:35:00Z
+**User Input**: "1点、閉じるべきギャップが残っています。前回の照合ポイント: (ii) シード+スナップショット=Session に seed/exposure_snapshot、§4 リプレイ手順まで書けている=合格。(iii) 追加規則・派生規則=BR-01〜07(追加規則2件)、BR-04(非アクティブ除外48h)、BR-05(構成不能の事前検証)、位置情報の U3/U4b/schema 波及申し送り、H-3(XC-02 ラウンドトリップ対象=確定 PairSequence+再開位置、seed/snapshot は対象外)まで解決=合格。Testable Properties: P-5(updated_exposure を derive_exposure のオラクルに)と P-6(決定論性)は指示外の追加でどちらも筋が良い。 残ったギャップ (i): 露出偏りの許容範囲が未定義。XC-01 チェックリストに露出均衡・層間比率の許容範囲明示とあり層間比率は 0.65 と数値化されたが露出偏り側は P-1 が『許容範囲内(多数セッション累積で収束方向)』の曖昧表現のまま。この定義がないと PBT-03 のテスト述語が書けず Code Generation で即興決めになる。提案: 定義形=適格項目(非アクティブ除外後)の露出回数で max−min ≤ max(2, α×mean) を S セッション累積シミュレーション後の統計的不変条件(PBT では S=30 逐次生成・露出フィードバック後に述語評価)。定数=α/S は Code Generation 時の較正シミュレーションで決めパラメータ表に追記、値は実装時決定でよいが述語の形は今固定。business-logic-model.md の P-1 と business-rules.md パラメータ表に一行修正で足り、ワークフロー差し戻し不要、次の生成のついでに反映を。"
+**AI Response**: 照合結果(ii)(iii)合格・P-5/P-6 評価に同意。残ギャップ (i) について: **指摘の修正はすでに未コミットの working tree 差分として反映済み**であることを git diff で確認・提示。P-1 述語=`max−min ≤ max(2, α×mean)`、S セッション累積シミュレーション後の統計的不変条件、`α`/`S` は Code Generation 較正で確定・パラメータ表に追記済み、述語の形は設計固定・定数値のみ実装時決定 — ユーザー提案の4点すべてに逐語一致。追加編集は不要と判断し、承認ゲート(Request Changes / Continue → NFR Requirements)を再提示。
+**Context**: CONSTRUCTION - U1 Functional Design (残ギャップ (i) は反映済みを確認・承認ゲート)
+
+---
+
