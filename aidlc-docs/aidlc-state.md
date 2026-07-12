@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: INCEPTION - Units Generation (Part 2: 生成完了・承認待ち)
+- **Current Stage**: CONSTRUCTION - U1 (共有基盤) Functional Design (生成完了・承認待ち)
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -36,7 +36,15 @@
 - [x] User Stories
 - [x] Workflow Planning
 - [x] Application Design
-- [x] Units Generation (承認待ち)
+- [x] Units Generation
+
+### 🟢 CONSTRUCTION PHASE — per-unit ループ（U1→U4a→U2→U3→U4b）
+#### U1: 共有基盤
+- [x] Functional Design (承認待ち)
+- [ ] NFR Requirements
+- [ ] NFR Design
+- [ ] Infrastructure Design
+- [ ] Code Generation
 
 ### 🟢 CONSTRUCTION PHASE
 - [ ] Functional Design - EXECUTE

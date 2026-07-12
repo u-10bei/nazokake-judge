@@ -113,3 +113,19 @@
 
 ---
 
+## Units Generation - Generated Artifacts Approval + Construction Start
+**Timestamp**: 2026-07-12T03:50:00Z
+**User Input**: "承認します"
+**AI Response**: Units Generation(unit-of-work / -dependency / -story-map)を承認完了。INCEPTION フェーズ完了。CONSTRUCTION PHASE の per-unit ループへ移行し、実装順序の先頭 U1(共有基盤)の Functional Design(Part 1: Plan+質問)を開始。u1-functional-design-plan.md に割当アルゴリズム・ドメインモデル・業務ルールに関する質問を埋め込みユーザー回答を待機(GATE)。PBT Partial のため PBT-01(プロパティ識別)は advisory だが XC-01(PBT-03)/XC-02(PBT-02)の前提として Testable Properties を設計に含める。
+**Context**: CONSTRUCTION - U1 Functional Design (Plan 提示・回答待ち)
+
+---
+
+## U1 Functional Design - Answers & Approval
+**Timestamp**: 2026-07-12T04:20:00Z
+**User Input**: "U1 全 7 問回答 + 追加規則 2 件・承認。 Q1=A(重み付きランダム抽選+シード決定論化。貪欲法 B は決定論的すぎ特定ペア偏重で比較グラフの連結性・混合性を悪化、重み付きは露出均衡と対戦相手多様性を両立。重み関数の具体形は business-logic-model で定義し PBT-03 の露出偏り許容範囲で妥当性判定) / Q2=A(層間ペア率を単一パラメータ化。C は FR-03 と矛盾。B プロ層重視は BT が連結なら推移的推定可のため v1 は単一パラメータで単純化し PBT 検証容易性優先。暫定下限 0.6〜0.7、4 層一様抽選で自然に約75%が層間ペア。プロ×編集自作重視は将来の反復判定フェーズ拡張として申し送り) / Q3=X(パラメータ化+暫定既定 本番40/練習3/Likert10。選択肢 A の Likert5 は実験計画 約10 と不一致) / Q4=B(サーバ生成シード保存+露出カウントスナップショット併存。A の XC-02 整合理由は不成立=再開は保存済みペア列を読むだけで再生成なし・露出カウントは時刻で変わるためシード固定でも同一列にならない。シードの真の用途は監査・デバッグの完全再現。入力スナップショット併記で本番割当を完全リプレイ、PBT 反例調査が即時可能) / Q5=A(導出方式 H-2 確定。updated_exposure は PBT モデルとして残す。追加規則: 一定期間非アクティブな in_progress セッションは露出導出から除外/期限切れ化、期間はパラメータ) / Q6=A(ベストエフォート+ログ警告。追加規則: 構成不能条件=プール過小でセッション構成不能 は参加者アクセス時でなく pool_ingest/設定検証時の事前チェックで弾く、参加者にはベストエフォートまで) / Q7=A(全確定回答を横断算入=XC-01 全体不変条件の定義そのもの。Q5 導出方式で自動的に実現)。 追加規則1(セッション内制約): 同一ペア重複禁止(a≠b)、同一項目のセッション内出現上限 k(パラメータ)。理由=同一作品の反復出現が記憶・慣れで判定を汚染。 追加規則2(A/B 提示位置のカウンターバランス): 各ペアでどちらを A(先/上)に置くか一様ランダム割当・記録。位置効果・順序効果対策で必須。Pair に提示位置情報を含め、エクスポート(US-R02)にも含めて分析側で位置効果検証可能に。"
+**AI Response**: 回答分析(Step 5) → 全て明確・矛盾なし、追加質問不要。Part 2 実行: domain-entities.md / business-logic-model.md(Testable Properties 含む) / business-rules.md を生成。追加規則2(位置情報)は U3 エクスポート・U4b 集計・schema/ へ波及するため申し送りとして記録。暫定パラメータ(本番40/練習3/Likert10、層間率下限0.65、同一項目上限 k=3、非アクティブ期間)を提案。
+**Context**: CONSTRUCTION - U1 Functional Design (Part 2 生成)
+
+---
+
