@@ -35,8 +35,10 @@
 | Participant UI → Backend | HTTPS / JSON（REST） | なし（トークンで識別） |
 | Admin UI → Backend | HTTPS / JSON（REST） | Basic 認証（Q5=B） |
 | Backend → D1 | D1 バインディング / パラメータ化クエリ | — |
-| scripts/ → D1 | 直接接続（投入・発行） | 運用者のローカル権限 |
+| scripts/ → D1 | **暫定・要確定（H-1）**: D1 はマネージド DB のため直接接続不可。経路候補 (a) `wrangler d1 execute` / (b) D1 HTTP API / (c) Worker 管理エンドポイント経由 | 方式により変動 |
 | scripts/bt_aggregate ← Export | ファイル（CSV/JSON, schema/ 準拠） | — |
+
+> **⚠️ H-1（Infrastructure Design で確定）**: `scripts/ → D1` は当初「直接接続」と記していたが、D1 はマネージド DB でローカル Python から SQLite ファイルのように直接開けないため不正確。有力案は (c) **Worker に Basic 認証背後の管理用エンドポイントを設け token_issue/pool_ingest がそれを叩く**方式。採用時は依存マトリクスの `C-SCRIPT-TOKEN / C-SCRIPT-POOL → C-REPO` が **`→ C-API`** に変わる。詳細は application-design.md §8。
 
 ---
 

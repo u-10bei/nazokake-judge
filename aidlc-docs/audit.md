@@ -89,3 +89,11 @@
 
 ---
 
+## Application Design - Review Feedback (後続フェーズ申し送り)
+**Timestamp**: 2026-07-12T03:10:00Z
+**User Input**: "後続フェーズへの申し送りとして3点(いずれも今直す必要はなく、該当フェーズで拾えばよい): 1. scripts/ → D1 の 直接接続 は実は自明でない(Infrastructure Design 行き、重要度高)。D1 はマネージド DB でローカル Python が SQLite ファイルのように直接開けない。現実的経路は (a) wrangler d1 execute 経由、(b) D1 の HTTP API、(c) Worker 側に管理用エンドポイント(Basic 認証背後)を生やしスクリプトがそれを叩く、のいずれか。token_issue/pool_ingest の実装方式に直結。個人的には (c) が認証境界も一本化でき素直(その場合 依存マトリクスの SCRIPT→REPO は SCRIPT→API に変わる)。 2. 露出カウントは 持つ か 導出する か(Functional Design 行き)。専用カウンタテーブルは更新漏れ・二重更新でペア列と乖離するリスク、save_pair_sequence 済みデータから毎回集計導出すれば単一の真実(Q4=A)が露出カウントにも及ぶ。この規模なら導出コストは無視でき導出方式を推す。updated_exposure 純粋関数は PBT 用モデルとして残せば無駄にならない。 3. is_practice をクライアント申告にしない(Functional Design 行き)。練習試行の除外(US-P02)は集計の正しさに関わるので、サーバが保存済みペア列上の位置から練習/本番を判定すべきでクライアント値は信用しない。ついでに XC-02 のラウンドトリップ対象(SessionView か DB 行の復元か)の定義も Functional Design で明確化を。"
+**AI Response**: 3 点とも妥当と判断。本体設計は変えず申し送りとして記録: (1) component-dependency.md 通信パターン表に「直接接続」は技術的に不正確・暫定である旨と (c) 案有力(SCRIPT→API)を注記し Infrastructure Design で確定と明記、(2) services.md 露出カウント論点に導出方式推奨・updated_exposure は PBT モデルとして残す旨を追記、(3) component-methods.md submit_judgment 署名から is_practice を削除しサーバ判定である旨を注記、XC-02 ラウンドトリップ対象定義を Functional Design 申し送りに追加。application-design.md に §8「後続フェーズ申し送り」を新設して H-1/H-2/H-3 に集約。
+**Context**: INCEPTION - Application Design (レビュー申し送り記録)
+
+---
+

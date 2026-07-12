@@ -10,7 +10,9 @@
 - **責務**: セッションのライフサイクル。トークン状態に応じた開始/再開/完了。
 - **オーケストレーション（セッション開始, US-P01+Q3=A）**:
   1. C-REPO `get_token` でトークン検証・状態判定。
-  2. 未使用なら C-REPO `read_exposure_counts` → C-DOM-ASSIGN `generate_pairs(pool, exposure, seed, size)` → C-REPO `save_pair_sequence` でペア列確定・保存 →（露出カウント更新の反映方針は Functional Design で確定）。
+  2. 未使用なら C-REPO `read_exposure_counts` → C-DOM-ASSIGN `generate_pairs(pool, exposure, seed, size)` → C-REPO `save_pair_sequence` でペア列確定・保存 →（露出カウント更新の反映方針は Functional Design で確定。**H-2**）。
+
+> **H-2（Functional Design で確定・推奨あり）**: `read_exposure_counts` の実現には「専用カウンタテーブルを持つ」案と「`save_pair_sequence` 済みデータから毎回集計導出する」案がある。前者は更新漏れ・二重更新でペア列と乖離するリスクを持つ。後者は単一の真実（Q4=A）が露出カウントにもそのまま及び、本規模では導出コストが無視できるため**導出方式を推奨**。`AssignmentEngine.updated_exposure` 純粋関数は PBT のモデルとして残す（本番が導出方式でも無駄にならない）。詳細は application-design.md §8。
   3. `SessionView`（次ペア・進捗・フェーズ）を返す。
 - **再開（US-P08）**: 保存済みペア列の未回答先頭を次ペアとして返す（DB が単一の真実）。
 

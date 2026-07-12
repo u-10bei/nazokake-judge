@@ -69,3 +69,15 @@ nazokake-judge/
 ## 7. トレーサビリティ要約
 - 要件 FR-01〜10 / NFR-01〜09、ストーリー US-P01〜08 / US-R01〜06 / XC-01〜04 を各コンポーネントにマップ（[component-dependency.md](./component-dependency.md) 参照）。
 - 未確定（後続で確定）: Likert/アンケート設問（プール確定後）、露出均衡の許容範囲・層間比率の具体値（Functional Design）、Python Workers 互換性（Infrastructure/NFR）。
+
+## 8. 後続フェーズへの申し送り（Application Design レビュー由来）
+
+いずれも本ステージでは確定せず、該当フェーズで拾う。
+
+| # | 論点 | 方針/推奨 | 行き先 | 重要度 |
+|---|---|---|---|---|
+| H-1 | **scripts/ → D1 の接続方式** | D1 はマネージド DB でローカル Python から SQLite ファイルのように直接接続できない。経路: (a) `wrangler d1 execute` / (b) D1 HTTP API / (c) **Worker に管理用エンドポイント（Basic 認証背後）を設けスクリプトがそれを叩く**。(c) が認証境界を一本化でき素直（採用時は依存が `SCRIPT→REPO` から `SCRIPT→API` に変わる）。token_issue/pool_ingest の実装方式に直結。 | **Infrastructure Design** | 高 |
+| H-2 | **露出カウントを持つか導出するか** | 専用カウンタテーブルは更新漏れ・二重更新でペア列と乖離するリスク。`save_pair_sequence` 済みデータから毎回**集計導出**すれば単一の真実（Q4=A）が露出カウントにも及ぶ。本規模では導出コスト無視可のため**導出方式を推奨**。`updated_exposure` 純粋関数は PBT 用モデルとして残す。 | **Functional Design** | 中 |
+| H-3 | **is_practice のサーバ判定** | 練習/本番の判定は集計の正しさ（US-P02）に関わるため、**サーバが保存済みペア列上の位置から判定**し、クライアント申告値は信用しない。あわせて **XC-02 のラウンドトリップ対象**（`SessionView` か DB 行の復元か）を Functional Design で明確化する。 | **Functional Design** | 中 |
+
+> 注: 上記に伴い、`component-dependency.md`（通信パターン表）・`services.md`（露出カウント）・`component-methods.md`（submit_judgment）に暫定注記を付した。設計本体の変更は各該当フェーズで行う。

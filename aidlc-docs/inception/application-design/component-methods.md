@@ -18,9 +18,10 @@
 
 | メソッド | 署名（概略） | 目的 |
 |---|---|---|
-| `submit_judgment` | `(token: str, pair_id: str, choice: "A"|"B", is_practice: bool) -> SubmitResult` | ペア判定を冪等保存（同一 token×pair は 1 件）。練習試行は集計対象外。 |
+| `submit_judgment` | `(token: str, pair_id: str, choice: "A"|"B") -> SubmitResult` | ペア判定を冪等保存（同一 token×pair は 1 件）。練習試行は集計対象外。 |
 
 - `SubmitResult`: `{ saved: bool, duplicate: bool, next_pair: PairView|None }`
+- **H-3（Functional Design で確定）**: 練習/本番の判定は **`is_practice` をクライアントから受け取らず、サーバが保存済みペア列上の位置から判定**する（クライアント申告は信用しない。US-P02 の集計正しさのため）。上記署名は当初 `is_practice: bool` を含めていたが削除した。あわせて **XC-02 のラウンドトリップ対象**（`SessionView` か DB 行の復元か）を Functional Design で定義する。詳細は application-design.md §8。
 
 ## C-SVC-SURVEY: SurveyService
 
