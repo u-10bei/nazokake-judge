@@ -1,0 +1,19 @@
+# AI-DLC ワークフロールール参照用（awslabs/aidlc-workflows のクローン。当リポジトリの成果物ではない）
+aidlc-workflows/
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
