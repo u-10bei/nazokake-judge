@@ -145,3 +145,19 @@
 
 ---
 
+## U1 Functional Design - Commit/Push & Approval
+**Timestamp**: 2026-07-12T07:45:00Z
+**User Input (commit/push 指示)**: "コミットは1本にまとめてください。もう一度確認してから承認します" / "コミットとプッシュが優先です。承認は、後から出します。" / **User Input (承認)**: "承認します。"
+**AI Response**: P-1 述語精緻化差分(business-logic-model.md / business-rules.md)+ 監査ログを1コミット `cb57583` にまとめ、`origin/main` へプッシュ(8adcb33..cb57583)。その後ユーザーが U1 Functional Design を明示承認。aidlc-state.md の U1 Functional Design を承認済みに更新し、per-unit ループ次段の NFR Requirements(U1)へ移行。NFR Requirements Part 1(Plan + 質問)を `construction/plans/u1-nfr-requirements-plan.md` に作成し回答待機(GATE)。
+**Context**: CONSTRUCTION - U1 Functional Design 承認 → NFR Requirements(U1) 開始
+
+---
+
+## U1 NFR Requirements - Answers & Approval (Part 1 → Part 2)
+**Timestamp**: 2026-07-12T08:05:00Z
+**User Input**: "U1 NFR 全 8 問回答済み・承認。全問★推奨デフォルト A を採用。Q1=A(Pydantic v2 第一候補+Infra/CodeGen 検証+フォールバック明記。v2 は Pyodide 公式パッケージ・Cloudflare Python Workers ドキュメントで FastAPI と並びサポート対象のため通る見込み高、実質は確認+beta 保険。B は App Design Q6=A の単一データ契約の利点放棄で不採用。フォールバック先=pydantic v1 pure-python or dataclasses+手書き検証) / Q2=A(SLO なし、参考目安 セッション開始<1s。データ規模〜50 セッション×43 ペア≈2,000 行で derive_exposure は瞬時、SLO 追跡コストの方が高い) / Q3=A(PairSequence 原子的一括保存 D1 batch。半端ペア列は再開 US-P08 と露出導出 H-2 を壊す。B は検出ロジックが新バグ源で不採用) / Q4=A(冪等は DB 一意制約+UPSERT に一本化。B の check-then-insert は競合窓が残る。(token,pair_id) 一意制約を DDL に、衝突時は既存維持し成功応答) / Q5=A(トークン 128-bit token_urlsafe(16)。契約=長さ/エントロピー/文字集合は U1 schema で規定、U4a 発行が従う。256-bit は URL 長の不便のみ) / Q6=A(構造化 JSON ログ→標準出力、監視基盤なし。BR-06/BR-05 は warning/error 構造化ログ、フィールド規約は Code Generation) / Q7=A(Hypothesis ローカル/CI 実行、固定シード反復で P-1 決定論化、deadline 緩和、反例時シード+縮小出力。追加: settings profile を dev/ci で分離—ci は examples 多め・deadline 無効・print_blob=True・固定シード、PBT-09 正式記録として tech-stack-decisions に) / Q8=A(スナップショット競合許容、P-1 累積収束で吸収、ロックなし。各セッションの exposure_snapshot は実参照値を保存するため鮮度ズレがあっても監査リプレイ完全性は保持)"
+**AI Response**: 回答分析(Step 5) → 全 8 問明確・矛盾なし、追加質問不要。補足の追加確定(フォールバック候補、Hypothesis dev/ci profile 分離、監査完全性根拠)を設計に取り込み。Part 2 実行: nfr-requirements.md(U1-NFR-01〜10)/ tech-stack-decisions.md(TSD-01〜08)を生成。標準 2 択完了メッセージ(Request Changes / Continue → NFR Design)を提示予定。
+**Context**: CONSTRUCTION - U1 NFR Requirements (Part 1 承認 → Part 2 生成)
+
+---
+
