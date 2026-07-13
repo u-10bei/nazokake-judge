@@ -51,9 +51,12 @@ nazokake-judge/
 │   ├── unit/u1/         ← U1: example-based（層逆流禁止含む）
 │   └── pbt/             ← U1: Hypothesis（P-1〜P-7）+ 較正ハーネス
 ├── pyproject.toml       ← U1: schema/ を backend も scripts も import 可能に（TSD-08）
-├── wrangler.toml        ← U1: python_workers flag / D1 binding / dev・prod / ルート
+├── wrangler.toml        ← U1: python_workers flag / workers_dev=true / D1 binding / dev・prod / main=隔離dir
+├── .github/workflows/   ← U1: CI deploy workflow（smoke-test-deploy.yml を雛形に流用, F-3）
 └── .dev.vars.example    ← U1: ローカル秘密のテンプレ（実体 .dev.vars は gitignore）
 ```
+
+> **実装前提（G-1 で本番確定, infrastructure-design.md §2.1 F-1〜F-6）**: フレームワークは **FastAPI 不可・raw workers API + Pydantic v2**（F-4）。Worker エントリは **module-level `async def on_fetch(request, env)` + 手動ルーティング**（F-5）。トップレベル import は最小限（起動 CPU 制限 10021 回避）。依存は `pyproject.toml`（`requirements.txt` 不可, F-1）。デプロイは **CI（GitHub Actions ubuntu-latest）経由**（F-3）。`wrangler.toml` に `workers_dev=true`（F-6）。Basic 認証は `on_fetch` 内の関数として実装（ASGI ミドルウェア前提にしない）。
 
 ---
 
@@ -61,8 +64,8 @@ nazokake-judge/
 
 各 step は完了時に `[x]` を付ける（Part 2 実行時）。
 
-- [ ] **Step 1 — Project Structure Setup**: 上記ディレクトリ雛形。**ツールチェーン = uv + pywrangler**（smoke test §2.1 で確定）: 依存は **`pyproject.toml` の `dependencies`**（`requirements.txt` は不可）、`wrangler.toml`（python_workers flag・D1 binding `DB`・dev/prod 環境・実験用サブドメインルート、`main` はソース隔離ディレクトリ）、**エントリポイントはモジュールレベル `on_fetch(request, env, ctx)`**（クラス `WorkerEntrypoint.fetch` は不可）、`.dev.vars.example` 作成、`.gitignore` に `.dev.vars` 追加（INF §6 チェック項目）。
-- [ ] **Step 2 — smoke test 参照 / G-1 ゲート（INF §2.1/§2.2）**: R-1/R-2/TSD-02 の**ローカル smoke test は実施済み・全 5 項目 PASS**（`smoke-test/`, `result-local.json`）。本 Step で smoke を再実施せず、確定事項（Pydantic v2.10.6・D1 batch 原子性・ON CONFLICT・上記ツールチェーン規約）を本実装に流用する。**権威ある R-1 判定は G-1**（本番 smoke test 全 PASS = U1 実デプロイの前提, §2.2）に置く — `smoke-test/` は G-1 クローズまで温存。**失敗時分岐**（G-1）: 項目3のみ FAIL→TSD-02 フォールバック（DP-07 隔離）/ それ以外（Workers/FastAPI・D1/batch・deploy 固有=bundle/snapshot/remote binding）→案 B エスカレーション（純粋ロジック+schema のみ生存, Repository/API 書き直し）。
+- [ ] **Step 1 — Project Structure Setup**: 上記ディレクトリ雛形。**ツールチェーン = uv + pywrangler / デプロイは CI**（F-1/F-3）: 依存は **`pyproject.toml` の `dependencies`**（`requirements.txt` は不可）、`wrangler.toml`（python_workers flag・**`workers_dev=true`**・D1 binding `DB`・dev/prod 環境・実験用サブドメインルート、`main` はソース隔離ディレクトリ）、**エントリポイントはモジュールレベル `on_fetch(request, env)` + 手動ルーティング**（クラス `WorkerEntrypoint` 不可, F-5。**FastAPI 不可**, F-4）、`.github/workflows/`（deploy workflow, `smoke-test-deploy.yml` 流用）、`.dev.vars.example` 作成、`.gitignore` に `.dev.vars` 追加（INF §6 チェック項目）。
+- [ ] **Step 2 — smoke test 確定事項の流用（INF §2.1/§2.2, G-1 CLOSED）**: R-1/R-2/TSD-02 は**本番 smoke test 全 5 項目 PASS で確定済み**（G-1 CLOSED, `smoke-test/result-prod.json`）。本 Step で smoke を再実施せず、確定事項を本実装に流用する: **raw workers API + Pydantic v2.10.6**（FastAPI 不可, F-4）、**module-level `on_fetch(request, env)`**（F-5）、D1 batch 原子性・ON CONFLICT DO NOTHING（DP-01/DP-02 本番実証）、依存=`pyproject.toml`（F-1）、**CI デプロイ**（F-3）、`workers_dev=true`（F-6）。フォールバック（TSD-02/案 B）は発動不要。
 - [ ] **Step 3 — C-SCHEMA 生成**（`schema/`）: Pydantic モデル（Item / Token / Session / Pair・PairSequence / Judgment / LikertResponse / SurveyResponse / ExposureCounts / AssignmentParams）+ D1 DDL(.sql) + エクスポート形式バージョン番号 + トークン契約定数。DDL 制約: `Judgment (token,pair_id)` 一意（DP-02）、`Item.layer` NOT NULL（BR-11）、`token` 一意・128bit 契約（DP-05/TSD-05）、状態 enum。**公開面は「モデル型 + 明示バリデート関数」のみ**（DP-07, 実装は内部隠蔽）。
 - [ ] **Step 4 — C-SCHEMA 単体テスト**（`tests/unit/u1/`）: モデル検証・トークン契約（長さ/文字集合/エントロピー）・バリデート関数の境界。
 - [ ] **Step 5 — C-SCHEMA サマリ**（`aidlc-docs/construction/u1/code/`）。
@@ -76,7 +79,7 @@ nazokake-judge/
 - [ ] **Step 13 — LogEmitter 生成 + テスト**（`backend/log.py`）: `emit(event, level, **fields)` JSON→stdout、標準フィールド `event/level/ts/unit` + 相関キー `session_id`/`token`（DP-06）。フィールド規約を単一発行点に集約。
 - [ ] **Step 14 — DB Migration Scripts**（`migrations/`）: `wrangler d1 migrations` 用 versioned `.sql`（DDL・一意制約・NOT NULL を含む）。dev→prod 適用手順を deployment サマリに記載。
 - [ ] **Step 15 — API Layer / Frontend Components: N/A（スキップ）**: U1 スコープ外（U2/U3/U4a）。スキップ理由を明記。
-- [ ] **Step 16 — Deployment Artifacts 確定**: `wrangler.toml` / `.dev.vars.example` / `pyproject.toml` を最終化し、`aidlc-docs/construction/u1/code/deployment-notes.md` にデプロイ手順（smoke→migrations→secret→deploy）を記録。
+- [ ] **Step 16 — Deployment Artifacts 確定**: `wrangler.toml`（`workers_dev=true`）/ `.dev.vars.example` / `pyproject.toml` / **`.github/workflows/` deploy workflow（CI 経由, Secrets: `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`）** を最終化し、`aidlc-docs/construction/u1/code/deployment-notes.md` にデプロイ手順（CI: sync→migrations→secret→deploy）を記録。
 - [ ] **Step 17 — Documentation**: `aidlc-docs/construction/u1/code/` に U1 コード構成・公開面（下位ユニットが import してよい面）・テスト実行方法をまとめる。README のディレクトリ構成「予定」を実体に更新。
 
 ---
@@ -101,7 +104,7 @@ U1 は横断制約と基盤を担う（個別の US-P/US-R は U2〜U4 で実装
 
 前段設計でほぼ確定済み。Code Generation 固有の残決定のみ（NFR §7 の申し送り）。特記なければ **★A** を採用。
 
-- **Q1（生成順とゲート）**: ★**A** = smoke test は**ローカル実施済み・全 PASS**（§2.1）につき本生成をそのまま進める。Pydantic v2/FastAPI/D1 batch の実可用性は確定済み。権威ある R-1 判定は **G-1（本番 smoke, §2.2）を U1 実デプロイ前ゲート**として残す。B=本番 smoke まで Code Generation 全体を保留（方針 A 合意により不採用＝ゲートは位置移動）。
+- **Q1（生成順とゲート）**: ★**A** = smoke test は**本番全 PASS で確定（G-1 CLOSED）**につき本生成を進める。Pydantic v2/raw workers API/D1 batch の本番可用性は確証済み（R-1/R-2/TSD-02 解消）。フォールバック（TSD-02/案 B）発動不要。B=（過去の選択肢, 本番 smoke まで保留）は G-1 クローズにより解消。
 - **Q2（serialize 形式）**: ★**A** = **JSON**（可読・監査リプレイ突合容易・Pydantic と親和）。対象は確定 PairSequence + 次未回答 index（seed/snapshot 非対象, H-3）。B=bytes（コンパクトだが可読性・デバッグ性で劣る）。
 - **Q3（LogEmitter フィールド規約）**: ★**A** = `event/level/ts/unit` 固定 + 相関キー `session_id`/`token`、発行点は `emit()` 一箇所に集約（DP-06）。B=呼び出し側任意（規約強制点が分散）。
 - **Q4（pyproject packages レイアウト）**: ★**A** = `schema/` を独立パッケージとして backend も scripts も**同一モジュール import**で解決（単一データ契約, Q6=A/TSD-08）。B=相対 import / パス操作（脆く scripts 実行時に壊れやすい）。
@@ -116,6 +119,6 @@ U1 は横断制約と基盤を担う（個別の US-P/US-R は U2〜U4 で実装
 - [ ] schema/ 公開面・domain 純粋関数・repo I/O 境界・LogEmitter が生成され、層逆流なし。
 - [ ] PBT（P-1〜P-7）+ ドメインジェネレータ + 較正ハーネスが生成（実行は Build & Test）。
 - [ ] migrations（versioned .sql）・wrangler.toml・pyproject.toml・.dev.vars.example・.gitignore(.dev.vars) が揃う。
-- [ ] smoke test ローカル結果が記録済み（§2.1）。**G-1（本番 smoke 全 PASS）は U1 実デプロイ前の未クローズゲートとして追跡**（`aidlc-state.md` Open Gates）。
+- [ ] smoke test **本番全 PASS 記録済み・G-1 CLOSED**（§2.1）。実装が F-1〜F-6（raw workers API / on_fetch / CI / workers_dev / 依存 pyproject）に準拠。
 - [ ] `aidlc-docs/construction/u1/code/` にサマリ・デプロイ手順・公開面ドキュメント。
 - [ ] U1 が Build & Test へ引き渡せる状態。

@@ -66,11 +66,10 @@
 - **Status**: U1 Code Generation Part 1（Planning）生成・承認待ち（Request Changes / Continue → Code Generation Part 2）
 
 ## Open Gates / Blockers
-（申し送り H-1/H-2/H-3 と同じ追跡方式。クローズ時に本欄と該当設計書を確定）
+（申し送り H-1/H-2/H-3 と同じ追跡方式）
 
-- **G-1（OPEN）: 本番 smoke test 全 PASS = U1 最初の実デプロイの前提条件**
-  - **定義**: `infrastructure-design.md §2.1` 第3回（`uv run pywrangler deploy` → `*.workers.dev/smoke/all`）の**全 5 項目 PASS**を、**U1 の最初の実デプロイの前提**とする。ローカル PASS（第2回, 2026-07-12）は Code Generation 続行の暫定エビデンスに留め、**権威ある R-1 判定は G-1 で確定**。
-  - **理由**: この Claude 環境からは Cloudflare 認証不可（アカウント別）。本番検証はユーザーのマシンで手動実行（deploy → curl、約5分）。方針 A（Code Generation 先行、G-1 はデプロイ直前ゲート）に合意（2026-07-12）。
-  - **検証手段**: 使い捨て `smoke-test/`（本実装の初回デプロイでは代替しない＝失敗時に beta ランタイム問題 vs アプリバグを切り分け可能に保つ）。→ **`smoke-test/` は G-1 クローズまで削除しない**（後片付け `wrangler delete` も同）。
-  - **失敗時分岐**（README 判定表流用）: **項目3のみ FAIL（Pydantic v2 不可）→ TSD-02 フォールバック**（DP-07 の狭い公開面で隔離・上位無波及）。**それ以外の FAIL**（項目1/2=Workers/FastAPI、項目4/5=D1/batch、および deploy 固有=依存バンドル/import スナップショット/remote binding）**→ 案 B（PHP+SQLite）へエスカレーション**（U1 で生き残るのは純粋ロジック＋schema 設計のみ、Repository/API 層は書き直し。DP-07 は無効＝Pydantic 起因限定の隔離）。
-  - **クローズ手順**: ユーザーが本番 deploy → `result-prod.json` 受領 → §2.1 第3回欄と判定を確定 → 本 G-1 を CLOSED → `smoke-test/` 削除可。
+- **G-1（✅ CLOSED, 2026-07-13）: 本番 smoke test 全 PASS = U1 最初の実デプロイの前提条件**
+  - **結果**: `infrastructure-design.md §2.1` 第3回（GitHub Actions ubuntu-latest → `pywrangler deploy` → `*.workers.dev/smoke/all`）で**全 5 項目 PASS**（`smoke-test/result-prod.json`, CI artifact）。R-1/R-2 解消・TSD-02 本番確証。
+  - **重要な構成変更**: **FastAPI → raw workers API + Pydantic v2**（F-4: FastAPI トップレベル import が起動 CPU 制限 10021 超過）。ハンドラは module-level `on_fetch(request, env)`（F-5）、`workers_dev=true`（F-6）、デプロイは CI 経由（F-1/F-3）。→ TSD-01 改訂・deployment-architecture.md 更新済み。
+  - **フォールバック**: 案 B（PHP+SQLite）／TSD-02（pydantic v1/dataclasses）いずれも**発動せず**（フレームワーク差し替えで解消）。
+  - **残タスク（ユーザー側・任意）**: Cloudflare 側 smoke Worker / D1（`nazokake-smoke`）の削除可（`smoke-test/` フォルダと workflow はリポジトリ残置＝本実装 CI 雛形）。`CLOUDFLARE_API_TOKEN` は本実装 CI 流用なら残置、しないなら失効。

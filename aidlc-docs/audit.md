@@ -231,3 +231,11 @@
 **AI Response**: 方針 A（ローカル PASS 暫定エビデンスで Code Generation 先行、権威ある R-1 判定は本番へ位置移動）を採用。指摘3点を反映: (1) `infrastructure-design.md §2.2` に G-1 を新設 + `aidlc-state.md` に「Open Gates / Blockers」欄を新設し G-1 を記載（H-1/H-2/H-3 方式）、(2) G-1 検証手段=使い捨て `smoke-test/`、G-1 クローズまで温存（初回デプロイで代替しない=beta vs アプリバグの切り分け保持）、(3) 失敗時分岐を正確に記録=項目3のみ FAIL→TSD-02（DP-07 隔離は Pydantic 起因限定）/ それ以外（Workers/FastAPI・D1/batch・deploy 固有の bundle/snapshot/remote binding）→案 B エスカレーション（純粋ロジック+schema のみ生存、Repository/API 書き直し）。TSD-01（uv+pywrangler ツールチェーン）/ TSD-02（Pydantic v2 ローカル確認）波及済み。中間記録一式（§2.1/§2.2/TSD/state/audit）を 1 コミットで確定。次段=U1 Code Generation Part 1 計画の承認 GATE。
 **Context**: CONSTRUCTION - U1 方針 A + G-1 ゲート明文化（中間記録コミット, Code Generation へ）
 
+---
+
+## U1 Infrastructure Design - G-1 CLOSED（本番 smoke test 全 PASS, FastAPI→raw workers API 変更）
+**Timestamp**: 2026-07-13T05:00:00Z
+**User Input**: "G-1 クローズ記録。本番 smoke test 全 5 項目 PASS(GitHub Actions 経由 pywrangler deploy, 2026-07-13 04:36 UTC)。知見 F-1〜F-6: F-1 requirements.txt 不可(pyproject+pywrangler/uv), F-2 ローカル≠本番(起動CPU制限), F-3 デプロイは CI(ubuntu-latest)を正(Windows ネイティブ不成立), F-4 **FastAPI は起動 CPU 制限 10021 で採用不可→raw workers API へ**, F-5 ハンドラは module-level on_fetch(request,env) 必須, F-6 workers_dev=true 明記。infrastructure-design §2 / tech-stack-decisions(TSD-01 raw workers API 改訂・TSD-02 クローズ)/ deployment-architecture(CI デプロイ)へ反映指示。aidlc-state G-1 CLOSED + audit 記録。smoke-test/ と workflow は本実装 CI 雛形として残置、Cloudflare 側 Worker/D1 は削除可。"
+**AI Response**: 指示どおり全文書へ反映。(1) `infrastructure-design.md`: §1 Compute を raw workers API+Pydantic に、§2 項目2 を HTTP ルーティングに、§2.1 に第3回本番全 PASS + F-1〜F-6 + 判定確定、§2.2 を **G-1 CLOSED**、§8 申し送り更新。(2) `tech-stack-decisions.md`: **TSD-01 を FastAPI→raw workers API + Pydantic v2 に改訂**（F-4/F-5, 影響評価=手動ルーティング軽微・データ契約無傷・U2/U3 はハンドラ形式前提）、ツールチェーン=uv+pywrangler/CI(F-1/F-3)/workers_dev(F-6)、TSD-02 を本番確証・フォールバック発動不要でクローズ、決定サマリ表更新。(3) `deployment-architecture.md`: デプロイを CI(GitHub Actions)経由に差し替え・開発環境要件(F-1/F-3/F-5/F-6)追加・トポロジ図更新。(4) `aidlc-state.md`: Open Gates の G-1 を CLOSED に。(5) `u1-code-generation-plan.md`: 実装前提を raw workers API/on_fetch/CI/workers_dev に更新（Step1/2/16・Q1・完了基準）。(6) プロジェクトメモリ更新（FastAPI 不可→raw workers API）。R-1/R-2 解消・TSD-02 本番確証・案 A′ 続行。次段=U1 Code Generation Part 1 計画の承認 GATE（変更反映済み）。
+**Context**: CONSTRUCTION - U1 Infrastructure Design G-1 CLOSED（本番全 PASS, raw workers API へ変更）→ Code Generation Part 1 承認待ち
+

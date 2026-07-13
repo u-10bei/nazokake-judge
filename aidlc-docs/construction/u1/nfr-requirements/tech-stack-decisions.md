@@ -6,21 +6,26 @@
 
 ---
 
-## TSD-01: 言語・ランタイム
+## TSD-01: 言語・ランタイム・フレームワーク（★本番 smoke test で改訂, 2026-07-13）
 - **言語**: Python。
-- **ランタイム**: **Cloudflare Python Workers（Pyodide ベース）**。Web フレームワークは **FastAPI**（Cloudflare Python Workers のサポート対象）。
-- **ツールチェーン（smoke test で確定, 2026-07-12）**: **uv + pywrangler**（`uv run pywrangler dev|deploy`）。サードパーティ依存は **`pyproject.toml` の `dependencies` に宣言**（`requirements.txt` は pywrangler 1.15.0 が起動拒否＝不可）。エントリポイントは**モジュールレベル `async def on_fetch(request, env, ctx)`**（クラスベース `WorkerEntrypoint.fetch` は未認識）。`main` はワーカーソースを隔離したディレクトリに置き `node_modules`/`.venv` を巻き込ませない。→ `infrastructure-design.md §2.1`。
-- **含意**: U1 の `backend/domain`（AssignmentEngine）・`backend/repo`（Repository）は Pyodide 上で動作可能な pure-Python 依存に留める。重い C 拡張依存は避ける。
-- 根拠: 案 A′（`aidlc-state.md`）、Infrastructure Design §2.1 smoke test。
+- **ランタイム**: **Cloudflare Python Workers（Pyodide ベース, `python_workers` flag）**。
+- **フレームワーク（改訂）**: **raw workers API（モジュールレベル `async def on_fetch(request, env)` + 手動ルーティング）+ Pydantic v2**。
+  - **変更前**: FastAPI（ASGI）。**変更後**: raw workers API + Pydantic v2。
+  - **根拠**: **F-4**（FastAPI のトップレベル import は起動 CPU 制限超過 `startup exceeded CPU limit ... [code: 10021]` で deploy 不可）、**F-5**（ハンドラはモジュールレベル `on_fetch`；クラス `WorkerEntrypoint` 継承は `TypeError: Method on_fetch does not exist` で不認識）。→ `infrastructure-design.md §2.1`。
+  - **影響評価**: ルート数は 10 本程度で手動ルーティングの負担は軽微。Pydantic による I/O 検証・データ契約（App Design Q6=A）は無傷。案 A′ の骨格（Workers + D1 + Hypothesis + `schema/` 共有）は不変。**U2/U3 Functional Design はこのハンドラ形式を前提**とする（ASGI ミドルウェア前提の設計をしない。Basic 認証は `on_fetch` 内の関数として実装）。
+- **ツールチェーン / デプロイ（smoke test で確定）**: **uv + pywrangler** を正とし、**実行（デプロイ）環境は CI（GitHub Actions ubuntu-latest）を正**とする（**F-1** requirements.txt 不可＝依存は `pyproject.toml`、**F-3** Windows ネイティブの pywrangler 非サポート＝uv 0.11.28 の Pyodide 配置と `python.exe` 期待パス不整合、WSL で回避可だが本プロジェクトは CI に一本化）。`wrangler.toml` に **`workers_dev = true`** を明記（**F-6**）。`main` はソース隔離ディレクトリ。
+- **含意**: U1 の `backend/domain`・`backend/repo` は Pyodide 上で動作可能な pure-Python 依存に留め、**トップレベル import は最小限**（10021 再発防止, F-4）。重い C 拡張依存は避ける。
+- 根拠: 案 A′（`aidlc-state.md`）、Infrastructure Design §2.1 smoke test（本番 F-1〜F-6）。
 
 ## TSD-02: モデル層（データ契約）— ★リスク管理付き決定
 - **第一候補**: **Pydantic v2**（`schema/` の Pydantic モデルを Worker と `scripts/` で共有する**単一データ契約**。Application Design Q6=A）。
 - **可用性検証**: Pydantic v2 の Pyodide/Workers 上での動作を **Infrastructure Design / Code Generation で確認**する（`pydantic-core` は Pyodide 公式パッケージセットに含まれ、Cloudflare のドキュメントでも FastAPI と並び挙げられているため**通る見込みは高い**。本決定の実質は「確認の儀式 + beta 環境への保険」）。→ **smoke test ローカル PASS（2026-07-12, Cloudflare 同梱 pydantic v2.10.6 で validate 双方向 OK, `infrastructure-design.md §2.1`）。本番デプロイ確認で正式クローズ。フォールバック発動の兆候なし。**
-- **フォールバック**（検証が通らない場合のみ）:
+- **フォールバック（発動不要・条項は保守のため残置）**: 本番で v2.10.6 を確証したため以下は**発動しない**が、将来 beta ランタイム変更時の保険として残す:
   1. **pydantic v1（pure-Python）** — API 差はあるが単一契約の思想を維持できる。
   2. **`dataclasses` + 手書きバリデーション** — 依存最小。共有契約は型注釈 + 明示バリデータで表現。
 - **不採用**: 「最初から軽量手段」（回答 B）は単一データ契約（Worker/scripts 共有）の利点を放棄するため採らない。
-- 根拠: Q1=A, U1-NFR-（モデル層）, App Design Q6=A。
+- **クローズ（2026-07-13）**: Pydantic **v2.10.6** の本番動作を確証（valid roundtrip / invalid rejected, §2.1 第3回）。**フォールバック発動不要**。DP-07 の狭い公開面は保守性のため維持。
+- 根拠: Q1=A, U1-NFR-（モデル層）, App Design Q6=A, Infrastructure Design §2.1（本番確証）。
 
 ## TSD-03: DB アクセス（Repository / C-REPO）
 - **DB**: **Cloudflare D1**（SQLite 互換, マネージド）。
@@ -69,8 +74,8 @@
 
 | ID | 決定 | 不可/例外時 |
 |---|---|---|
-| TSD-01 | Python + Cloudflare Python Workers(Pyodide) + FastAPI | — |
-| TSD-02 | Pydantic v2（単一データ契約）+ 可用性検証 | pydantic v1 or dataclasses+手書き検証へフォールバック |
+| TSD-01 | Python + Cloudflare Python Workers(Pyodide) + **raw workers API（`on_fetch`+手動ルーティング）+ Pydantic v2**。デプロイは uv+pywrangler / CI(GitHub Actions) | FastAPI 不可(F-4)→raw workers API |
+| TSD-02 | Pydantic v2（単一データ契約）**本番確証 v2.10.6** | フォールバック条項残置・**発動不要** |
 | TSD-03 | D1 + パラメータ化クエリ + batch 原子確定 | — |
 | TSD-04 | 冪等 = DB 一意制約 + UPSERT | — |
 | TSD-05 | トークン 128-bit（契約は schema/） | — |
