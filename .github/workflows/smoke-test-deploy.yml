@@ -1,0 +1,67 @@
+name: smoke-test-deploy
+
+# G-1 ゲート検証用: 本番ランタイムへ smoke worker を deploy し /smoke/all を判定する。
+# 手動実行のみ (workflow_dispatch)。全項目 PASS で job が成功、1 つでも FAIL なら job が失敗する。
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-and-verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smoke-test
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Apply D1 migrations (remote)
+        run: uv run pywrangler d1 migrations apply nazokake-smoke --remote
+
+      - name: Deploy smoke worker
+        run: uv run pywrangler deploy 2>&1 | tee deploy.log
+
+      - name: Extract deployed URL
+        id: url
+        run: |
+          URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          if [ -z "$URL" ]; then
+            echo "::error::deploy 出力から workers.dev URL を抽出できませんでした。deploy.log を確認してください。"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Deployed: $URL"
+
+      - name: Verify /smoke/all (retry for cold start)
+        run: |
+          URL="${{ steps.url.outputs.url }}/smoke/all"
+          for i in 1 2 3 4 5; do
+            if curl -sf "$URL" -o result-prod.json; then
+              break
+            fi
+            echo "attempt $i failed; retrying in 5s..."
+            sleep 5
+          done
+          echo "===== result-prod.json ====="
+          python3 -m json.tool result-prod.json
+          python3 -c "import json,sys; d=json.load(open('result-prod.json')); sys.exit(0 if d.get('overall_pass') else 1)"
+
+      - name: Upload result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-result-prod
+          path: |
+            smoke-test/result-prod.json
+            smoke-test/deploy.log
+          if-no-files-found: warn
