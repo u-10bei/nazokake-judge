@@ -330,3 +330,19 @@
 **AI Response**: 回答分析 → 全問明確・矛盾なし、追加質問不要。Part 2 実行: nfr-requirements.md（U4a-NFR-01〜12: 認証境界/CORS なし/ログ秘匿/配布物非コミット/基本衛生=定数時間比較、原子投入/冪等・凍結/発行一貫性、構造化ログ、**充足判定単一実装 U4a-NFR-10**、PBT/integration 振り分け、migration 0002、非目標=レート制限なし）、tech-stack-decisions.md（TSD-U4a-01〜06: Basic 認証を on_fetch 内関数+定数時間比較、pool_sufficiency 純粋関数、ペイロードモデル schema/、Item.body+migration 0002+Repository 書き込み、scripts CLI pure-Python、PBT+integration）。標準 2 択（Request Changes / Continue → NFR Design）を提示予定。
 **Context**: CONSTRUCTION - U4a NFR Requirements (Part 2 生成・承認待ち)
 
+---
+
+## U4a NFR Requirements - Approval & NFR Design Start
+**Timestamp**: 2026-07-13T08:35:00Z
+**User Input**: "承認します"
+**AI Response**: U4a NFR Requirements（nfr-requirements.md U4a-NFR-01〜12 / tech-stack-decisions.md TSD-U4a-01〜06）を承認完了。aidlc-state を承認済みに更新し、per-unit ループ次段の NFR Design(U4a) へ移行。NFR Design Part 1（Plan + 質問）を `construction/plans/u4a-nfr-design-plan.md` に作成し回答待機（GATE）。主論点は Basic 認証ガードの単一チョークポイント、ログ秘匿の強制点、凍結ガード+upsert の read-then-write 整合、pool_sufficiency の LC 位置づけ。
+**Context**: CONSTRUCTION - U4a NFR Design (Plan 提示・回答待ち)
+
+---
+
+## U4a NFR Design - Answers & Part 2 Generation
+**Timestamp**: 2026-07-13T08:50:00Z
+**User Input**: "U4a NFR Design 全 5 問回答済み・承認。全問★A。適用性評価(キャッシュ/キュー/CB/ロック=N/A)同意。Q1=A(認証ガードは on_fetch 入口の単一チョークポイント=認証漏れを構造的に防ぐ) / Q2=A(管理ログ秘匿を構造で強制・許可フィールド限定ラッパ) / Q3=A(read-then-write ロックなし許容・窓最小化, U1 Q8 同型) / Q4=A(pool_sufficiency 純粋関数 SufficiencyResult{ok, shortfalls}=ingest warn と issue gate が同一内訳を各文脈で表示) / Q5=A(統一封筒 401/200+ok=false+内訳, CLI 終了コード規約)。"
+**AI Response**: 回答分析 → 全問明確・矛盾なし、追加質問不要。Part 2 実行: nfr-design-patterns.md（DP-U4a-01 認証チョークポイント/02 ログ秘匿の強制点/03 原子投入 DP-01 流用/04 冪等 upsert+凍結ガード read-then-write ロックなし/05 充足判定単一実装 pool_sufficiency/06 発行ゲート+衝突リトライ/07 統一エラー封筒 + 非採用表）、logical-components.md（LC-U4a-01 AdminApi / 02 AuthGuard / 03 PoolSufficiency / 04 Repository 書込拡張 / 05 AdminLog 秘匿 / 06 CLI + DataContract 拡張・依存方向 mermaid・層逆流禁止）。標準 2 択（Request Changes / Continue → Infrastructure Design）を提示予定。
+**Context**: CONSTRUCTION - U4a NFR Design (Part 2 生成・承認待ち)
+

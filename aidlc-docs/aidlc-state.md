@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4a NFR Requirements (Part 2 生成完了・承認待ち)
+- **Current Stage**: CONSTRUCTION - U4a NFR Design (Part 2 生成完了・承認待ち)
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -50,8 +50,8 @@
 
 #### U4a: スクリプト先行分（token_issue / pool_ingest + 管理 API 先行導入）
 - [x] Functional Design (承認済み 2026-07-13。Q5=X: Item.body を D1 格納=U1 波及。BR-U4a-12 発行時充足ゲート)
-- [x] NFR Requirements (Part 2 生成完了・承認待ち 2026-07-13。全 7 問★A + pool_sufficiency 単一実装)
-- [ ] NFR Design
+- [x] NFR Requirements (承認済み 2026-07-13。全 7 問★A + pool_sufficiency 単一実装)
+- [x] NFR Design (Part 2 生成完了・承認待ち 2026-07-13。全 5 問★A、DP-U4a-01〜07 / LC-U4a-01〜06)
 - [ ] Infrastructure Design
 - [ ] Code Generation
 - [ ] Build & Test
@@ -72,8 +72,8 @@
 - **Current Stage**: U1 Code Generation Part 1（Planning）— 生成完了・承認待ち（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
 - **Completed**: U1 Functional Design（cb57583）／NFR Requirements（c70340a）／NFR Design（9cf22aa）／Infrastructure Design（承認済み 2026-07-12, H-1=(c) 確定, 8a4dc6f）
-- **Next Stage**: U4a NFR Design（NFR Requirements 承認後）
-- **Status**: U4a NFR Requirements（Part 2）生成完了・承認待ち（Request Changes / Continue → NFR Design）
+- **Next Stage**: U4a Infrastructure Design（NFR Design 承認後）
+- **Status**: U4a NFR Design（Part 2）生成完了・承認待ち（Request Changes / Continue → Infrastructure Design）
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
