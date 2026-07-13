@@ -8,5 +8,5 @@ compatibility_flags = ["python_workers"]
 [[d1_databases]]
 binding = "DB"
 database_name = "nazokake-smoke"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "115db1e2-c906-49c0-89df-25cfcd58eb5d"
 migrations_dir = "migrations"
