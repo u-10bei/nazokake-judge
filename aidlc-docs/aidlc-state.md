@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U1 (共有基盤) Build & Test 完了・レビュー待ち
+- **Current Stage**: CONSTRUCTION - U1 完了（承認済み）→ U4a Functional Design 開始待ち
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -46,7 +46,7 @@
 - [x] Infrastructure Design (承認済み 2026-07-12, H-1=(c) 確定)
 - [x] Code Generation Part 1 (Planning) — 承認済み 2026-07-13
 - [x] Code Generation Part 2 (Generation) — 承認済み 2026-07-13（unit+PBT 19 passed, α/S 較正確定）
-- [x] Build & Test — 生成完了・レビュー待ち 2026-07-13（unit+PBT 19 + integration 4 全 PASS）
+- [x] Build & Test — 承認済み 2026-07-13（unit+PBT 19 + integration 4 全 PASS）。**U1 完了**
 
 ### 🟢 CONSTRUCTION PHASE
 - [ ] Functional Design - EXECUTE
@@ -65,7 +65,7 @@
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
 - **Completed**: U1 Functional Design（cb57583）／NFR Requirements（c70340a）／NFR Design（9cf22aa）／Infrastructure Design（承認済み 2026-07-12, H-1=(c) 確定, 8a4dc6f）
 - **Next Stage**: 次ユニット U4a（token_issue / pool_ingest, 管理 API 経由 H-1(c)）の Functional Design
-- **Status**: U1 Build & Test 完了・レビュー待ち（2026-07-13）。unit+PBT 19 + integration 4 全 PASS。U1 は Ready（設計〜テスト完了）
+- **Status**: **U1 完了・承認済み**（2026-07-13, Build & Test 承認）。unit+PBT 19 + integration 4 全 PASS。次は U4a Functional Design（Part 1）
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
@@ -75,3 +75,6 @@
   - **重要な構成変更**: **FastAPI → raw workers API + Pydantic v2**（F-4: FastAPI トップレベル import が起動 CPU 制限 10021 超過）。ハンドラは module-level `on_fetch(request, env)`（F-5）、`workers_dev=true`（F-6）、デプロイは CI 経由（F-1/F-3）。→ TSD-01 改訂・deployment-architecture.md 更新済み。
   - **フォールバック**: 案 B（PHP+SQLite）／TSD-02（pydantic v1/dataclasses）いずれも**発動せず**（フレームワーク差し替えで解消）。
   - **残タスク（ユーザー側・任意）**: Cloudflare 側 smoke Worker / D1（`nazokake-smoke`）の削除可（`smoke-test/` フォルダと workflow はリポジトリ残置＝本実装 CI 雛形）。`CLOUDFLARE_API_TOKEN` は本実装 CI 流用なら残置、しないなら失効。
+
+## Residual Tasks（非ブロッキング）
+- **RT-1: `.github/workflows/deploy.yml` の肉付け**。現状は**スケルトン**（`main=backend/entry.py`=ヘルスのみ / `database_id` プレースホルダ / push トリガ無効）で、そのままでは実デプロイは機能しない。**U4a〜U2 が形になり最初の実デプロイをする際に、`smoke-test/.github` の `smoke-test-deploy.yml` を雛形に、実 D1・実ルート・トークンで機能する形へ更新**する（G-1 で確定した F-1〜F-6 規約に従う）。

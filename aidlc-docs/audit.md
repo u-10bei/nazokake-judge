@@ -282,3 +282,11 @@
 - tests/integration/（worker.py / wrangler.toml / pyproject.toml / migrations / README / result-integration.json）
 **Context**: CONSTRUCTION - U1 Build & Test 完了・レビュー待ち（GATE）
 
+---
+
+## U1 Build & Test - 承認（軽微注記 RT-1 追加）+ U1 完了
+**Timestamp**: 2026-07-13T07:05:00Z
+**User Input**: "軽微な注記: Next Steps の .github/workflows/deploy.yml 経由について、最初の実デプロイ時に smoke-test-deploy.yml を雛形に作成する理解で読み替え。忘れそうなら aidlc-state 残タスクに一行。これで承認します。"
+**AI Response**: 確認結果を明示: `deploy.yml` は U1 Code Generation（4550314）で作成済みだが**スケルトン**（main=backend/entry.py=ヘルスのみ / database_id プレースホルダ / push トリガ無効）で、そのままでは実デプロイ非機能。ユーザー理解（最初の実デプロイ時に肉付け）は正確。aidlc-state に **Residual Task RT-1**（deploy.yml の肉付けを U4a〜U2 の初回実デプロイ時に実施）を追加。U1 Build & Test を承認完了として state を更新（**U1 完了**）。per-unit ループ次段=U4a（token_issue / pool_ingest）の Functional Design へ。
+**Context**: CONSTRUCTION - U1 完了（Build & Test 承認）→ U4a Functional Design 開始
+
