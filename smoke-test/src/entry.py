@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 
 import pydantic
 from pydantic import BaseModel, Field, ValidationError
-from workers import Response, WorkerEntrypoint
+from workers import Response
 
 
 def _to_py(obj):
@@ -144,24 +144,22 @@ def _json_response(body):
     return Response(json.dumps(body, ensure_ascii=False))
 
 
-class Default(WorkerEntrypoint):
-    async def fetch(self, request):
-        try:
-            path = urlparse(request.url).path
-            env = self.env
-            if path == "/smoke/all":
-                return _json_response(await smoke_all(env))
-            if path == "/smoke/routing":
-                return _json_response(await smoke_routing())
-            if path == "/smoke/pydantic":
-                return _json_response(await smoke_pydantic())
-            if path == "/smoke/d1":
-                return _json_response(await smoke_d1(env))
-            if path == "/smoke/d1-batch":
-                return _json_response(await smoke_d1_batch(env))
-            return _json_response({"smoke_endpoints": [
-                "/smoke/all", "/smoke/routing", "/smoke/pydantic",
-                "/smoke/d1", "/smoke/d1-batch"]})
-        except Exception as e:  # noqa: BLE001
-            import traceback
-            return Response("SMOKE-ERROR: " + repr(e) + "\n" + traceback.format_exc())
+async def on_fetch(request, env):
+    try:
+        path = urlparse(request.url).path
+        if path == "/smoke/all":
+            return _json_response(await smoke_all(env))
+        if path == "/smoke/routing":
+            return _json_response(await smoke_routing())
+        if path == "/smoke/pydantic":
+            return _json_response(await smoke_pydantic())
+        if path == "/smoke/d1":
+            return _json_response(await smoke_d1(env))
+        if path == "/smoke/d1-batch":
+            return _json_response(await smoke_d1_batch(env))
+        return _json_response({"smoke_endpoints": [
+            "/smoke/all", "/smoke/routing", "/smoke/pydantic",
+            "/smoke/d1", "/smoke/d1-batch"]})
+    except Exception as e:  # noqa: BLE001
+        import traceback
+        return Response("SMOKE-ERROR: " + repr(e) + "\n" + traceback.format_exc())
