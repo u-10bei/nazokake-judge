@@ -314,3 +314,19 @@
 **AI Response**: 妥当な指摘（段階投入運用と BR-05 本来意図の整合）と判断し反映。business-rules.md: **BR-U4a-05** を「評価対象＝マージ後プール（既存∪入力）／pool_ingest は warning+投入実行」に書換、**BR-U4a-12（発行時充足ゲート＝error+発行拒否, 真のゲート）**を新設、検証表を ingest 時（warn）/ issue 時（error）の 2 行に分割。business-logic-model.md: §2 手順を凍結ガード→投入→充足判定(マージ後・warn)の順に、§3 に発行時ゲート手順を追加、Testable Properties を **PU4a-3a（ingest は warn で投入成功）/ PU4a-3b（issue は未達で発行拒否）**に分割、設計判断ノート追記。domain-entities.md: `precheck_errors`→`sufficiency_warnings`（warn 意味）、`TokenIssueResult` に `ok`/`gate_errors` 追加（発行拒否の表現）。規則番号の非連続（05→09 等）は一意のため実害なしとして現状維持。
 **Context**: CONSTRUCTION - U4a Functional Design (Review 反映・承認待ち)
 
+---
+
+## U4a Functional Design - Approval & NFR Requirements Start
+**Timestamp**: 2026-07-13T08:05:00Z
+**User Input**: "承認します"
+**AI Response**: U4a Functional Design（domain-entities / business-rules BR-U4a-01〜12 / business-logic-model + 段階投入対応の BR-U4a-05/12 修正）を承認完了。aidlc-state の U4a Functional Design を承認済みに更新し、per-unit ループ次段の NFR Requirements(U4a) へ移行。U4a は管理 API + Basic 認証を先行導入するためセキュリティ面（認証・トークン秘匿・ログ非出力）が主論点。NFR Requirements Part 1（Plan + 質問）を `construction/plans/u4a-nfr-requirements-plan.md` に作成し回答待機（GATE）。
+**Context**: CONSTRUCTION - U4a NFR Requirements (Plan 提示・回答待ち)
+
+---
+
+## U4a NFR Requirements - Answers & Part 2 Generation
+**Timestamp**: 2026-07-13T08:20:00Z
+**User Input**: "U4a NFR 全 7 問回答済み・承認。全問★A。Q6 に追加要件『充足判定は単一実装・2 呼び出し点』（pool_sufficiency を backend/domain 純粋関数として BR-U4a-05 warn と BR-U4a-12 gate の両方が同一関数を呼ぶ＝述語乖離防止）。Q3 補足: Item.body の D1 格納の帰結で謎かけ本文は未公表研究刺激、ログ経路への漏出も防ぐ。Q7 レート制限なしは非目標として nfr-requirements の非目標節に記録（U1 Q8 流儀）。"
+**AI Response**: 回答分析 → 全問明確・矛盾なし、追加質問不要。Part 2 実行: nfr-requirements.md（U4a-NFR-01〜12: 認証境界/CORS なし/ログ秘匿/配布物非コミット/基本衛生=定数時間比較、原子投入/冪等・凍結/発行一貫性、構造化ログ、**充足判定単一実装 U4a-NFR-10**、PBT/integration 振り分け、migration 0002、非目標=レート制限なし）、tech-stack-decisions.md（TSD-U4a-01〜06: Basic 認証を on_fetch 内関数+定数時間比較、pool_sufficiency 純粋関数、ペイロードモデル schema/、Item.body+migration 0002+Repository 書き込み、scripts CLI pure-Python、PBT+integration）。標準 2 択（Request Changes / Continue → NFR Design）を提示予定。
+**Context**: CONSTRUCTION - U4a NFR Requirements (Part 2 生成・承認待ち)
+
