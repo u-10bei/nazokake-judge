@@ -31,32 +31,32 @@
 - **★A（推奨）**: **単一チョークポイント** — `on_fetch` の `/admin/*` ディスパッチ入口に**認証ガード関数を1箇所**置き、全管理エンドポイントがそこを通る。認証漏れのエンドポイントを構造的に作れない。U2/U3 が同じガードを再利用（U4a-NFR-01）。
 - **B**: 各エンドポイントハンドラ内で個別に認証チェック。→ 追加時の付け忘れリスク。
 
-[Answer]:
+[Answer]: A
 
 ### Q2【秘匿】ログ秘匿の強制点
 - **★A（推奨）**: **秘匿の強制点を1箇所に集約** — 管理操作用のログは、トークン生値・本文フィールドを**構造的に受け付けないヘルパ／規約**（例: `emit` を件数・`item_id`・結果コードのみで呼ぶ薄いラッパ、または「admin ログに token/body キーを渡さない」を LC 境界で固定）。U1 の DP-06「単一発行点」の思想と一致（U4a-NFR-03）。
 - **B**: 各呼び出し側の規律に委ねる（生値を渡さないよう都度注意）。→ 漏出の温床。
 
-[Answer]:
+[Answer]: A
 
 ### Q3【一貫性】凍結ガード + upsert の read-then-write 整合
 凍結ガード（BR-U4a-03）は「参照済み item_id 集合を読む → その後 batch で upsert」の read-then-write。
 - **★A（推奨）**: **ロックなしで許容**（単独研究者・小規模・投入は実験開始前の運用）。参照集合の取得を**投入 batch の直前**に行い窓を最小化。同時投入のスナップショット競合は許容（U1 Q8 のスナップショット競合許容と同方針）。理論上の TOCTOU は運用形態上ほぼ発生しない。
 - **B**: 参照読取と投入を単一トランザクション/ロックで直列化。→ D1 の粒度に対し過剰、複雑さ増。
 
-[Answer]:
+[Answer]: A
 
 ### Q4【純粋ロジック】pool_sufficiency の LC 位置づけ・戻り値
 - **★A（推奨）**: **`backend/domain/` の純粋関数** `pool_sufficiency(items, params) -> SufficiencyResult`。`SufficiencyResult = { ok: bool, shortfalls: list[str] }`（三点セットのどれが不足かを内訳で返す）。ingest（warn）と issue（gate）が同一関数を呼び、`ok`/`shortfalls` を各文脈（warning ログ / error+拒否）で解釈（U4a-NFR-10）。PBT 対象。
 - **B**: 判定を管理エンドポイント内にインライン実装。→ 単一実装要件（U4a-NFR-10）に反する。
 
-[Answer]:
+[Answer]: A
 
 ### Q5【エラー契約】管理 API の統一エラー封筒
 - **★A（推奨）**: 管理 API のレスポンスは**統一封筒**で `ok` + 詳細（`IngestResult` の `rejected`/`sufficiency_warnings`、`TokenIssueResult` の `gate_errors`）を返す。**認証失敗は HTTP 401 + `WWW-Authenticate: Basic`**（本文は簡素）。業務エラー（拒否・ゲート未達）は 200 + `ok=false` + 内訳（CLI が内訳を表示できる）。
 - **B**: 各エラーを個別の HTTP ステータス（422 等）で返す。→ CLI 側のハンドリングが煩雑、内訳伝達が弱い。
 
-[Answer]:
+[Answer]: A
 
 ---
 
