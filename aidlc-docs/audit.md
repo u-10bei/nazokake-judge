@@ -290,3 +290,19 @@
 **AI Response**: 確認結果を明示: `deploy.yml` は U1 Code Generation（4550314）で作成済みだが**スケルトン**（main=backend/entry.py=ヘルスのみ / database_id プレースホルダ / push トリガ無効）で、そのままでは実デプロイ非機能。ユーザー理解（最初の実デプロイ時に肉付け）は正確。aidlc-state に **Residual Task RT-1**（deploy.yml の肉付けを U4a〜U2 の初回実デプロイ時に実施）を追加。U1 Build & Test を承認完了として state を更新（**U1 完了**）。per-unit ループ次段=U4a（token_issue / pool_ingest）の Functional Design へ。
 **Context**: CONSTRUCTION - U1 完了（Build & Test 承認）→ U4a Functional Design 開始
 
+---
+
+## U4a Functional Design - Start (Plan + Questions)
+**Timestamp**: 2026-07-13T07:20:00Z
+**User Input**: "U4a Functional Design を始めてください"
+**AI Response**: functional-design.md ルールをロード。U4a コンテキスト（unit-of-work / story-map / stories US-R05・R06 / components・methods / component-dependency / INF §4 H-1(c) / shared-infrastructure / U1 実装）を分析。中核論点＝**U4a が U2/U3 に先行するため Worker 管理エンドポイント + Basic 認証（C-AUTH）と Repository の書き込みメソッド（insert_tokens/insert_items）が未実装で U4a が先行導入する構図**。`construction/plans/u4a-functional-design-plan.md` を作成し、責務境界（Q1/Q2 最重要）・管理 API 粒度・pool_ingest 冪等性・CLI 入力/body_ref・BR-05 事前検証・token_issue 入出力・認証受け渡しの 8 問（★推奨デフォルト A + トレードオフ）を [Answer] タグで埋め込み回答待機（GATE）。UI なしのため frontend-components は N/A。
+**Context**: CONSTRUCTION - U4a Functional Design (Plan 提示・回答待ち)
+
+---
+
+## U4a Functional Design - Answers & Part 2 Generation
+**Timestamp**: 2026-07-13T07:40:00Z
+**User Input**: "U4a 全 8 問回答済み・承認。Q1/2/3/7/8=A。Q4=A + 破壊的更新ガード必須化(参照済み item への UPDATE 拒否=プール凍結の強制)。Q5=X(★A 修正: Item に body フィールド追加し D1 格納、body_ref は出自メモに格下げ、投入 JSON は gitignore=NFR-08 の実装。U1 波及: schema/models.py Item 変更・migration 0002・list_items 更新・テスト更新を U4a スコープに含む)。Q6=A + 層間実行可能性の式追加((総数−最大層)×k ≥ ceil(0.65×session_pairs) を三点セットに)。Q7=A + 衝突は事前排除→batch→全体リトライ。Part 2 指示: Q5 の U1 波及を明記、Q4 ガードと Q6 三点セットを business-rules に独立規則で固定。"
+**AI Response**: 回答分析 → 全問明確・矛盾なし、追加質問不要。Q5=X（Item.body を D1 格納）は「body_ref の解決先が存在せず U2 が本文表示できない」設計の穴を埋める妥当な修正、NFR-08 の「リポジトリ」=git の解釈も整合と判断。Part 2 実行: domain-entities.md（Item 波及=body 追加/body_ref 格下げ・migration 0002・ペイロードモデル ItemIngestRequest/IngestResult/TokenIssueRequest/TokenIssueResult）、business-rules.md（BR-U4a-01〜11: 層/本文必須・**凍結ガード BR-U4a-03**・冪等 upsert・**プール充足三点セット BR-U4a-05**・トークン一意/秘匿・認証境界）、business-logic-model.md（pool_ingest/token_issue フロー・構成要素の責務境界・Testable Properties PU4a-1〜6・U1 波及の変更スコープ明示）を生成。aidlc-state に U4a セクション追加。標準 2 択（Request Changes / Continue → NFR Requirements）を提示予定。
+**Context**: CONSTRUCTION - U4a Functional Design (Part 2 生成・承認待ち)
+
