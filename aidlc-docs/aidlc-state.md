@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4a NFR Design (Part 2 生成完了・承認待ち)
+- **Current Stage**: CONSTRUCTION - U4a Infrastructure Design (Part 2 生成完了・承認待ち)
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -51,8 +51,8 @@
 #### U4a: スクリプト先行分（token_issue / pool_ingest + 管理 API 先行導入）
 - [x] Functional Design (承認済み 2026-07-13。Q5=X: Item.body を D1 格納=U1 波及。BR-U4a-12 発行時充足ゲート)
 - [x] NFR Requirements (承認済み 2026-07-13。全 7 問★A + pool_sufficiency 単一実装)
-- [x] NFR Design (Part 2 生成完了・承認待ち 2026-07-13。全 5 問★A、DP-U4a-01〜07 / LC-U4a-01〜06)
-- [ ] Infrastructure Design
+- [x] NFR Design (承認済み 2026-07-13。全 5 問★A、DP-U4a-01〜07 / LC-U4a-01〜06)
+- [x] Infrastructure Design (Part 2 生成完了・承認待ち 2026-07-13。全 5 問★A。RT-1 を U4a で消化)
 - [ ] Code Generation
 - [ ] Build & Test
 
@@ -72,8 +72,8 @@
 - **Current Stage**: U1 Code Generation Part 1（Planning）— 生成完了・承認待ち（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
 - **Completed**: U1 Functional Design（cb57583）／NFR Requirements（c70340a）／NFR Design（9cf22aa）／Infrastructure Design（承認済み 2026-07-12, H-1=(c) 確定, 8a4dc6f）
-- **Next Stage**: U4a Infrastructure Design（NFR Design 承認後）
-- **Status**: U4a NFR Design（Part 2）生成完了・承認待ち（Request Changes / Continue → Infrastructure Design）
+- **Next Stage**: U4a Code Generation（Infrastructure Design 承認後）
+- **Status**: U4a Infrastructure Design（Part 2）生成完了・承認待ち（Request Changes / Continue → Code Generation）。差分=/admin ルート・ADMIN_BASIC 秘密（手元 put）・migration 0002 適用順・deploy.yml 肉付け（RT-1 消化）
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
@@ -85,4 +85,4 @@
   - **残タスク（ユーザー側・任意）**: Cloudflare 側 smoke Worker / D1（`nazokake-smoke`）の削除可（`smoke-test/` フォルダと workflow はリポジトリ残置＝本実装 CI 雛形）。`CLOUDFLARE_API_TOKEN` は本実装 CI 流用なら残置、しないなら失効。
 
 ## Residual Tasks（非ブロッキング）
-- **RT-1: `.github/workflows/deploy.yml` の肉付け**。現状は**スケルトン**（`main=backend/entry.py`=ヘルスのみ / `database_id` プレースホルダ / push トリガ無効）で、そのままでは実デプロイは機能しない。**U4a〜U2 が形になり最初の実デプロイをする際に、`smoke-test/.github` の `smoke-test-deploy.yml` を雛形に、実 D1・実ルート・トークンで機能する形へ更新**する（G-1 で確定した F-1〜F-6 規約に従う）。
+- **RT-1: `.github/workflows/deploy.yml` の肉付け** — **U4a で消化予定**（U4a Infrastructure Design Q4=A で決定）。U4a Code Generation で `smoke-test-deploy.yml` を雛形に `uv sync → テスト → d1 migrations apply --remote(0001+0002) → deploy` へ機能化し、実 D1（`nazokake-judge`, smoke 用と別作成）・実ルート（/admin）で動く形に。`ADMIN_BASIC_*` は手元 `wrangler secret put`（CI 二重管理回避）。deploy.yml 実装完了で **CLOSE**。

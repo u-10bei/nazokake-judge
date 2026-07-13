@@ -346,3 +346,19 @@
 **AI Response**: 回答分析 → 全問明確・矛盾なし、追加質問不要。Part 2 実行: nfr-design-patterns.md（DP-U4a-01 認証チョークポイント/02 ログ秘匿の強制点/03 原子投入 DP-01 流用/04 冪等 upsert+凍結ガード read-then-write ロックなし/05 充足判定単一実装 pool_sufficiency/06 発行ゲート+衝突リトライ/07 統一エラー封筒 + 非採用表）、logical-components.md（LC-U4a-01 AdminApi / 02 AuthGuard / 03 PoolSufficiency / 04 Repository 書込拡張 / 05 AdminLog 秘匿 / 06 CLI + DataContract 拡張・依存方向 mermaid・層逆流禁止）。標準 2 択（Request Changes / Continue → Infrastructure Design）を提示予定。
 **Context**: CONSTRUCTION - U4a NFR Design (Part 2 生成・承認待ち)
 
+---
+
+## U4a NFR Design - Approval & Infrastructure Design Start
+**Timestamp**: 2026-07-13T09:10:00Z
+**User Input**: "承認します"
+**AI Response**: U4a NFR Design（nfr-design-patterns.md DP-U4a-01〜07 / logical-components.md LC-U4a-01〜06）を承認完了。aidlc-state を承認済みに更新し、per-unit ループ次段の Infrastructure Design(U4a) へ移行。U4a は U1 の共有基盤（D1 + schema/ + CI デプロイ）を大きく流用するため差分は小さい見込み（/admin ルート・ADMIN_BASIC_* シークレット・migration 0002 適用順・deploy.yml 肉付け=RT-1）。Infrastructure Design Part 1（Plan + 質問）を `construction/plans/u4a-infrastructure-design-plan.md` に作成し回答待機（GATE）。
+**Context**: CONSTRUCTION - U4a Infrastructure Design (Plan 提示・回答待ち)
+
+---
+
+## U4a Infrastructure Design - Answers & Part 2 Generation
+**Timestamp**: 2026-07-13T09:25:00Z
+**User Input**: "U4a Infra 全 5 問回答済み・承認。全問★A。Q4 補足: ADMIN_BASIC_* は手元からの一回きり `npx wrangler secret put` を正とする（CI 経由設定は不採用＝GitHub Secrets と Cloudflare の二重管理を避ける／wrangler secret put は Node のみで動き Windows でも手元 PowerShell で可）。CI の GitHub Secrets は既存 CLOUDFLARE_API_TOKEN/ACCOUNT_ID のみ。deploy.yml のテストはデプロイ前（品質ゲート）。実験用 D1 は smoke 用と別作成（wrangler d1 create → wrangler.toml 転記 → migrations apply）。smoke-test-deploy.yml は残置。備考: 既存 plan 2 ファイルの Answer 空欄バックフィルを含めること／以後 Answer 欄記入運用。"
+**AI Response**: 回答分析 → 全問明確・矛盾なし。Part 2 実行: infrastructure-design.md（差分中心: LC-U4a→インフラ・/admin ルート同一 Worker・CORS なし、ADMIN_BASIC_* を手元 wrangler secret put・CI Secrets は CLOUDFLARE_* のみ、migration 0002 の適用順=migration→deploy 厳守・実験用 D1 別作成、deploy.yml 肉付け=test 前置ゲート付き CI で RT-1 消化、CLI 非デプロイ、デプロイ手順、トレーサビリティ）。**運用ルールに従い u4a-infrastructure-design-plan.md の [Answer] 欄を同時記入**。RT-1 を「U4a で消化予定（Code Generation で deploy.yml 機能化 → CLOSE）」に更新。備考の plan 2 ファイルのバックフィルは前コミット 73cb2a7 で対応済み（FD 含む 3 ファイル）。標準 2 択（Request Changes / Continue → Code Generation）を提示予定。
+**Context**: CONSTRUCTION - U4a Infrastructure Design (Part 2 生成・承認待ち)
+
