@@ -262,3 +262,11 @@
 **AI Response**: 指示どおり反映。(1) `backend/domain/assignment.py`: `_pick_pair` の重みを `1/(eff+1)³`(p=3, 根拠コメント付)へ。updated_exposure/derive_exposure docstring の練習除外を **BR-08→BR-10**(is_practice サーバ判定, 本番のみ集計)に訂正。(2) `tests/pbt/calibration.py`: ALPHA_PROVISIONAL/S_PROVISIONAL を **ALPHA=0.7/S=30**(較正確定表記)へ、`_realistic_pool()`(95件 pro30/ai20/edit30/rule15)追加。(3) `tests/pbt/test_assignment_properties.py`: test_p1 を `_realistic_pool()`+既定 AssignmentParams で評価、小プール版は smoke として併存。**検証: dev/ci 両プロファイル 19 passed**。P-1 本番規模の実測 gap=9/mean=25.3/threshold=17.7(α=0.7)=約2倍マージンで成立(自明 PASS でない)。文書波及: business-rules.md パラメータ表(α=0.7/S=30/p=3 確定 + 較正確定節)、business-logic-model.md(重み関数 p=3 / P-1 定数確定)、code/README.md §5。
 **Context**: CONSTRUCTION - U1 α/S 較正確定・本番規模 P-1 成立（レビュー待ち継続）
 
+---
+
+## U1 Code Generation - 承認（Part 2 完了）
+**Timestamp**: 2026-07-13T06:30:00Z
+**User Input**: "U1 コードを承認します"
+**AI Response**: U1 Code Generation（schema/domain/repo/log + tests + config + α/S 較正確定）を承認完了。aidlc-state の U1 Code Generation を承認済みに更新し、per-unit ループ次段の Build & Test へ移行（Repository の miniflare D1 テスト・PBT 実行。α/S 較正は確定済み）。U1（共有基盤）の設計〜実装が完了し、後続ユニット（U4a→U2→U3→U4b）が依存する公開面（schema / backend.domain / backend.repo.Repository / backend.log.emit）が確定。
+**Context**: CONSTRUCTION - U1 Code Generation 承認 → Build & Test（U1）待機
+

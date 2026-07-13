@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U1 (共有基盤) Code Generation (Part 2: Generation 完了・レビュー待ち)
+- **Current Stage**: CONSTRUCTION - U1 (共有基盤) Code Generation 承認済み → Build & Test 待機
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -45,7 +45,8 @@
 - [x] NFR Design (承認済み 2026-07-12)
 - [x] Infrastructure Design (承認済み 2026-07-12, H-1=(c) 確定)
 - [x] Code Generation Part 1 (Planning) — 承認済み 2026-07-13
-- [x] Code Generation Part 2 (Generation) — 生成完了・レビュー待ち 2026-07-13（unit+PBT 18 passed）
+- [x] Code Generation Part 2 (Generation) — 承認済み 2026-07-13（unit+PBT 19 passed, α/S 較正確定）
+- [ ] Build & Test — 次段
 
 ### 🟢 CONSTRUCTION PHASE
 - [ ] Functional Design - EXECUTE
@@ -63,8 +64,8 @@
 - **Current Stage**: U1 Code Generation Part 1（Planning）— 生成完了・承認待ち（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
 - **Completed**: U1 Functional Design（cb57583）／NFR Requirements（c70340a）／NFR Design（9cf22aa）／Infrastructure Design（承認済み 2026-07-12, H-1=(c) 確定, 8a4dc6f）
-- **Next Stage**: U1 Build & Test（Repository の miniflare D1 テスト・α/S 較正）。または次ユニット U4a
-- **Status**: U1 Code Generation Part 2（Generation）完了・レビュー待ち（Request Changes / Continue → Build & Test）。unit+PBT 18 passed（dev/ci）
+- **Next Stage**: U1 Build & Test（Repository の miniflare D1 テスト・PBT 実行・α/S 較正は確定済み）
+- **Status**: U1 Code Generation 承認済み（2026-07-13）。unit+PBT 19 passed（dev/ci）、α/S 較正確定。Build & Test 開始待ち
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
