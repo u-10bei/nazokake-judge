@@ -385,3 +385,11 @@
 **AI Response**: U4a 全 14 ステップ生成。U1 波及=`Item.body` D1 格納（migration 0002 は items 再構築で body NOT NULL/body_ref NULL 化、空 items で rebuild 成立を実 D1 で検証）・`validate_item` body 検証・`list_items`/Repository 拡張。新規: `schema/payloads.py`（6 モデル）、`backend/domain/pool_sufficiency`（純粋・単一実装 DP-U4a-05）、`backend/repo` に insert_items（upsert+凍結ガード, body_ref None は SQL NULL で bind＝D1_TYPE_ERROR 回避）/insert_tokens/referenced_item_ids/all_token_strings、`backend/admin/`（api=統一封筒 / auth=定数時間 Basic / log=秘匿ラッパ）、`entry.py` に /admin/* 単一チョークポイント配線、`scripts/`（pool_ingest/token_issue/_client, urllib）、`deploy.yml` 機能化（test 前置ゲート・tee 不使用）=**RT-1 CLOSED**。**検証: unit+PBT 27 passed（U1 回帰 19 + pool_sufficiency 6 + schema 2, dev/ci）／integration 実 D1 で全 7 シナリオ PASS**（PU4a-6 認証401 / 3a 段階投入warn / 1 冪等 / 3b 発行ゲート / realistic / 4 トークン発行 / 2 凍結ガード, result-u4a-integration.json）。バグ修正: body_ref None binding の D1_TYPE_ERROR を SQL リテラル NULL で回避、integration ドライバに miniflare コールドスタート用リトライ追加。code/README.md 生成。plan 全 Step [x]・Answer 欄記入・RT-1 CLOSED を state に反映。標準 2 択（Request Changes / Continue → Build & Test）を提示予定。
 **Context**: CONSTRUCTION - U4a Code Generation Part 2 完了・レビュー待ち（GATE）
 
+---
+
+## U4a Code Generation - 承認 & U4a 完了
+**Timestamp**: 2026-07-13T12:55:00Z
+**User Input**: "承認します"
+**AI Response**: U4a Code Generation（schema 波及=Item.body / payloads / pool_sufficiency / Repository 拡張 / backend/admin / scripts / deploy.yml=RT-1 CLOSED）を承認完了。U4a は Code Generation 内で integration（実 D1 全 7 シナリオ）+ unit/PBT 27 を実施済みのため **Build & Test も実質完了**として扱い、aidlc-state の U4a を完了に更新。**U4a 完了**（token_issue/pool_ingest + 管理 API 先行導入）。per-unit ループ次段は **U2（参加者フロー）**。U2 は backend/admin の Basic 認証・Item.body 表示・Repository（save_pair_sequence/insert_judgment/get_token 等）・generate_pairs を消費する。次は U2 Functional Design（Part 1）。
+**Context**: CONSTRUCTION - U4a 完了 → U2 Functional Design 開始
+

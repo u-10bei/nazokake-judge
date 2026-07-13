@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4a Code Generation (Part 2: Generation 完了・レビュー待ち)
+- **Current Stage**: CONSTRUCTION - U4a 完了（承認済み）→ U2 Functional Design 開始待ち
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -54,8 +54,8 @@
 - [x] NFR Design (承認済み 2026-07-13。全 5 問★A、DP-U4a-01〜07 / LC-U4a-01〜06)
 - [x] Infrastructure Design (承認済み 2026-07-13。全 5 問★A。RT-1 を U4a で消化)
 - [x] Code Generation Part 1 (Planning) — 承認済み 2026-07-13（全 5 決定点★A）
-- [x] Code Generation Part 2 (Generation) — 生成完了・レビュー待ち 2026-07-13（unit+PBT 27 + integration 7 全 PASS。RT-1 CLOSED）
-- [ ] Build & Test
+- [x] Code Generation Part 2 (Generation) — 承認済み 2026-07-13（unit+PBT 27 + integration 7 全 PASS。RT-1 CLOSED）
+- [x] Build & Test — Code Generation 内で実施（integration 実 D1 全 7 シナリオ + unit/PBT 27）。**U4a 完了**
 
 ### 🟢 CONSTRUCTION PHASE
 - [ ] Functional Design - EXECUTE
@@ -73,8 +73,8 @@
 - **Current Stage**: U1 Code Generation Part 1（Planning）— 生成完了・承認待ち（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
 - **Completed**: U1 Functional Design（cb57583）／NFR Requirements（c70340a）／NFR Design（9cf22aa）／Infrastructure Design（承認済み 2026-07-12, H-1=(c) 確定, 8a4dc6f）
-- **Next Stage**: U4a Build & Test（NFR Design/Infra 済み。実質は Code Gen で integration 実施済）。または U2 へ
-- **Status**: U4a Code Generation Part 2 生成完了・レビュー待ち（2026-07-13）。**unit+PBT 27 + integration 7 全 PASS**（U1 回帰含む）。RT-1 CLOSED。Item.body の U1 波及を全緑で反映
+- **Next Stage**: U2（参加者フロー）の Functional Design。実装順 U1→U4a→**U2**→U3→U4b
+- **Status**: **U4a 完了・承認済み**（2026-07-13）。unit+PBT 27 + integration 7 全 PASS。RT-1 CLOSED。次は U2 Functional Design
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
