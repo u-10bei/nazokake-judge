@@ -95,8 +95,11 @@ def _pick_pair(rng, pool, exposure, occ, used, params, prefer_cross, relax):
         return None
 
     def weight(it: Item) -> float:
+        # 重み = 1/(有効露出+1)^3。指数 p=3 は 2026-07-13 の α/S 較正で確定
+        # （p=1 は本番規模 95 件・S=30 で露出偏りが過大。p=3 で比較グラフの
+        #  連結性・相手多様性への影響なしを確認済み）。tests/pbt/calibration.py 参照。
         eff = exposure.get(it.item_id, 0) + occ[it.item_id]
-        return 1.0 / (eff + 1.0)
+        return 1.0 / (eff + 1.0) ** 3
 
     a = _weighted_choice(rng, cands, weight)
 
@@ -141,7 +144,7 @@ def updated_exposure(exposure: ExposureCounts, pairs: list[Pair]) -> ExposureCou
     """生成ペア（本番のみ）で露出カウントを更新した新カウントを返す（純粋）。
 
     本番未使用。PBT のオラクル（モデル）として derive_exposure と整合検証（P-5）。
-    練習ペアは集計対象外（BR-08）。
+    練習ペアは露出集計対象外（本番のみ集計。is_practice はサーバ判定 BR-10）。
     """
     new: ExposureCounts = dict(exposure)
     for pair in pairs:
@@ -171,7 +174,7 @@ def derive_exposure(
     """確定 PairSequence から露出を集計する（H-2, 保持テーブルなし）。
 
     対象: status == 'completed'、または status == 'in_progress' かつアクティブ
-    （last_active_at が閾値内, BR-04）。練習ペアは除外（BR-08）。
+    （last_active_at が閾値内, BR-04）。練習ペアは除外（本番のみ集計。is_practice サーバ判定 BR-10）。
     """
     now = _iso_to_epoch(now_iso)
     threshold = inactive_threshold_hours * 3600

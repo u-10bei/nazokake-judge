@@ -41,7 +41,7 @@
 - テスト: `HYPOTHESIS_PROFILE=ci uv run --group dev pytest -q`。
 - デプロイ: **CI（`.github/workflows/deploy.yml`）経由**（`uv run pywrangler d1 migrations apply --remote` → `deploy`）。`wrangler.toml` の `database_id` を実 D1 に設定。
 
-## 5. 未確定 → Build & Test 申し送り
-- **α/S 較正**: `calibration.py` の `ALPHA_PROVISIONAL=0.5`/`S_PROVISIONAL=30` は暫定。較正シミュレーション（同一累積ループ共有）で確定し `business-rules.md` パラメータ表に追記。述語形は固定。
-- **Repository D1 テスト**: miniflare/ローカル D1 での冪等性・原子性の実行。
+## 5. 較正確定 / Build & Test 申し送り
+- **α/S 較正（✅ 確定 2026-07-13）**: 本番規模プール（95 件）で較正し、**重み指数 p=3・α=0.7・S=30** を確定（暫定 α=0.5/p=1 は本番規模で不成立）。`assignment.py` の重みを `1/(eff+1)³` に、`calibration.py` を `ALPHA=0.7`/`S=30`/`_realistic_pool()` に更新。P-1 テストは本番規模で評価。比較グラフへの副作用なし（連結成分常に 1）。`business-rules.md` / `business-logic-model.md` に反映。
+- **Repository D1 テスト**: miniflare/ローカル D1 での冪等性・原子性の実行（Build & Test）。
 - **暫定パラメータ**（session_pairs=40/practice=3/likert=10/cross=0.65/k=3/inactive=48h）は Negotiable。

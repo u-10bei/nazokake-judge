@@ -20,9 +20,10 @@ from backend.domain import (
 from schema import Pair, SessionState
 from tests.pbt import generators
 from tests.pbt.calibration import (
-    ALPHA_PROVISIONAL,
-    S_PROVISIONAL,
+    ALPHA,
+    S,
     _fixed_pool,
+    _realistic_pool,
     cumulative_exposure,
     exposure_balance_ok,
 )
@@ -117,15 +118,26 @@ def test_p5_updated_exposure_matches_derive(pool, params, seed):
 def test_p1_exposure_balance_cumulative():
     """P-1 / XC-01: S セッション累積後、適格項目で `max−min ≤ max(2, α×mean)`。
 
-    ステートフル累積ハーネス（calibration.cumulative_exposure）で固定シード評価
-    （統計的性質を決定論化, U1-NFR-13）。α/S は暫定値。
+    **本番規模プール（95 件）+ 既定 AssignmentParams（40 ペア/セッション）**で評価
+    （較正 2026-07-13 で確定した本番レジーム）。ステートフル累積ハーネス
+    （calibration.cumulative_exposure）で固定シード評価（決定論化, U1-NFR-13）。
     """
+    from schema import AssignmentParams
+
+    pool = _realistic_pool()               # 95 件・pro30/ai20/edit30/rule15
+    params = AssignmentParams()            # 本番既定（session_pairs=40 等）
+    exposure = cumulative_exposure(pool, params, S)
+    assert exposure_balance_ok(exposure, pool, ALPHA)
+
+
+def test_p1_exposure_balance_small_pool_smoke():
+    """P-1（smoke）: 小規模プールでの高速確認（本番レジームは上のテスト）。"""
     from schema import AssignmentParams
 
     pool = _fixed_pool(16)
     params = AssignmentParams(session_pairs=8, practice_pairs=2)
-    exposure = cumulative_exposure(pool, params, S_PROVISIONAL)
-    assert exposure_balance_ok(exposure, pool, ALPHA_PROVISIONAL)
+    exposure = cumulative_exposure(pool, params, S)
+    assert exposure_balance_ok(exposure, pool, ALPHA)
 
 
 # ---------------------------------------------------------------- P-7 (位置一様, 統計)
