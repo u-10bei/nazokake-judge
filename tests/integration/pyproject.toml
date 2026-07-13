@@ -1,0 +1,15 @@
+# 統合テストハーネス（使い捨て）。依存は pyproject に宣言（requirements.txt 不可, F-1）。
+[project]
+name = "nazokake-it"
+version = "0.1.0"
+description = "U1 Repository 実 D1 統合テスト worker"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2",
+]
+
+[dependency-groups]
+dev = [
+    "workers-py",
+    "workers-runtime-sdk",
+]

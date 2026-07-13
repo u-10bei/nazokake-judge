@@ -1,0 +1,11 @@
+# 生成物・ローカル状態
+node_modules/
+.venv/
+.venv-workers/
+python_modules/
+.wrangler/
+dev.log
+
+# 本体ソースの隔離コピー（DRY のため git 管理せず、実行前に親からコピーする。README 参照）
+src/schema/
+src/backend/

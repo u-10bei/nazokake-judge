@@ -270,3 +270,15 @@
 **AI Response**: U1 Code Generation（schema/domain/repo/log + tests + config + α/S 較正確定）を承認完了。aidlc-state の U1 Code Generation を承認済みに更新し、per-unit ループ次段の Build & Test へ移行（Repository の miniflare D1 テスト・PBT 実行。α/S 較正は確定済み）。U1（共有基盤）の設計〜実装が完了し、後続ユニット（U4a→U2→U3→U4b）が依存する公開面（schema / backend.domain / backend.repo.Repository / backend.log.emit）が確定。
 **Context**: CONSTRUCTION - U1 Code Generation 承認 → Build & Test（U1）待機
 
+---
+
+## Build and Test Stage — U1
+**Timestamp**: 2026-07-13T06:55:00Z
+**Build Status**: Success（uv + pywrangler。依存解決・バンドル・ローカル D1 マイグレーション適用）
+**Test Status**: Pass（unit+PBT 19、integration 4）
+**AI Response**: U1 Build & Test 実施。(1) unit+PBT（pure-Python）を dev/ci 両プロファイルで実行=**19 passed**（P-1 は本番規模 95 件で成立）。(2) **Repository 実 D1 統合テスト**を新規ハーネス `tests/integration/`（smoke-test 隔離方式: src/ に schema/backend コピー・main=src/worker.py・node_modules は親）で miniflare/pywrangler dev 上に実行=**全 4 項目 PASS**: save_pair_sequence 原子コミット / batch 途中失敗の全ロールバック（DP-01, 実 DDL 下で実証）/ insert_judgment 冪等 ON CONFLICT DO NOTHING 既存返却（DP-02）/ read_exposure_counts == updated_exposure オラクル一致（H-2）。結果 `tests/integration/result-integration.json`。コピーソースと生成物は .gitignore、README に再現手順。生成: build-and-test/{build-instructions, unit-test-instructions, integration-test-instructions, build-and-test-summary}.md。
+**Files Generated**:
+- build-instructions.md / unit-test-instructions.md / integration-test-instructions.md / build-and-test-summary.md
+- tests/integration/（worker.py / wrangler.toml / pyproject.toml / migrations / README / result-integration.json）
+**Context**: CONSTRUCTION - U1 Build & Test 完了・レビュー待ち（GATE）
+

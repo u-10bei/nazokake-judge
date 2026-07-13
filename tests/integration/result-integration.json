@@ -1,0 +1,56 @@
+{
+  "overall_pass": true,
+  "results": [
+    {
+      "item": "1-save-commit",
+      "pass": true,
+      "detail": {
+        "generated": 5,
+        "saved_pairs": 5,
+        "session_rows": 1
+      }
+    },
+    {
+      "item": "2-save-atomic-rollback",
+      "pass": true,
+      "detail": {
+        "raised": true,
+        "leftover_pairs": 0,
+        "leftover_session": 0
+      }
+    },
+    {
+      "item": "3-judgment-idempotent",
+      "pass": true,
+      "detail": {
+        "first": "A",
+        "second_returns_kept": "A",
+        "rows": 1
+      }
+    },
+    {
+      "item": "4-read-exposure",
+      "pass": true,
+      "detail": {
+        "oracle": {
+          "it000": 1,
+          "it006": 2,
+          "it002": 1,
+          "it004": 1,
+          "it005": 1,
+          "it003": 1,
+          "it007": 1
+        },
+        "derived": {
+          "it000": 1,
+          "it006": 2,
+          "it002": 1,
+          "it004": 1,
+          "it005": 1,
+          "it003": 1,
+          "it007": 1
+        }
+      }
+    }
+  ]
+}
