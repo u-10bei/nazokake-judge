@@ -50,12 +50,17 @@ class Choice(str, Enum):
 # --------------------------------------------------------------------- モデル
 
 class Item(BaseModel):
-    """刺激（作品）。本文はリポジトリ管理外のため body_ref で参照（NFR-08）。"""
+    """刺激（作品）。**本文 `body` は D1 に格納**（U4a Q5=X）。
+
+    NFR-08 の「リポジトリ管理外」= git リポジトリを指し、DB は対象外（README「刺激は
+    デプロイ時に別経路で投入する」＝投入先が D1）。投入用 JSON ファイル自体は gitignore。
+    """
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     item_id: str = Field(min_length=1)
     layer: Layer                          # NOT NULL（BR-11）
-    body_ref: str = Field(min_length=1)   # 本文への参照（本文自体は非格納）
+    body: str = Field(min_length=1)       # 謎かけ本文（D1 格納。U2 が表示に使う）
+    body_ref: str | None = None           # 出自メモ（任意。コレクション番号・制作系列 ID 等）
 
 
 class Token(BaseModel):

@@ -1,15 +1,18 @@
 name: deploy
 
-# 本実装 Worker を Cloudflare へデプロイする（CI 経由, F-3）。
-# smoke-test-deploy.yml を雛形に流用。手動実行 + main への push（任意で有効化）。
+# 本実装 Worker を Cloudflare へデプロイする（CI 経由, F-3）。RT-1 消化（U4a）。
+# テスト → migrations → deploy の順（テスト失敗ならデプロイしない = 品質ゲート）。
+# 手動実行。実 D1(nazokake-judge, smoke 用とは別)を作成し wrangler.toml の database_id を設定しておくこと。
+# ADMIN_BASIC_* は CI では設定しない（手元から一回きり `npx wrangler secret put`）。
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}       # Workers Scripts:Edit + D1:Edit
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -23,10 +26,13 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
+      # 品質ゲート: テスト失敗なら後続（migrations/deploy）は実行されない。
+      # tee 等のパイプは使わず、pytest の終了コードをそのまま job の成否にする
+      # （smoke-test-deploy.yml の tee で終了コードが失われた教訓の反映）。
       - name: Run tests (unit + PBT)
         env:
           HYPOTHESIS_PROFILE: ci
-        run: uv run --group dev pytest -q
+        run: uv run --group dev pytest tests/unit tests/pbt -q
 
       - name: Apply D1 migrations (remote)
         run: uv run pywrangler d1 migrations apply nazokake-judge --remote

@@ -1,0 +1,96 @@
+{
+  "overall_pass": true,
+  "results": [
+    {
+      "item": "PU4a-6-auth-401",
+      "pass": true,
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "item": "PU4a-3a-staged-ingest-warns",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "inserted": 4,
+        "updated": 0,
+        "rejected": [],
+        "sufficiency_warnings": [
+          "総数不足: 4 < 最小 27（ceil(2×session_pairs/k)）",
+          "層間供給不足: (総数−最大層)3 × k3 = 9 < 必要 26（ceil(cross×session_pairs)）"
+        ]
+      }
+    },
+    {
+      "item": "PU4a-1-idempotent",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "inserted": 0,
+        "updated": 4,
+        "rejected": [],
+        "sufficiency_warnings": [
+          "総数不足: 4 < 最小 27（ceil(2×session_pairs/k)）",
+          "層間供給不足: (総数−最大層)3 × k3 = 9 < 必要 26（ceil(cross×session_pairs)）"
+        ]
+      }
+    },
+    {
+      "item": "PU4a-3b-issue-gate-blocks",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "tokens": [],
+        "issued_at": null,
+        "gate_errors": [
+          "総数不足: 4 < 最小 27（ceil(2×session_pairs/k)）",
+          "層間供給不足: (総数−最大層)3 × k3 = 9 < 必要 26（ceil(cross×session_pairs)）"
+        ]
+      }
+    },
+    {
+      "item": "ingest-realistic-sufficient",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "inserted": 95,
+        "updated": 0,
+        "rejected": [],
+        "sufficiency_warnings": []
+      }
+    },
+    {
+      "item": "PU4a-4-token-issue",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "tokens": [
+          "PGMqoKOGGkuHs-0X5JXoGg",
+          "os-TiNW-zoyYWrMgxVGSdA",
+          "qwyWYneqG_ejR2BmlTuMGw",
+          "MsdRxuWczKNgUFU4wSL3BQ",
+          "wpIuJ6E_XuZK6FXHcjq7mw"
+        ],
+        "issued_at": "2026-07-13T12:45:53Z",
+        "gate_errors": []
+      }
+    },
+    {
+      "item": "PU4a-2-freeze-guard",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "inserted": 0,
+        "updated": 0,
+        "rejected": [
+          {
+            "item_id": "frozen001",
+            "reason": "参照済み item への更新は拒否（プール凍結, BR-U4a-03）"
+          }
+        ],
+        "sufficiency_warnings": []
+      }
+    }
+  ]
+}

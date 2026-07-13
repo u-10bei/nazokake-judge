@@ -52,7 +52,8 @@ def _realistic_pool() -> list[Item]:
     i = 0
     for layer, count in _REALISTIC_LAYER_COUNTS.items():
         for _ in range(count):
-            pool.append(Item(item_id=f"it{i:03d}", layer=layer, body_ref=f"ref{i:03d}"))
+            pool.append(Item(item_id=f"it{i:03d}", layer=layer,
+                             body=f"body{i:03d}", body_ref=f"ref{i:03d}"))
             i += 1
     return pool
 
@@ -61,6 +62,7 @@ def _fixed_pool(n: int = 16) -> list[Item]:
     """小規模プール（全 4 層均等）。smoke / 位置一様性（P-7）用。"""
     layers = list(Layer)
     return [
-        Item(item_id=f"it{i:03d}", layer=layers[i % len(layers)], body_ref=f"ref{i:03d}")
+        Item(item_id=f"it{i:03d}", layer=layers[i % len(layers)],
+             body=f"body{i:03d}", body_ref=f"ref{i:03d}")
         for i in range(n)
     ]

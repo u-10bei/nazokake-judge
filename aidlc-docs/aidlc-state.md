@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4a Infrastructure Design (Part 2 生成完了・承認待ち)
+- **Current Stage**: CONSTRUCTION - U4a Code Generation (Part 2: Generation 完了・レビュー待ち)
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -52,8 +52,9 @@
 - [x] Functional Design (承認済み 2026-07-13。Q5=X: Item.body を D1 格納=U1 波及。BR-U4a-12 発行時充足ゲート)
 - [x] NFR Requirements (承認済み 2026-07-13。全 7 問★A + pool_sufficiency 単一実装)
 - [x] NFR Design (承認済み 2026-07-13。全 5 問★A、DP-U4a-01〜07 / LC-U4a-01〜06)
-- [x] Infrastructure Design (Part 2 生成完了・承認待ち 2026-07-13。全 5 問★A。RT-1 を U4a で消化)
-- [ ] Code Generation
+- [x] Infrastructure Design (承認済み 2026-07-13。全 5 問★A。RT-1 を U4a で消化)
+- [x] Code Generation Part 1 (Planning) — 承認済み 2026-07-13（全 5 決定点★A）
+- [x] Code Generation Part 2 (Generation) — 生成完了・レビュー待ち 2026-07-13（unit+PBT 27 + integration 7 全 PASS。RT-1 CLOSED）
 - [ ] Build & Test
 
 ### 🟢 CONSTRUCTION PHASE
@@ -72,8 +73,8 @@
 - **Current Stage**: U1 Code Generation Part 1（Planning）— 生成完了・承認待ち（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
 - **Completed**: U1 Functional Design（cb57583）／NFR Requirements（c70340a）／NFR Design（9cf22aa）／Infrastructure Design（承認済み 2026-07-12, H-1=(c) 確定, 8a4dc6f）
-- **Next Stage**: U4a Code Generation（Infrastructure Design 承認後）
-- **Status**: U4a Infrastructure Design（Part 2）生成完了・承認待ち（Request Changes / Continue → Code Generation）。差分=/admin ルート・ADMIN_BASIC 秘密（手元 put）・migration 0002 適用順・deploy.yml 肉付け（RT-1 消化）
+- **Next Stage**: U4a Build & Test（NFR Design/Infra 済み。実質は Code Gen で integration 実施済）。または U2 へ
+- **Status**: U4a Code Generation Part 2 生成完了・レビュー待ち（2026-07-13）。**unit+PBT 27 + integration 7 全 PASS**（U1 回帰含む）。RT-1 CLOSED。Item.body の U1 波及を全緑で反映
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
@@ -85,4 +86,4 @@
   - **残タスク（ユーザー側・任意）**: Cloudflare 側 smoke Worker / D1（`nazokake-smoke`）の削除可（`smoke-test/` フォルダと workflow はリポジトリ残置＝本実装 CI 雛形）。`CLOUDFLARE_API_TOKEN` は本実装 CI 流用なら残置、しないなら失効。
 
 ## Residual Tasks（非ブロッキング）
-- **RT-1: `.github/workflows/deploy.yml` の肉付け** — **U4a で消化予定**（U4a Infrastructure Design Q4=A で決定）。U4a Code Generation で `smoke-test-deploy.yml` を雛形に `uv sync → テスト → d1 migrations apply --remote(0001+0002) → deploy` へ機能化し、実 D1（`nazokake-judge`, smoke 用と別作成）・実ルート（/admin）で動く形に。`ADMIN_BASIC_*` は手元 `wrangler secret put`（CI 二重管理回避）。deploy.yml 実装完了で **CLOSE**。
+- **RT-1: `.github/workflows/deploy.yml` の肉付け** — **✅ CLOSED（2026-07-13, U4a Code Generation で消化）**。`deploy.yml` を機能化: `uv sync → test（unit+PBT, 前置ゲート）→ d1 migrations apply --remote(0001+0002) → deploy`（tee パイプ不使用で終了コード保持）。`ADMIN_BASIC_*` は手元 `wrangler secret put`。実デプロイはユーザー環境（Cloudflare 認証）で実行。

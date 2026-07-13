@@ -24,6 +24,14 @@ from schema.models import (
     Token,
     TokenStatus,
 )
+from schema.payloads import (
+    IngestResult,
+    ItemIngestRequest,
+    RejectedItem,
+    SufficiencyResult,
+    TokenIssueRequest,
+    TokenIssueResult,
+)
 from schema.tokens import (
     TOKEN_BYTES,
     TOKEN_MIN_LENGTH,
@@ -37,6 +45,9 @@ __all__ = [
     "Item", "Token", "Session", "Pair", "PairSequence", "Judgment",
     "LikertResponse", "SurveyResponse", "SessionState", "AssignmentParams",
     "ExposureCounts",
+    # U4a ペイロードモデル
+    "ItemIngestRequest", "IngestResult", "RejectedItem", "SufficiencyResult",
+    "TokenIssueRequest", "TokenIssueResult",
     # 列挙
     "Layer", "TokenStatus", "SessionPhase", "Choice",
     # 明示バリデート関数（トークン契約）

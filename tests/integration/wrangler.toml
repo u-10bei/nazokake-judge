@@ -1,7 +1,7 @@
 # U1 Repository 統合テスト（使い捨てハーネス）。main の dir(src/)のみバンドルされるよう
 # schema/backend は src/ に隔離コピー（node_modules/.venv は親=巻き込まない, F-6）。
 name = "nazokake-it"
-main = "src/worker.py"
+main = "src/it_entry.py"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["python_workers"]
 workers_dev = true

@@ -10,6 +10,7 @@ from backend.domain.assignment import (
     generate_pairs,
     updated_exposure,
 )
+from backend.domain.pool_sufficiency import pool_sufficiency
 from backend.domain.serializer import deserialize, serialize
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "SessionExposure",
     "serialize",
     "deserialize",
+    "pool_sufficiency",
 ]

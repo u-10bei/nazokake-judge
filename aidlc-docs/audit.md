@@ -362,3 +362,26 @@
 **AI Response**: 回答分析 → 全問明確・矛盾なし。Part 2 実行: infrastructure-design.md（差分中心: LC-U4a→インフラ・/admin ルート同一 Worker・CORS なし、ADMIN_BASIC_* を手元 wrangler secret put・CI Secrets は CLOUDFLARE_* のみ、migration 0002 の適用順=migration→deploy 厳守・実験用 D1 別作成、deploy.yml 肉付け=test 前置ゲート付き CI で RT-1 消化、CLI 非デプロイ、デプロイ手順、トレーサビリティ）。**運用ルールに従い u4a-infrastructure-design-plan.md の [Answer] 欄を同時記入**。RT-1 を「U4a で消化予定（Code Generation で deploy.yml 機能化 → CLOSE）」に更新。備考の plan 2 ファイルのバックフィルは前コミット 73cb2a7 で対応済み（FD 含む 3 ファイル）。標準 2 択（Request Changes / Continue → Code Generation）を提示予定。
 **Context**: CONSTRUCTION - U4a Infrastructure Design (Part 2 生成・承認待ち)
 
+---
+
+## U4a Infrastructure Design - Approval & Code Generation Start
+**Timestamp**: 2026-07-13T09:40:00Z
+**User Input**: "承認します"
+**AI Response**: U4a Infrastructure Design を承認完了。aidlc-state を承認済みに更新し、per-unit ループ次段の Code Generation(U4a) へ移行。code-generation.md ルールに従い Part 1（Planning）: 番号付き生成ステップ（schema 波及=Item.body/ペイロードモデル・migration 0002・pool_sufficiency 純粋関数・Repository 書込拡張・backend/admin=AdminApi+AuthGuard+AdminLog・scripts CLI・deploy.yml 機能化=RT-1・PBT/integration・U1 回帰）と決定点を含む `construction/plans/u4a-code-generation-plan.md` を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄を記入予定。
+**Context**: CONSTRUCTION - U4a Code Generation Part 1（Planning）承認待ち
+
+---
+
+## U4a Code Generation - Part 1 承認 & Part 2 Generation 開始
+**Timestamp**: 2026-07-13T09:55:00Z
+**User Input**: "U4a Code Gen Part 1 全 5 決定点★A・承認。Part 2 注記: レビュー時 Claude 環境で unit+PBT 実行（U1 流儀）、integration は実行実績提示。Step 12 deploy.yml は smoke-test-deploy.yml の教訓（tee パイプで終了コード喪失・URL 抽出フォールバック）を反映。"
+**AI Response**: Part 1 計画承認、plan の Answer 欄に全★A を記入。Part 2 生成開始。生成順: schema 波及（Item.body）→ ペイロードモデル → migration 0002（items テーブル rebuild で body NOT NULL 追加・body_ref NULL 化）→ pool_sufficiency（純粋・単一実装）+ PBT → Repository 拡張（insert_items=upsert+凍結ガード batch 直前読取 / insert_tokens / referenced_item_ids / list_items に body）→ AdminLog（秘匿）→ AuthGuard（定数時間）→ AdminApi（統一封筒）→ entry.py 配線 → scripts CLI（urllib）→ deploy.yml 機能化（RT-1）+ .dev.vars.example → U1 回帰（Item 構築箇所の body 追加）+ integration。
+**Context**: CONSTRUCTION - U4a Code Generation Part 2（Generation）実行中
+
+---
+
+## U4a Code Generation - Part 2 Generation 完了（unit+PBT 27 + integration 7 全 PASS, RT-1 CLOSED）
+**Timestamp**: 2026-07-13T12:40:00Z
+**AI Response**: U4a 全 14 ステップ生成。U1 波及=`Item.body` D1 格納（migration 0002 は items 再構築で body NOT NULL/body_ref NULL 化、空 items で rebuild 成立を実 D1 で検証）・`validate_item` body 検証・`list_items`/Repository 拡張。新規: `schema/payloads.py`（6 モデル）、`backend/domain/pool_sufficiency`（純粋・単一実装 DP-U4a-05）、`backend/repo` に insert_items（upsert+凍結ガード, body_ref None は SQL NULL で bind＝D1_TYPE_ERROR 回避）/insert_tokens/referenced_item_ids/all_token_strings、`backend/admin/`（api=統一封筒 / auth=定数時間 Basic / log=秘匿ラッパ）、`entry.py` に /admin/* 単一チョークポイント配線、`scripts/`（pool_ingest/token_issue/_client, urllib）、`deploy.yml` 機能化（test 前置ゲート・tee 不使用）=**RT-1 CLOSED**。**検証: unit+PBT 27 passed（U1 回帰 19 + pool_sufficiency 6 + schema 2, dev/ci）／integration 実 D1 で全 7 シナリオ PASS**（PU4a-6 認証401 / 3a 段階投入warn / 1 冪等 / 3b 発行ゲート / realistic / 4 トークン発行 / 2 凍結ガード, result-u4a-integration.json）。バグ修正: body_ref None binding の D1_TYPE_ERROR を SQL リテラル NULL で回避、integration ドライバに miniflare コールドスタート用リトライ追加。code/README.md 生成。plan 全 Step [x]・Answer 欄記入・RT-1 CLOSED を state に反映。標準 2 択（Request Changes / Continue → Build & Test）を提示予定。
+**Context**: CONSTRUCTION - U4a Code Generation Part 2 完了・レビュー待ち（GATE）
+

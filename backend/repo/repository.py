@@ -16,7 +16,7 @@ import json
 
 from backend.domain import SessionExposure, derive_exposure
 from backend.repo._d1 import to_js_maybe, to_py
-from schema import ExposureCounts, Item, Pair, Session, Token
+from schema import ExposureCounts, Item, Pair, RejectedItem, Session, Token
 
 
 class Repository:
@@ -64,9 +64,96 @@ class Repository:
     # ---------------------------------------------------------- 刺激プール
 
     async def list_items(self) -> list[Item]:
-        res = await self._db.prepare("SELECT item_id, layer, body_ref FROM items").all()
+        res = await self._db.prepare(
+            "SELECT item_id, layer, body, body_ref FROM items"
+        ).all()
         rows = to_py(res)["results"]
         return [Item.model_validate(r) for r in rows]
+
+    async def referenced_item_ids(self) -> set[str]:
+        """pairs から参照済みの item_id 集合（凍結ガード用, BR-U4a-03）。
+
+        pairs に現れる item は保存済みペア列の構成要素であり、judgments はその pairs を
+        参照する。よって「pairs に現れる item」を凍結対象（更新拒否）とする。
+        """
+        res = await self._db.prepare(
+            "SELECT item_left AS iid FROM pairs UNION SELECT item_right FROM pairs"
+        ).all()
+        return {r["iid"] for r in to_py(res)["results"]}
+
+    # ---------------------------------------------------------- 投入（U4a）
+
+    async def insert_items(self, items: list[Item]) -> dict:
+        """刺激プールを bulk 投入（DP-U4a-03/04）。
+
+        - 未参照 item_id は upsert（`ON CONFLICT DO UPDATE`, べき等）、新規は INSERT。
+        - **参照済み item_id への更新は拒否**（凍結ガード BR-U4a-03）→ 投入全体を中断。
+        - 参照集合の取得は投入 batch の直前（窓最小化, ロックなし, Q2=A）。
+        戻り値: {inserted, updated, rejected: list[RejectedItem]}。
+        """
+        existing = {
+            r["item_id"]
+            for r in to_py(await self._db.prepare("SELECT item_id FROM items").all())["results"]
+        }
+        referenced = await self.referenced_item_ids()  # batch 直前に取得
+
+        rejected: list[RejectedItem] = [
+            RejectedItem(
+                item_id=it.item_id,
+                reason="参照済み item への更新は拒否（プール凍結, BR-U4a-03）",
+            )
+            for it in items
+            if it.item_id in referenced
+        ]
+        if rejected:
+            # 投入全体を中断（部分適用しない, BR-U4a-03）
+            return {"inserted": 0, "updated": 0, "rejected": rejected}
+
+        # D1 は Python None の bind を undefined として拒否するため、body_ref が None の
+        # ときは bind せず SQL リテラル NULL を使う（U1 と同じイディオム）。
+        stmts = [self._item_upsert_stmt(it) for it in items]
+        if stmts:
+            await self._db.batch(to_js_maybe(stmts))
+
+        inserted = sum(1 for it in items if it.item_id not in existing)
+        updated = len(items) - inserted
+        return {"inserted": inserted, "updated": updated, "rejected": []}
+
+    def _item_upsert_stmt(self, it: Item):
+        """1 item の upsert 文（body_ref None は SQL NULL, 非 None は bind）。"""
+        if it.body_ref is None:
+            return self._db.prepare(
+                "INSERT INTO items (item_id, layer, body, body_ref) VALUES (?, ?, ?, NULL) "
+                "ON CONFLICT(item_id) DO UPDATE SET "
+                "layer=excluded.layer, body=excluded.body, body_ref=NULL"
+            ).bind(it.item_id, it.layer.value, it.body)
+        return self._db.prepare(
+            "INSERT INTO items (item_id, layer, body, body_ref) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(item_id) DO UPDATE SET "
+            "layer=excluded.layer, body=excluded.body, body_ref=excluded.body_ref"
+        ).bind(it.item_id, it.layer.value, it.body, it.body_ref)
+
+    async def insert_tokens(self, tokens: list[str], now_iso: str) -> int:
+        """トークンを bulk 投入（status=unused, issued_at, DP-U4a-03/BR-U4a-10）。
+
+        衝突の事前排除は呼び出し側（AdminApi, BR-U4a-06）。PK 衝突で batch 失敗時は
+        呼び出し側が全体リトライする。戻り値: 投入件数。
+        """
+        stmts = [
+            self._db.prepare(
+                "INSERT INTO tokens (token, status, issued_at, last_active_at) "
+                "VALUES (?, 'unused', ?, NULL)"
+            ).bind(tok, now_iso)
+            for tok in tokens
+        ]
+        if stmts:
+            await self._db.batch(to_js_maybe(stmts))
+        return len(tokens)
+
+    async def all_token_strings(self) -> set[str]:
+        """既存トークン文字列集合（発行時の衝突事前排除用, BR-U4a-06）。"""
+        res = await self._db.prepare("SELECT token FROM tokens").all()
+        return {r["token"] for r in to_py(res)["results"]}
 
     # ---------------------------------------------------------- 露出導出（H-2）
 

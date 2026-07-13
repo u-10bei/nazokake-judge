@@ -30,12 +30,26 @@ def test_item_rejects_unknown_layer():
 
 def test_item_accepts_all_layers():
     for layer in Layer:
-        it = Item(item_id="x", layer=layer, body_ref="r")
+        it = Item(item_id="x", layer=layer, body="なぞかけ本文", body_ref="r")
         assert it.layer == layer
 
 
+def test_item_requires_body():
+    """本文 body 欠落・空は投入拒否（BR-U4a-02, U4a 波及）。"""
+    with pytest.raises(ValidationError):
+        validate_item({"item_id": "a", "layer": "pro"})  # body なし
+    with pytest.raises(ValidationError):
+        validate_item({"item_id": "a", "layer": "pro", "body": ""})  # 空
+
+
+def test_item_body_ref_optional():
+    """body_ref は任意（出自メモ, U4a 波及）。"""
+    it = Item(item_id="x", layer=Layer.PRO, body="本文")
+    assert it.body_ref is None
+
+
 def test_item_is_frozen():
-    it = Item(item_id="x", layer=Layer.PRO, body_ref="r")
+    it = Item(item_id="x", layer=Layer.PRO, body="本文", body_ref="r")
     with pytest.raises(ValidationError):
         it.item_id = "y"  # frozen
 

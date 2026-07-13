@@ -17,7 +17,8 @@ def pools(draw, min_items: int = 12, max_items: int = 24) -> list[Item]:
     """全 4 層を含む刺激プールを生成する（層を round-robin で割当）。"""
     n = draw(st.integers(min_value=min_items, max_value=max_items))
     return [
-        Item(item_id=f"it{i:03d}", layer=LAYERS[i % len(LAYERS)], body_ref=f"ref{i:03d}")
+        Item(item_id=f"it{i:03d}", layer=LAYERS[i % len(LAYERS)],
+             body=f"body{i:03d}", body_ref=f"ref{i:03d}")
         for i in range(n)
     ]
 

@@ -31,3 +31,9 @@ dist/
 # テスト
 .hypothesis/
 .pytest_cache/
+
+# U4a: 配布用トークン URL 一覧・投入 JSON（本文・トークンは git 非格納, NFR-08 / BR-U4a-07）
+*.dist.txt
+*.tokens.txt
+pool_*.json
+items_*.json
