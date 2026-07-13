@@ -1,0 +1,16 @@
+# smoke test 用 (使い捨て)。pywrangler は依存をここから読む (requirements.txt は読まれない)
+[project]
+name = "nazokake-smoke"
+version = "0.1.0"
+description = "R-1/TSD-02/R-2 smoke test worker for nazokake-judge"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "pydantic>=2",
+]
+
+[dependency-groups]
+dev = [
+    "workers-py",           # pywrangler CLI
+    "workers-runtime-sdk",  # 型ヒント等
+]

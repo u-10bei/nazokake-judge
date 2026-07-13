@@ -1,0 +1,12 @@
+# nazokake-judge smoke test (使い捨て。本実装の wrangler.toml は Code Generation で別途作成)
+name = "nazokake-smoke"
+main = "src/entry.py"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["python_workers"]
+
+# D1: `npx wrangler d1 create nazokake-smoke` の出力で database_id を置き換えること
+[[d1_databases]]
+binding = "DB"
+database_name = "nazokake-smoke"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

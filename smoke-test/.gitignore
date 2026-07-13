@@ -1,0 +1,7 @@
+# 生成物・ローカル状態（コミットしない）
+node_modules/
+.venv/
+.venv-workers/
+python_modules/
+.wrangler/
+dev.log
