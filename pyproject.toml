@@ -1,0 +1,36 @@
+# nazokake-judge — 本実装（U1 共有基盤で確定）
+# ツールチェーン: uv + pywrangler / デプロイは CI(GitHub Actions)。依存は本ファイルで宣言
+# （requirements.txt は Cloudflare Python Workers で不可, F-1）。
+[project]
+name = "nazokake-judge"
+version = "0.1.0"
+description = "なぞかけ品質判定 Web アプリ (Cloudflare Python Workers + D1)"
+requires-python = ">=3.12"
+# Worker ランタイムにバンドルされる依存（raw workers API + Pydantic v2, F-4）。
+# トップレベル import は最小限に保つ（起動 CPU 制限 10021 回避）。
+dependencies = [
+    "pydantic>=2",
+]
+
+[dependency-groups]
+# 開発/CI 用。Worker にはバンドルされない。
+dev = [
+    "workers-py",           # pywrangler CLI（dev/deploy）
+    "workers-runtime-sdk",  # 型ヒント等
+    "hypothesis>=6",        # PBT (TSD-07)
+    "pytest>=8",
+]
+
+# schema/ と backend/ を backend も scripts も import 可能なパッケージとして解決（TSD-08）。
+[tool.setuptools]
+packages = ["schema", "backend", "backend.domain", "backend.repo"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+# Hypothesis の dev/ci profile は tests/conftest.py で登録（HYPOTHESIS_PROFILE で選択）。

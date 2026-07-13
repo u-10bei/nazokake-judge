@@ -37,16 +37,31 @@
 
 ルール一式は `aidlc-workflows/`(awslabs のクローン)に配置しており、このリポジトリには含めない(`.gitignore` で除外)。AI-DLC が生成する計画・設計ドキュメントは `aidlc-docs/` 配下に置き、リポジトリで管理する。
 
-## ディレクトリ構成(予定)
+## ディレクトリ構成
+
+案 A′（Cloudflare Python Workers + D1）で確定。U1（共有基盤）を実装済み。
 
 ```
 nazokake-judge/
-├── aidlc-docs/      # AI-DLC の計画・設計ドキュメント
-├── frontend/        # 静的 HTML/JS フロントエンド
-├── backend/         # Workers または PHP バックエンド
-├── schema/          # DB スキーマ・マイグレーション
-└── scripts/         # 刺激プール投入・BT 集計スクリプト
+├── aidlc-docs/          # AI-DLC の計画・設計ドキュメント
+├── schema/              # データ契約: Pydantic モデル + トークン契約 + 形式バージョン（U1・全ユニット共有）
+├── backend/
+│   ├── domain/          # AssignmentEngine（純粋）+ SessionState Serializer（U1）
+│   ├── repo/            # D1 Repository（唯一の I/O 境界, U1）
+│   ├── log.py           # 構造化ログ（U1）
+│   ├── entry.py         # Worker エントリ（on_fetch。ルートは U2/U3 が配線）
+│   ├── participant/     # 参加者フロー（U2, 未生成）
+│   └── admin/           # 研究者管理（U3, 未生成）
+├── frontend/            # 静的 HTML/JS（U2/U3, 未生成）
+├── scripts/             # 刺激プール投入・トークン発行・BT 集計（U4, 未生成）
+├── migrations/          # D1 versioned マイグレーション
+├── tests/{unit,pbt}/    # 単体 + プロパティベーステスト（Hypothesis）
+├── pyproject.toml       # 依存（Pydantic v2）・ツールチェーン（uv + pywrangler）
+├── wrangler.toml        # Workers 設定（python_workers / D1 binding / workers_dev）
+└── .github/workflows/   # CI（テスト + デプロイ）
 ```
+
+> **実装規約（本番 smoke test で確定）**: フレームワークは FastAPI ではなく **raw workers API + Pydantic v2**（起動 CPU 制限のため）。Worker ハンドラは module-level `on_fetch(request, env)`。デプロイは CI（GitHub Actions）経由。
 
 ## 注意事項
 

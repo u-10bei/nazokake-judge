@@ -17,3 +17,17 @@ venv/
 
 # Node
 node_modules/
+
+# Cloudflare Workers / wrangler
+.dev.vars
+.wrangler/
+.venv-workers/
+python_modules/
+dist/
+
+# uv
+.uv-cache/
+
+# テスト
+.hypothesis/
+.pytest_cache/

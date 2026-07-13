@@ -1,0 +1,19 @@
+# nazokake-judge 本実装 Worker 設定（U1 で確定）。
+# raw workers API + Pydantic（FastAPI 不可, F-4）。デプロイは CI 経由（F-3）。
+name = "nazokake-judge"
+main = "backend/entry.py"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["python_workers"]
+workers_dev = true   # 既定に依存せず明示（F-6）
+
+# D1 バインディング。database_id は環境ごとに設定（CI/ダッシュボードで作成）。
+[[d1_databases]]
+binding = "DB"
+database_name = "nazokake-judge"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# dev/prod で D1 を分離（実験データ汚染防止, Q3=A）。
+# prod は実験用サブドメインの Workers ルートに紐付け（運用時に確定）。
+[env.prod]
+workers_dev = true

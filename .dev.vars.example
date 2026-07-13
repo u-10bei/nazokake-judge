@@ -1,0 +1,5 @@
+# ローカル開発用シークレットのテンプレート。
+# 実体 .dev.vars は gitignore（NFR-08, F-6）。本番は `wrangler secret put`。
+# 管理 API / 研究者管理画面の Basic 認証（H-1=(c), App Design Q5=B）。
+ADMIN_BASIC_USER=changeme
+ADMIN_BASIC_PASSWORD=changeme

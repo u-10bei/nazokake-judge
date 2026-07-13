@@ -239,3 +239,18 @@
 **AI Response**: 指示どおり全文書へ反映。(1) `infrastructure-design.md`: §1 Compute を raw workers API+Pydantic に、§2 項目2 を HTTP ルーティングに、§2.1 に第3回本番全 PASS + F-1〜F-6 + 判定確定、§2.2 を **G-1 CLOSED**、§8 申し送り更新。(2) `tech-stack-decisions.md`: **TSD-01 を FastAPI→raw workers API + Pydantic v2 に改訂**（F-4/F-5, 影響評価=手動ルーティング軽微・データ契約無傷・U2/U3 はハンドラ形式前提）、ツールチェーン=uv+pywrangler/CI(F-1/F-3)/workers_dev(F-6)、TSD-02 を本番確証・フォールバック発動不要でクローズ、決定サマリ表更新。(3) `deployment-architecture.md`: デプロイを CI(GitHub Actions)経由に差し替え・開発環境要件(F-1/F-3/F-5/F-6)追加・トポロジ図更新。(4) `aidlc-state.md`: Open Gates の G-1 を CLOSED に。(5) `u1-code-generation-plan.md`: 実装前提を raw workers API/on_fetch/CI/workers_dev に更新（Step1/2/16・Q1・完了基準）。(6) プロジェクトメモリ更新（FastAPI 不可→raw workers API）。R-1/R-2 解消・TSD-02 本番確証・案 A′ 続行。次段=U1 Code Generation Part 1 計画の承認 GATE（変更反映済み）。
 **Context**: CONSTRUCTION - U1 Infrastructure Design G-1 CLOSED（本番全 PASS, raw workers API へ変更）→ Code Generation Part 1 承認待ち
 
+---
+
+## U1 Code Generation - Part 1 Plan 承認 → Part 2 Generation 開始
+**Timestamp**: 2026-07-13T05:20:00Z
+**User Input**: "承認します"
+**AI Response**: U1 Code Generation Part 1 計画（raw workers API/on_fetch/CI/workers_dev 反映済み）を承認。aidlc-state を Part 1 承認済み・Part 2 実行中に更新。Part 2 生成を開始。本番で通った raw workers API イディオム（`from workers import Response`, `on_fetch(request, env)`, `env.DB.prepare().bind().run()/first()`, `env.DB.batch(_to_js_maybe(...))`, `_to_py`）と smoke-test-deploy.yml を流用。生成順: 構成(pyproject/wrangler/CI/gitignore) → schema/ → backend/domain(assignment/serializer) → backend/repo → backend/log → migrations → tests(unit/u1, pbt, calibration) → code サマリ。API/Frontend は U1 スコープ外(N/A)。
+**Context**: CONSTRUCTION - U1 Code Generation Part 2（Generation）実行中
+
+---
+
+## U1 Code Generation - Part 2 Generation 完了（unit+PBT 18 passed）
+**Timestamp**: 2026-07-13T05:45:00Z
+**AI Response**: U1 全 17 ステップを生成。schema/（models/tokens/version/__init__, 狭い公開面 DP-07）、backend/domain（assignment: generate_pairs 重み付き決定論+BR-01/02/03/07/10, updated_exposure=P-5 オラクル, derive_exposure=H-2/BR-04; serializer: XC-02 ラウンドトリップ）、backend/repo（Repository: save_pair_sequence=D1 batch 原子確定 DP-01, insert_judgment=ON CONFLICT DO NOTHING 既存 choice 返却 DP-02, read_exposure_counts=derive 委譲, パラメータ化クエリ BR-12; _d1 ヘルパ=本番実証イディオム）、backend/log（emit 構造化 JSON DP-06）、backend/entry（最小 on_fetch=API は U2/U3 で配線）、migrations/0001_init.sql（一意制約/NOT NULL/CHECK/FK）、tests/pbt（P-1〜P-7, generators=PBT-07, calibration=DP-08 共有ループ・α/S 暫定）、tests/unit/u1（schema/serializer/層逆流禁止 U1-NFR-15）、config（pyproject/wrangler/CI deploy.yml/.dev.vars.example/.gitignore）。**検証実行: HYPOTHESIS_PROFILE=dev/ci 両方で 18 passed**（pure-Python ローカル）。Repository の D1 依存テストは miniflare で Build & Test。実装は G-1 確定規約（raw workers API/on_fetch/CI/workers_dev/pyproject 依存）に準拠。API Layer/Frontend は U1 スコープ外（Step 15 N/A）。code/README.md にサマリ・公開面・申し送り（α/S 較正）記録。標準 2 択（Request Changes / Continue → Build & Test）で承認待機。
+**Context**: CONSTRUCTION - U1 Code Generation Part 2 完了・レビュー待ち（GATE）
+

@@ -64,23 +64,23 @@ nazokake-judge/
 
 各 step は完了時に `[x]` を付ける（Part 2 実行時）。
 
-- [ ] **Step 1 — Project Structure Setup**: 上記ディレクトリ雛形。**ツールチェーン = uv + pywrangler / デプロイは CI**（F-1/F-3）: 依存は **`pyproject.toml` の `dependencies`**（`requirements.txt` は不可）、`wrangler.toml`（python_workers flag・**`workers_dev=true`**・D1 binding `DB`・dev/prod 環境・実験用サブドメインルート、`main` はソース隔離ディレクトリ）、**エントリポイントはモジュールレベル `on_fetch(request, env)` + 手動ルーティング**（クラス `WorkerEntrypoint` 不可, F-5。**FastAPI 不可**, F-4）、`.github/workflows/`（deploy workflow, `smoke-test-deploy.yml` 流用）、`.dev.vars.example` 作成、`.gitignore` に `.dev.vars` 追加（INF §6 チェック項目）。
-- [ ] **Step 2 — smoke test 確定事項の流用（INF §2.1/§2.2, G-1 CLOSED）**: R-1/R-2/TSD-02 は**本番 smoke test 全 5 項目 PASS で確定済み**（G-1 CLOSED, `smoke-test/result-prod.json`）。本 Step で smoke を再実施せず、確定事項を本実装に流用する: **raw workers API + Pydantic v2.10.6**（FastAPI 不可, F-4）、**module-level `on_fetch(request, env)`**（F-5）、D1 batch 原子性・ON CONFLICT DO NOTHING（DP-01/DP-02 本番実証）、依存=`pyproject.toml`（F-1）、**CI デプロイ**（F-3）、`workers_dev=true`（F-6）。フォールバック（TSD-02/案 B）は発動不要。
-- [ ] **Step 3 — C-SCHEMA 生成**（`schema/`）: Pydantic モデル（Item / Token / Session / Pair・PairSequence / Judgment / LikertResponse / SurveyResponse / ExposureCounts / AssignmentParams）+ D1 DDL(.sql) + エクスポート形式バージョン番号 + トークン契約定数。DDL 制約: `Judgment (token,pair_id)` 一意（DP-02）、`Item.layer` NOT NULL（BR-11）、`token` 一意・128bit 契約（DP-05/TSD-05）、状態 enum。**公開面は「モデル型 + 明示バリデート関数」のみ**（DP-07, 実装は内部隠蔽）。
-- [ ] **Step 4 — C-SCHEMA 単体テスト**（`tests/unit/u1/`）: モデル検証・トークン契約（長さ/文字集合/エントロピー）・バリデート関数の境界。
-- [ ] **Step 5 — C-SCHEMA サマリ**（`aidlc-docs/construction/u1/code/`）。
-- [ ] **Step 6 — Business Logic 生成**（`backend/domain/`）: `generate_pairs`（重み付きランダム抽選+シード決定論化, BR-01/02/03/07/10）、`updated_exposure`（PBT オラクル）、`derive_exposure`（確定 PairSequence から集計・非アクティブ除外 BR-04, H-2）、`serialize`/`deserialize`（XC-02 対象=確定 PairSequence + 次未回答 index、seed/snapshot は対象外 H-3）。純粋・DB I/O なし。
-- [ ] **Step 7 — Business Logic テスト**: example-based（`tests/unit/u1/`）+ **PBT**（`tests/pbt/`）。P-1（露出偏り `max−min ≤ max(2, α×mean)` を S セッション累積後に評価）/ P-2（層間比率）/ P-3（セッション内制約）/ P-4（ラウンドトリップ）/ P-5（updated_exposure==derive_exposure オラクル）/ P-6（決定論）/ P-7（位置一様）。ドメインジェネレータ（PBT-07, Item/ExposureCounts/AssignmentParams）、シード+縮小出力（PBT-08）、Hypothesis settings profile dev/ci 分離（TSD-07）。
-- [ ] **Step 8 — α/S 較正ハーネス**（`tests/pbt/` 内, DP-08 と**共有実装**）: 固定シードで S セッション逐次生成・`updated_exposure` フィードバックの累積ループを P-1 検証と共有し、重み関数候補ごとの露出分布から α/S 暫定値を決定。確定値を `business-rules.md` パラメータ表に追記（述語形は固定済み・定数のみ）。
-- [ ] **Step 9 — Business Logic サマリ**。
-- [ ] **Step 10 — Repository 生成**（`backend/repo/`）: `save_pair_sequence`（Session+PairSequence+exposure_snapshot を**単一 D1 batch で原子確定**, DP-01/TSD-03）、`insert_judgment`（`ON CONFLICT DO NOTHING` + 既存 choice 返却, 冪等 DP-02/TSD-04）、`read_exposure_counts`、`get_token`/`mark_token_*`（状態遷移 BR-09）、`list_items`。**全メソッド パラメータ化クエリ**（BR-12/DP-04）。D1 binding を受け取る Worker 内専用モジュール。
-- [ ] **Step 11 — Repository テスト**（`tests/unit/u1/`）: miniflare/ローカル D1 で冪等性・原子性・パラメータ化クエリ・非アクティブ除外導出。
-- [ ] **Step 12 — Repository サマリ**。
-- [ ] **Step 13 — LogEmitter 生成 + テスト**（`backend/log.py`）: `emit(event, level, **fields)` JSON→stdout、標準フィールド `event/level/ts/unit` + 相関キー `session_id`/`token`（DP-06）。フィールド規約を単一発行点に集約。
-- [ ] **Step 14 — DB Migration Scripts**（`migrations/`）: `wrangler d1 migrations` 用 versioned `.sql`（DDL・一意制約・NOT NULL を含む）。dev→prod 適用手順を deployment サマリに記載。
-- [ ] **Step 15 — API Layer / Frontend Components: N/A（スキップ）**: U1 スコープ外（U2/U3/U4a）。スキップ理由を明記。
-- [ ] **Step 16 — Deployment Artifacts 確定**: `wrangler.toml`（`workers_dev=true`）/ `.dev.vars.example` / `pyproject.toml` / **`.github/workflows/` deploy workflow（CI 経由, Secrets: `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`）** を最終化し、`aidlc-docs/construction/u1/code/deployment-notes.md` にデプロイ手順（CI: sync→migrations→secret→deploy）を記録。
-- [ ] **Step 17 — Documentation**: `aidlc-docs/construction/u1/code/` に U1 コード構成・公開面（下位ユニットが import してよい面）・テスト実行方法をまとめる。README のディレクトリ構成「予定」を実体に更新。
+- [x] **Step 1 — Project Structure Setup**: 上記ディレクトリ雛形。**ツールチェーン = uv + pywrangler / デプロイは CI**（F-1/F-3）: 依存は **`pyproject.toml` の `dependencies`**（`requirements.txt` は不可）、`wrangler.toml`（python_workers flag・**`workers_dev=true`**・D1 binding `DB`・dev/prod 環境・実験用サブドメインルート、`main` はソース隔離ディレクトリ）、**エントリポイントはモジュールレベル `on_fetch(request, env)` + 手動ルーティング**（クラス `WorkerEntrypoint` 不可, F-5。**FastAPI 不可**, F-4）、`.github/workflows/`（deploy workflow, `smoke-test-deploy.yml` 流用）、`.dev.vars.example` 作成、`.gitignore` に `.dev.vars` 追加（INF §6 チェック項目）。
+- [x] **Step 2 — smoke test 確定事項の流用（INF §2.1/§2.2, G-1 CLOSED）**: R-1/R-2/TSD-02 は**本番 smoke test 全 5 項目 PASS で確定済み**（G-1 CLOSED, `smoke-test/result-prod.json`）。本 Step で smoke を再実施せず、確定事項を本実装に流用する: **raw workers API + Pydantic v2.10.6**（FastAPI 不可, F-4）、**module-level `on_fetch(request, env)`**（F-5）、D1 batch 原子性・ON CONFLICT DO NOTHING（DP-01/DP-02 本番実証）、依存=`pyproject.toml`（F-1）、**CI デプロイ**（F-3）、`workers_dev=true`（F-6）。フォールバック（TSD-02/案 B）は発動不要。
+- [x] **Step 3 — C-SCHEMA 生成**（`schema/`）: Pydantic モデル（Item / Token / Session / Pair・PairSequence / Judgment / LikertResponse / SurveyResponse / ExposureCounts / AssignmentParams）+ D1 DDL(.sql) + エクスポート形式バージョン番号 + トークン契約定数。DDL 制約: `Judgment (token,pair_id)` 一意（DP-02）、`Item.layer` NOT NULL（BR-11）、`token` 一意・128bit 契約（DP-05/TSD-05）、状態 enum。**公開面は「モデル型 + 明示バリデート関数」のみ**（DP-07, 実装は内部隠蔽）。
+- [x] **Step 4 — C-SCHEMA 単体テスト**（`tests/unit/u1/`）: モデル検証・トークン契約（長さ/文字集合/エントロピー）・バリデート関数の境界。
+- [x] **Step 5 — C-SCHEMA サマリ**（`aidlc-docs/construction/u1/code/`）。
+- [x] **Step 6 — Business Logic 生成**（`backend/domain/`）: `generate_pairs`（重み付きランダム抽選+シード決定論化, BR-01/02/03/07/10）、`updated_exposure`（PBT オラクル）、`derive_exposure`（確定 PairSequence から集計・非アクティブ除外 BR-04, H-2）、`serialize`/`deserialize`（XC-02 対象=確定 PairSequence + 次未回答 index、seed/snapshot は対象外 H-3）。純粋・DB I/O なし。
+- [x] **Step 7 — Business Logic テスト**: example-based（`tests/unit/u1/`）+ **PBT**（`tests/pbt/`）。P-1（露出偏り `max−min ≤ max(2, α×mean)` を S セッション累積後に評価）/ P-2（層間比率）/ P-3（セッション内制約）/ P-4（ラウンドトリップ）/ P-5（updated_exposure==derive_exposure オラクル）/ P-6（決定論）/ P-7（位置一様）。ドメインジェネレータ（PBT-07, Item/ExposureCounts/AssignmentParams）、シード+縮小出力（PBT-08）、Hypothesis settings profile dev/ci 分離（TSD-07）。
+- [x] **Step 8 — α/S 較正ハーネス**（`tests/pbt/` 内, DP-08 と**共有実装**）: 固定シードで S セッション逐次生成・`updated_exposure` フィードバックの累積ループを P-1 検証と共有し、重み関数候補ごとの露出分布から α/S 暫定値を決定。確定値を `business-rules.md` パラメータ表に追記（述語形は固定済み・定数のみ）。
+- [x] **Step 9 — Business Logic サマリ**。
+- [x] **Step 10 — Repository 生成**（`backend/repo/`）: `save_pair_sequence`（Session+PairSequence+exposure_snapshot を**単一 D1 batch で原子確定**, DP-01/TSD-03）、`insert_judgment`（`ON CONFLICT DO NOTHING` + 既存 choice 返却, 冪等 DP-02/TSD-04）、`read_exposure_counts`、`get_token`/`mark_token_*`（状態遷移 BR-09）、`list_items`。**全メソッド パラメータ化クエリ**（BR-12/DP-04）。D1 binding を受け取る Worker 内専用モジュール。
+- [x] **Step 11 — Repository テスト**（`tests/unit/u1/`）: miniflare/ローカル D1 で冪等性・原子性・パラメータ化クエリ・非アクティブ除外導出。
+- [x] **Step 12 — Repository サマリ**。
+- [x] **Step 13 — LogEmitter 生成 + テスト**（`backend/log.py`）: `emit(event, level, **fields)` JSON→stdout、標準フィールド `event/level/ts/unit` + 相関キー `session_id`/`token`（DP-06）。フィールド規約を単一発行点に集約。
+- [x] **Step 14 — DB Migration Scripts**（`migrations/`）: `wrangler d1 migrations` 用 versioned `.sql`（DDL・一意制約・NOT NULL を含む）。dev→prod 適用手順を deployment サマリに記載。
+- [x] **Step 15 — API Layer / Frontend Components: N/A（スキップ）**: U1 スコープ外（U2/U3/U4a）。スキップ理由を明記。
+- [x] **Step 16 — Deployment Artifacts 確定**: `wrangler.toml`（`workers_dev=true`）/ `.dev.vars.example` / `pyproject.toml` / **`.github/workflows/` deploy workflow（CI 経由, Secrets: `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`）** を最終化し、`aidlc-docs/construction/u1/code/deployment-notes.md` にデプロイ手順（CI: sync→migrations→secret→deploy）を記録。
+- [x] **Step 17 — Documentation**: `aidlc-docs/construction/u1/code/` に U1 コード構成・公開面（下位ユニットが import してよい面）・テスト実行方法をまとめる。README のディレクトリ構成「予定」を実体に更新。
 
 ---
 
@@ -115,10 +115,10 @@ U1 は横断制約と基盤を担う（個別の US-P/US-R は U2〜U4 で実装
 
 ## 6. 完了基準（code-generation.md Completion Criteria）
 
-- [ ] 本計画が承認され、全 Step が `[x]`。
-- [ ] schema/ 公開面・domain 純粋関数・repo I/O 境界・LogEmitter が生成され、層逆流なし。
-- [ ] PBT（P-1〜P-7）+ ドメインジェネレータ + 較正ハーネスが生成（実行は Build & Test）。
-- [ ] migrations（versioned .sql）・wrangler.toml・pyproject.toml・.dev.vars.example・.gitignore(.dev.vars) が揃う。
-- [ ] smoke test **本番全 PASS 記録済み・G-1 CLOSED**（§2.1）。実装が F-1〜F-6（raw workers API / on_fetch / CI / workers_dev / 依存 pyproject）に準拠。
-- [ ] `aidlc-docs/construction/u1/code/` にサマリ・デプロイ手順・公開面ドキュメント。
-- [ ] U1 が Build & Test へ引き渡せる状態。
+- [x] 本計画が承認され、全 Step が `[x]`。
+- [x] schema/ 公開面・domain 純粋関数・repo I/O 境界・LogEmitter が生成され、層逆流なし。
+- [x] PBT（P-1〜P-7）+ ドメインジェネレータ + 較正ハーネスが生成（実行は Build & Test）。
+- [x] migrations（versioned .sql）・wrangler.toml・pyproject.toml・.dev.vars.example・.gitignore(.dev.vars) が揃う。
+- [x] smoke test **本番全 PASS 記録済み・G-1 CLOSED**（§2.1）。実装が F-1〜F-6（raw workers API / on_fetch / CI / workers_dev / 依存 pyproject）に準拠。
+- [x] `aidlc-docs/construction/u1/code/` にサマリ・デプロイ手順・公開面ドキュメント。
+- [x] U1 が Build & Test へ引き渡せる状態。
