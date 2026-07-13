@@ -26,15 +26,17 @@
    （層ラベル必須 BR-U4a-01 / 本文非空 BR-U4a-02。不正はここで弾いて報告）
 2. CLI: ItemIngestRequest を組み、HTTPS+Basic で POST /admin/items
 3. Worker(admin): Basic 認証（BR-U4a-08）
-4. Worker: プール充足の事前検証（BR-U4a-05 三点セット）
-      不足 → precheck_errors を返し 投入せず終了（ok=false）
-5. Worker: プール凍結ガード（BR-U4a-03）
+4. Worker: プール凍結ガード（BR-U4a-03）
       既存 items のうち pairs/judgments から参照済み集合を取得
       入力に「参照済み item_id への UPDATE」が含まれれば → 投入全体を中断（error, 列挙）
-6. Worker: Repository.insert_items(bulk) を D1 batch で原子投入（BR-U4a-09）
+5. Worker: Repository.insert_items(bulk) を D1 batch で原子投入（BR-U4a-09）
       未参照 item_id は upsert（ON CONFLICT DO UPDATE, BR-U4a-04）、新規は INSERT
-7. Worker: IngestResult(ok, inserted, updated, rejected, precheck_errors) を返す
-8. CLI: 結果を表示（rejected/precheck_errors があれば非ゼロ終了）
+6. Worker: プール充足の充足判定（BR-U4a-05 三点セット）を **マージ後プール（既存 items ∪ 今回投入）**に対して評価
+      未達 → sufficiency_warnings に不足内訳（warning ログ）。**投入は成功のまま**（段階投入を妨げない）
+7. Worker: IngestResult(ok, inserted, updated, rejected, sufficiency_warnings) を返す
+8. CLI: 結果を表示（rejected があれば非ゼロ終了。sufficiency_warnings は警告表示のみで成功扱い）
+
+> **設計判断（段階投入との整合）**: 十兵衛さんのプールは層ごとに順次完成する（プロ層→AI 層→…）。BR-U4a-05 を「今回の POST 分だけ」に課すと、正当な段階投入が誤って拒否される。よって評価対象は**マージ後プール**、かつ pool_ingest では **warn に留め**、ハードなゲートは参加者アクセスを可能にする token_issue（BR-U4a-12）へ移す。
 ```
 
 - **べき等性**: 同一入力の再実行は同一 D1 状態（未参照 item は upsert）。
@@ -46,12 +48,15 @@
 1. CLI: count とベース URL テンプレートを引数で受ける
 2. CLI: TokenIssueRequest(count) を HTTPS+Basic で POST /admin/tokens
 3. Worker(admin): Basic 認証
-4. Worker: 既存トークン集合を読み、generate_token() で count 個を生成（衝突は事前排除, BR-U4a-06）
-5. Worker: Repository.insert_tokens(bulk) を D1 batch 投入（status=unused, issued_at, BR-U4a-10）
+4. Worker: **発行時充足ゲート（BR-U4a-12）**: 現行 D1 プールが BR-U4a-05 三点セット未達なら
+      → **error（不足内訳）+ 発行拒否**（tokens は発行しない）。これが「参加者アクセス前に
+        構成不能を弾く」真のゲート（BR-05 本来意図）。段階投入中の不完全プールでの発行を防ぐ。
+5. Worker: 既存トークン集合を読み、generate_token() で count 個を生成（衝突は事前排除, BR-U4a-06）
+6. Worker: Repository.insert_tokens(bulk) を D1 batch 投入（status=unused, issued_at, BR-U4a-10）
       PK 衝突で失敗 → 全体を再生成しリトライ
-6. Worker: TokenIssueResult(tokens, issued_at) を返す
-7. CLI: 各 token を URL テンプレートに差し込み TokenUrl 一覧を生成
-8. CLI: URL 一覧を stdout + ファイル出力（配布用・gitignore, BR-U4a-07）
+7. Worker: TokenIssueResult(tokens, issued_at) を返す
+8. CLI: 各 token を URL テンプレートに差し込み TokenUrl 一覧を生成
+9. CLI: URL 一覧を stdout + ファイル出力（配布用・gitignore, BR-U4a-07）
 ```
 
 ---
@@ -74,7 +79,8 @@
 |---|---|---|
 | **PU4a-1** | pool_ingest 冪等: 同一入力を 2 回投入 → D1 状態不変（2 回目は updated、inserted=0） | BR-U4a-04 |
 | **PU4a-2** | 凍結ガード: 参照済み item_id の UPDATE を含む投入 → 全体拒否・D1 不変 | BR-U4a-03 |
-| **PU4a-3** | プール充足述語: 三点セットを満たさない入力 → precheck_errors・投入なし／満たす入力 → 投入成功 | BR-U4a-05 |
+| **PU4a-3a** | 段階投入: マージ後プールが三点セット未達でも **pool_ingest は成功**（sufficiency_warnings 付き・D1 に投入される） | BR-U4a-05 |
+| **PU4a-3b** | 発行時ゲート: 現行プールが三点セット未達なら **token_issue は error + 発行拒否**（tokens 0 行）／充足なら発行成功 | BR-U4a-12 |
 | **PU4a-4** | トークン一意: count 個発行 → 全て一意・DB に count 行・`is_valid_token` 全通過 | BR-U4a-06 |
 | **PU4a-5** | insert_items/insert_tokens の原子性: batch 途中失敗 → 全ロールバック | BR-U4a-09 / DP-01 |
 | **PU4a-6** | 認証: Basic 認証なし/誤り → 401、投入なし | BR-U4a-08 |

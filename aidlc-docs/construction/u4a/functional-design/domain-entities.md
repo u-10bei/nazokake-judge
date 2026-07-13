@@ -36,13 +36,14 @@
   | `inserted` | int | 新規 INSERT 件数 |
   | `updated` | int | 既存 upsert 件数（未参照 item のみ, BR-U4a-04） |
   | `rejected` | list[`RejectedItem`] | 拒否内訳（`{item_id, reason}`。層欠落/本文欠落/凍結ガード等） |
-  | `precheck_errors` | list[str] | プール充足事前検証（BR-U4a-05）の不足内訳 |
+  | `sufficiency_warnings` | list[str] | **マージ後プール**（既存∪入力）の充足判定（BR-U4a-05）の不足内訳。**warning 扱いで投入は成功**（段階投入を妨げない。ハードなゲートは token_issue=BR-U4a-12） |
 
 - **`RejectedItem`**: `{ item_id: str, reason: str }`。
 
 ### token_issue 系
 - **`TokenIssueRequest`**: `{ count: int (ge=1) }`。URL テンプレートは CLI 側の責務（API は count のみ）。
-- **`TokenIssueResult`**: `{ tokens: list[str], issued_at: str }`。生成された生トークン列と発行時刻。
+- **`TokenIssueResult`**: `{ ok: bool, tokens: list[str], issued_at: str \| None, gate_errors: list[str] }`。
+  - **発行時充足ゲート（BR-U4a-12）**: 現行プールが三点セット未達なら `ok=false`・`tokens=[]`・`gate_errors` に不足内訳（**発行拒否**）。充足なら `ok=true`・生成トークン列を返す。
 - **`TokenUrl`**（CLI 内部・出力用）: `{ token: str, url: str }`。CLI がベース URL テンプレートに token を差し込んで生成。
 
 ### 参照する U1 モデル

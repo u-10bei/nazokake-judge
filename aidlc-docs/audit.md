@@ -306,3 +306,11 @@
 **AI Response**: 回答分析 → 全問明確・矛盾なし、追加質問不要。Q5=X（Item.body を D1 格納）は「body_ref の解決先が存在せず U2 が本文表示できない」設計の穴を埋める妥当な修正、NFR-08 の「リポジトリ」=git の解釈も整合と判断。Part 2 実行: domain-entities.md（Item 波及=body 追加/body_ref 格下げ・migration 0002・ペイロードモデル ItemIngestRequest/IngestResult/TokenIssueRequest/TokenIssueResult）、business-rules.md（BR-U4a-01〜11: 層/本文必須・**凍結ガード BR-U4a-03**・冪等 upsert・**プール充足三点セット BR-U4a-05**・トークン一意/秘匿・認証境界）、business-logic-model.md（pool_ingest/token_issue フロー・構成要素の責務境界・Testable Properties PU4a-1〜6・U1 波及の変更スコープ明示）を生成。aidlc-state に U4a セクション追加。標準 2 択（Request Changes / Continue → NFR Requirements）を提示予定。
 **Context**: CONSTRUCTION - U4a Functional Design (Part 2 生成・承認待ち)
 
+---
+
+## U4a Functional Design - Review Feedback & Revision（BR-U4a-05 段階投入対応）
+**Timestamp**: 2026-07-13T07:55:00Z
+**User Input**: "BR-U4a-05 の評価対象と拒否の置き場所が曖昧。入力(今回 POST 分)だけを評価すると段階投入(プロ層30→AI層→…と順次完成)と衝突し、正当な段階投入が誤拒否される。修正2段構え: (1) 評価対象=マージ後の見込みプール(既存 items ∪ 入力)と明記、(2) ハード拒否を pool_ingest から token_issue へ移す。BR-05 の本来意図は『参加者アクセス前に構成不能を弾く』で、アクセスを可能にするのはトークン発行。よって pool_ingest は未達なら warning+投入実行、token_issue は未達なら error+発行拒否(真のゲート)。変更: BR-U4a-05 書換(評価対象=マージ後・ingest は warn)+ BR-U4a-12 新規(発行時充足ゲート)+ フロー §2/§3 更新 + PU4a-3 テスト条件更新。"
+**AI Response**: 妥当な指摘（段階投入運用と BR-05 本来意図の整合）と判断し反映。business-rules.md: **BR-U4a-05** を「評価対象＝マージ後プール（既存∪入力）／pool_ingest は warning+投入実行」に書換、**BR-U4a-12（発行時充足ゲート＝error+発行拒否, 真のゲート）**を新設、検証表を ingest 時（warn）/ issue 時（error）の 2 行に分割。business-logic-model.md: §2 手順を凍結ガード→投入→充足判定(マージ後・warn)の順に、§3 に発行時ゲート手順を追加、Testable Properties を **PU4a-3a（ingest は warn で投入成功）/ PU4a-3b（issue は未達で発行拒否）**に分割、設計判断ノート追記。domain-entities.md: `precheck_errors`→`sufficiency_warnings`（warn 意味）、`TokenIssueResult` に `ok`/`gate_errors` 追加（発行拒否の表現）。規則番号の非連続（05→09 等）は一意のため実害なしとして現状維持。
+**Context**: CONSTRUCTION - U4a Functional Design (Review 反映・承認待ち)
+
