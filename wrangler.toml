@@ -1,7 +1,10 @@
 # nazokake-judge 本実装 Worker 設定（U1 で確定）。
 # raw workers API + Pydantic（FastAPI 不可, F-4）。デプロイは CI 経由（F-3）。
+# **F-8**: Python Workers は `main` のディレクトリのみをモジュールルートとしてバンドルする。
+# 絶対 import（backend.…/schema.…）を解決するため、entry.py と backend/・schema/ を同一
+# ディレクトリ（src/）に置く（smoke=src/entry.py・integration=src/ 隔離コピーと同型）。
 name = "nazokake-judge"
-main = "backend/entry.py"
+main = "src/entry.py"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["python_workers"]
 workers_dev = true   # 既定に依存せず明示（F-6）

@@ -12,7 +12,8 @@ from urllib.parse import urlparse
 
 from workers import Response
 
-from backend.entry import on_fetch as base_on_fetch
+# entry.py は src/ 直下（F-8, backend/ の外＝module root）。`backend.entry` ではなく `entry`。
+from entry import on_fetch as base_on_fetch
 
 _TABLES = ("judgments", "pairs", "sessions", "likert_responses",
            "survey_responses", "tokens", "items")

@@ -21,16 +21,21 @@ dev = [
     "pytest>=8",
 ]
 
-# schema/ と backend/ を backend も scripts も import 可能なパッケージとして解決（TSD-08）。
+# src/ レイアウト（F-8）: schema/ と backend/ は src/ 配下。setuptools は src をパッケージ
+# ルートとして解決する（backend も scripts も import 可能, TSD-08）。
 [tool.setuptools]
-packages = ["schema", "backend", "backend.domain", "backend.repo"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+# pythonpath: "src"=backend/schema の解決、"."=tests パッケージ（tests.pbt.generators 等）の解決。
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = ["src", "."]
 
 # Hypothesis の dev/ci profile は tests/conftest.py で登録（HYPOTHESIS_PROFILE で選択）。

@@ -9,3 +9,4 @@ dev.log
 # 本体ソースの隔離コピー（DRY のため git 管理せず、実行前に親からコピーする。README 参照）
 src/schema/
 src/backend/
+src/entry.py

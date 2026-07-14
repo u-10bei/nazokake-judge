@@ -13,6 +13,12 @@
 
 from __future__ import annotations
 
+# src/ を import パスへ（F-8）。schema/scripts import より前に実行する。
+try:
+    from scripts import _bootstrap  # noqa: F401  (python -m scripts.token_issue)
+except ImportError:
+    import _bootstrap  # noqa: F401  (python scripts/token_issue.py)
+
 import argparse
 import json
 import sys

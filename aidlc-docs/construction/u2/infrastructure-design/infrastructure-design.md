@@ -57,6 +57,10 @@ Static Assets × Python Workers は G-1（FastAPI 起動 CPU）と同種の「**
 - **フォールバック（受け皿）**: 順序が想定と異なる → 該当設定で是正。**Static Assets 自体が Python Workers と併用不能な場合のみ** → C（Worker が HTML/JS を `Response` で直接返す埋め込み配信）。**B（Cloudflare Pages 分離）は CORS・二重運用のため最後の手段**。
 - **検証対象外**: SPA フォールバック（`not_found_handling`）は不使用のため検証しない（Q2）。
 
+**検証結果（2026-07-14, 初回実デプロイの過程で確定）**:
+- **① の確認過程で F-8 を発見・是正**: 初回デプロイ後 `/api/ping` が 1101・tail に `ModuleNotFoundError: No module named 'backend'`。原因＝Python Workers は `main` のディレクトリのみをモジュールルートにバンドルするため、`main="backend/entry.py"` ではルートが `backend/` になり `backend.…`/`schema.…` の絶対 import が解決不能（integration が PASS したのは harness が `src/` 隔離コピーで正しいレイアウトだったから＝本番設定に未伝播）。→ **src/ レイアウトへ移行**（`main="src/entry.py"`・`src/backend/`・`src/schema/`、`pythonpath=["src","."]`、scripts `_bootstrap`、harness cp 元更新）。**F-8 として知見昇格**（§2.1 / shared-infrastructure）。
+- **例外がスローされた＝ルーティングは Worker に到達**していたため **beta ① は半分成立済み**。Static Assets 併用不能の C/B フォールバックは**不要**（本件は assets 無関係のバンドル規則の問題）。是正後の残作業は正常応答の確認（`/api/ping` JSON・`/` index.html・`/no-such-path` 404・`/admin/items` 401）のみ＝再デプロイで消化。
+
 ## 7. Deployment（Q5）
 - U1/U4a の **dev（miniflare/ローカル D1）/ prod（実験用サブドメイン・本番 D1）** 分離を流用。
 - **収束**: 参加者フロント・参加者 API・管理 API（U4a）・scripts が **同一 Worker / 同一 D1 / 実験用サブドメイン一本**を共有。トークン配布 URL は当該サブドメイン + `?token=`。

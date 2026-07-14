@@ -71,9 +71,18 @@ PU2-8 完了順序 / PU2-7 Likert 初回不変（stored=3）/ PU2-complete / PU2
 - **修正**: seed を **先頭 6 バイト（48bit, < 2^53）** に短縮（`backend/participant/session.py`）。決定論性・監査再現性・トークン由来の性質は不変（RNG 品質は 128-bit トークンのハッシュゆえ十分）。plan/audit の「先頭 8 バイト」は本実装制約により 6 バイトへ確定（自己記述コメント付き）。
 - **教訓**: pure-Python/PBT では検出できない D1 bind の型制約を integration が捕捉（U4a の `body_ref None` bind 事例と同型の価値）。
 
+## src/ レイアウト移行（F-8, 2026-07-14）
+初回実デプロイで `ModuleNotFoundError: No module named 'backend'`（Python Workers は `main` の
+ディレクトリのみをモジュールルートにバンドル）。**src/ レイアウトへ移行して是正**:
+- `git mv`: `backend/entry.py`→`src/entry.py`、`backend/`→`src/backend/`、`schema/`→`src/schema/`。
+  `frontend/`・`migrations/`・`scripts/`・`tests/` はルート据え置き。
+- `wrangler.toml`: `main = "src/entry.py"`。`pyproject.toml`: `package-dir={""="src"}` + `packages.find where=["src"]`、`pytest pythonpath=["src","."]`。
+- `scripts/_bootstrap.py`（src/ を sys.path へ）+ 両 CLI 冒頭で読込。integration harness の import（`entry`）と cp 元（`../../src/…`）更新。
+- 検証: unit+PBT 33 緑・scripts 両起動 OK・**integration 全 9 項目 PASS**（harness も src 追随）。F-8 を §2.1 / shared-infrastructure に昇格。
+
 ## ユーザー側で実施する実機検証（残 1 件・実行実績提示）
-- **beta 検証（Step 1, Infra §6-β）**: Static Assets × Python Workers — 初回実デプロイと兼ねる。`/api/ping` が Worker 到達（**dev で確認済み**）/ アセット `/` 配信（要デプロイ）/ deploy 同梱。想定外→是正 → C（Worker 埋め込み）→ B（Pages）。
-  - 補足: `/api/*` の Worker 到達は本 integration 環境（miniflare, [assets] なし）でも `/api/ping` 応答で確認済み。残るはアセット配信（`/`→index.html）の実デプロイ確認のみ。
+- **beta 検証（Step 1, Infra §6-β）**: 再デプロイで正常応答を確認するのみ（バンドル問題は F-8 で是正済み）。`/api/ping`（JSON）・`/`（index.html）・`/no-such-path`（404）・`/admin/items`（401）。
+  - 補足: `/api/*` の Worker 到達は integration 環境（miniflare）で確認済み。ルート worker（`main=src/entry.py`）も dev で `/api/*` を解決（ModuleNotFoundError なし）。残るはアセット `/`→index.html の実デプロイ確認。
 
 ## 決定点の実装対応
 | 決定点 | 実装 |

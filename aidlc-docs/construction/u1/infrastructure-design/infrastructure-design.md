@@ -67,6 +67,7 @@
 - **F-5（ハンドラ形式）**: **モジュールレベル `async def on_fetch(request, env)`** が必須。クラス形式（`WorkerEntrypoint` 継承）は実行時 `TypeError: Method on_fetch does not exist` で不認識。
 - **F-6（ルート宣言）**: `wrangler.toml` に **`workers_dev = true`** を明記（既定に依存しない）。加えてワーカーソースは `main` を独立ディレクトリ（`src/`）に隔離し `node_modules`/`.venv` を巻き込ませない。
 - **F-7（D1 bind の整数上限）**: **D1 の `.bind(...)` は JS 安全整数（2^53−1）を超える Python `int` を bigint 化して拒否**（`D1_TYPE_ERROR: Type 'bigint' not supported`）。DB に保存・バインドする整数（seed / カウンタ等）は **2^53 未満に収める**こと（例: U2 `seed_from_token` は SHA-256 先頭 6 バイト=48bit）。pure-Python/PBT では検出できず integration（実 D1）でのみ露見する型制約。→ U2 integration（2026-07-14）で確定。U3/U4b でも同制約が及ぶ。
+- **F-8（バンドルの module root）**: **Python Workers は `main` のあるディレクトリのみをモジュールルートとしてバンドル**する。絶対 import（`backend.…`/`schema.…`）を使うコードは、それらのパッケージを **`main` と同一ディレクトリ配下（src/ レイアウト）** に置くこと。本実装は `main = "src/entry.py"` とし `src/entry.py`・`src/backend/`・`src/schema/` を同居させる（`frontend/`・`migrations/`・`scripts/`・`tests/` はルート据え置き＝`[assets]`/`migrations_dir` は main 位置と独立）。scripts は `_bootstrap` で `src/` を `sys.path` へ、pytest は `pythonpath=["src","."]` で解決。smoke（`src/entry.py`）・integration（`src/` 隔離コピー）で実証済みのパターンを本番へ適用。→ 本番初回デプロイの `ModuleNotFoundError: No module named 'backend'` を受け 2026-07-14 に src/ レイアウトへ移行して確定。
 
 **本番 第3回の項目別**（`smoke-test/result-prod.json`）: 1-worker-boot / 2-http-routing（raw workers API）/ 3-pydantic-v2（v2.10.6, valid roundtrip・invalid rejected）/ 4-d1-binding（select・insert-select roundtrip）/ 5-d1-batch（commit・**NOT NULL 違反で全体ロールバック**・**ON CONFLICT DO NOTHING 既存維持**）= **全 PASS**。
 

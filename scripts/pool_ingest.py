@@ -11,6 +11,12 @@
 
 from __future__ import annotations
 
+# src/ を import パスへ（F-8）。schema import より前に実行する。
+try:
+    from scripts import _bootstrap  # noqa: F401  (python -m scripts.pool_ingest)
+except ImportError:
+    import _bootstrap  # noqa: F401  (python scripts/pool_ingest.py)
+
 import argparse
 import json
 import sys

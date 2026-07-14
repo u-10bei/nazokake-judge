@@ -37,3 +37,10 @@ dist/
 *.tokens.txt
 pool_*.json
 items_*.json
+
+# Python build 生成物
+*.egg-info/
+
+# ルートの uv lock（各ハーネスは個別管理。ルートは未追跡）
+/uv.lock
+/pylock.toml
