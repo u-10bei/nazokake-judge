@@ -59,13 +59,14 @@
 | 4 | D1 binding | ✅ PASS | `SELECT 1`=1、insert/select roundtrip |
 | 5 | D1 batch（DP-01/DP-02, R-2） | ✅ PASS | commit / **失敗時ロールバック（原子性）** / **ON CONFLICT DO NOTHING（既存維持）** |
 
-**確定知見 F-1〜F-6（beta ランタイムの実制約。本番実装＝U1 Code Generation の前提）**:
+**確定知見 F-1〜F-7（beta ランタイムの実制約。本番実装＝各ユニット Code Generation の前提）**:
 - **F-1（依存管理）**: サードパーティ依存は **`requirements.txt` では不可**（pywrangler 1.15.0 は存在すると起動拒否）。**`pyproject.toml` の `dependencies` + `uv/pywrangler` でベンダリング**するのが正。→ TSD-01。
 - **F-2（ローカル≠本番）**: ローカル workerd は **deploy 時の起動 CPU 制限を課さない**。ローカル PASS は本番 PASS を含意しない（F-4 を第3回で実証）。
 - **F-3（デプロイ経路）**: **CI（GitHub Actions, ubuntu-latest）を正**とする。Windows ネイティブの pywrangler は不成立（uv の Pyodide インタープリタ配置と期待パス `python.exe` の不整合, uv 0.11.28 時点）。
 - **F-4（FastAPI 不可）**: FastAPI のトップレベル import は起動制限超過 `Python Worker startup exceeded CPU limit 1757<=1000 with snapshot baseline` [code: 10021]。→ **FastAPI 採用不可。raw workers API + 手動ルーティングへ**（TSD-01 改訂）。
 - **F-5（ハンドラ形式）**: **モジュールレベル `async def on_fetch(request, env)`** が必須。クラス形式（`WorkerEntrypoint` 継承）は実行時 `TypeError: Method on_fetch does not exist` で不認識。
 - **F-6（ルート宣言）**: `wrangler.toml` に **`workers_dev = true`** を明記（既定に依存しない）。加えてワーカーソースは `main` を独立ディレクトリ（`src/`）に隔離し `node_modules`/`.venv` を巻き込ませない。
+- **F-7（D1 bind の整数上限）**: **D1 の `.bind(...)` は JS 安全整数（2^53−1）を超える Python `int` を bigint 化して拒否**（`D1_TYPE_ERROR: Type 'bigint' not supported`）。DB に保存・バインドする整数（seed / カウンタ等）は **2^53 未満に収める**こと（例: U2 `seed_from_token` は SHA-256 先頭 6 バイト=48bit）。pure-Python/PBT では検出できず integration（実 D1）でのみ露見する型制約。→ U2 integration（2026-07-14）で確定。U3/U4b でも同制約が及ぶ。
 
 **本番 第3回の項目別**（`smoke-test/result-prod.json`）: 1-worker-boot / 2-http-routing（raw workers API）/ 3-pydantic-v2（v2.10.6, valid roundtrip・invalid rejected）/ 4-d1-binding（select・insert-select roundtrip）/ 5-d1-batch（commit・**NOT NULL 違反で全体ロールバック**・**ON CONFLICT DO NOTHING 既存維持**）= **全 PASS**。
 

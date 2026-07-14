@@ -32,6 +32,7 @@
 
 - **実行時の D1 アクセスは Worker に集約**（H-1 = (c) 確定）。scripts は Worker 管理 API（Basic 認証）経由。→ `u1/infrastructure-design/infrastructure-design.md` §4。
 - **DDL 適用は `wrangler d1 migrations`**（versioned）。全ユニットの DDL 変更はここを通す。
+- **F-7（D1 bind の整数上限, 全ユニット共通）**: D1 `.bind()` は **2^53−1 を超える整数を拒否**（`D1_TYPE_ERROR: bigint`）。DB に保存/バインドする整数（seed・カウンタ等）は 2^53 未満に収める（U2 seed=SHA-256 先頭 6 バイト=48bit で対処）。pure-Python/PBT では出ず integration でのみ露見。詳細＝F-1〜F-7（`u1/infrastructure-design/infrastructure-design.md` §2.1）。U3/U4b も準拠。
 - **シークレットは `wrangler secret`**（リポジトリ外）。ローカルは `.dev.vars`（gitignore）。
 - **schema/ の import パス解決**: backend も scripts も import 可能なパスに配置（`pyproject.toml` packages 設定。Code Generation で確定）。
 
