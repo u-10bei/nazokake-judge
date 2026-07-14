@@ -425,3 +425,19 @@
 **User Input**: "全 8 問回答済み・承認。全問 ★A。Q3 補足=相関ハッシュは SHA-256 先頭 8 文字等を参加者系ログ全体で単一規約。Q4=出自秘匿を NFR に昇格（ItemView={item_id,body} 固定・フラグ出し分け不採用）。Q5=楽観更新なし（サーバ応答待ち）・正式 WCAG 準拠は非目標。Q8=トークン無期限（BR-04 は失効ではない）。Scalability/Resiliency=N/A に同意。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 8 問バックフィル。Part 2 実行: nfr-requirements.md（U2-NFR-01〜15: セキュリティ衛生=トークン=資格/no-store/ログ非出力+相関ハッシュ規約/body 渡し/SQLi、研究健全性=出自秘匿の NFR 昇格 ItemView={item_id,body}、可用性=モバイル/日本語/合理的 a11y/楽観更新なし、信頼性=DB 側冪等/完了順序/露出競合許容/トークン無期限、性能=SLO なし、可観測性、テスト容易性=PBT PU2-1/3/6・integration PU2-2/4/5/7/8、データ=migration 0003 + likert_fixed_targets、非目標節）／tech-stack-decisions.md（TSD-U2-01〜06: /api/* ルーティング・相関ハッシュ・ビュー型/ItemView 秘匿・derive_phase/select_likert_targets 純関数・migration 0003+Repository 追加・バニラ JS SPA/テスト振り分け）を生成。標準 2 択（Request Changes / Continue → NFR Design〈U2〉）を提示予定。
 **Context**: CONSTRUCTION - U2 NFR Requirements Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U2 NFR Requirements - 承認 & NFR Design 開始
+**Timestamp**: 2026-07-14T02:00:00Z
+**User Input**: "承認します"
+**AI Response**: U2 NFR Requirements（U2-NFR-01〜15 / TSD-U2-01〜06）を承認完了。aidlc-state の U2 NFR Requirements を承認済みに更新し、per-unit ループ次段の NFR Design〈U2〉へ移行。nfr-design.md ルールに従い Part 1（Plan + 質問）を作成: NFR Requirements を設計パターン（DP-U2）と論理コンポーネント（LC-U2）に落とす方針で、設計パターン適用性を評価し（キャッシュ/キュー/CB/ロック=N/A）、参加者フロー固有の論点（フェーズ導出の単一述語・出自秘匿の強制点=ItemView 構造化・トークン非ログの強制点・冪等の DB 側集約・楽観更新なしのサーバ権威契約・統一エラー封筒）を質問化して `construction/plans/u2-nfr-design-plan.md` に作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U2 NFR Design Part 1（Planning）承認待ち
+
+---
+
+## U2 NFR Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-14T02:25:00Z
+**User Input**: "全 5 問回答済み・承認。全問 ★A。適用性評価（キャッシュ/キュー/CB/ロック/スケール=N/A）同意。Q2 の (a) 出自秘匿=型で排除が要（Item を直接シリアライズせず ItemView のみ通す＝layer は出力型に存在せず事故で出せない）。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: nfr-design-patterns.md（DP-U2-01〜07: トークン検証チョークポイント軽量版・出自秘匿の型排除〈本ユニットの要〉・トークン非ログ単一ラッパ+ハッシュ規約・no-store 共通ヘルパ・純粋述語 derive_phase/純関数 select_likert_targets・DB 側冪等+完了順序サーバ確認・統一封筒+SessionView 再同期契約、非採用部品表）／logical-components.md（LC-U2-01 ParticipantApi / 02 SessionService / 03 ResponseService / 04 SurveyService / 05 ViewSerializer〈出自秘匿の一点集約〉/ 06 ParticipantLog〈秘匿〉/ 07 LikertSelector / 08 ParticipantFrontend + Repository 拡張 + ビュー型 DataContract 拡張・依存方向図・層の逆流禁止）を生成。標準 2 択（Request Changes / Continue → Infrastructure Design〈U2〉）を提示予定。
+**Context**: CONSTRUCTION - U2 NFR Design Part 2 完了・レビュー待ち（GATE）
