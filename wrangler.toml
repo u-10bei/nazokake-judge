@@ -17,7 +17,7 @@ directory = "frontend"
 [[d1_databases]]
 binding = "DB"
 database_name = "nazokake-judge"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "ab3e84bc-1d1a-443b-ad02-911c31ec4d6f"
 migrations_dir = "migrations"
 
 # dev/prod で D1 を分離（実験データ汚染防止, Q3=A）。
