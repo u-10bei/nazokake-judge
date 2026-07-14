@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - **U2 完了**（Code Gen + Build & Test）→ U3 Functional Design 開始待ち
+- **Current Stage**: CONSTRUCTION - U3 Functional Design Part 1 生成完了・承認待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -66,9 +66,12 @@
 - [x] Code Generation（Part 1+2）— **承認済み・完了**（2026-07-14, 全 16 ステップ / 6 決定点★A）。unit+PBT 33 緑（U1/U4a 回帰含む）。実機で 2 バグ捕捉・修正: **F-7**（seed の D1 bind オーバーフロー→48bit）・**F-8**（バンドル module root→src/ レイアウト移行）+ entry.py catch-all→404。Q1=U1 FD Q4=B の生成方法改訂を記録
 - [x] Build & Test — **完了**（2026-07-14）。unit+PBT **33 緑** / integration **全 9 項目 PASS**（実 D1/miniflare, result-u2-integration.json: PU2-2/4/5/7/8 + 一巡・出自秘匿）/ **本番初回デプロイ完了**（migrations 0001+0002+0003 本番適用済み）/ beta 3 点は dev 実測で確定（①api 到達・③未知=404・④admin 401・health 200）。**残**: F-8+catch-all 反映の**再デプロイ後の prod curl 疎通**（①=200・③=404・②`/`=index.html）→ beta 最終 CLOSE（自明・疎通のみ）。**U2 完了**
 
-### 🟢 CONSTRUCTION PHASE（U3 / U4b 未着手）
-- [ ] U3（研究者・管理）: Functional Design 以降
-- [ ] U4b（bt_aggregate）: Functional Design 以降
+#### U3: 研究者・管理（admin）
+- [~] Functional Design — **Part 1 生成完了・承認待ち**（2026-07-14）。US-R01/R02/R03。中核=エクスポート契約（U4b BT 入力の固定）・認証境界一本化・集計意味論。全 7 問
+- [ ] NFR Requirements / NFR Design / Infrastructure Design / Code Generation / Build & Test
+
+### 🟢 CONSTRUCTION PHASE（U4b 未着手）
+- [ ] U4b（bt_aggregate）: Functional Design 以降（U3 のエクスポート形式を入力）
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER

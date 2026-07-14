@@ -504,3 +504,11 @@
 **User Input**: "entry.py の既定分岐を修正: ヘルスは専用パスに限定し未知パスは 404+統一封筒（Infra Q2 どおり）。③再確認は curl 一回。Infra §6-β に検証結果記録（3点確定 + F-8 発見是正 + entry.py catch-all 発見修正 + ④401 傍証 + deploy 実績: migrations 0001〜0003 本番適用済み・初回実デプロイ完了）。aidlc-state: U2 の Code Generation / Build & Test 相当を完了に。"
 **AI Response**: `src/entry.py` の catch-all を修正: ヘルスを `/health` 専用パスに限定、未知パスは **404 + `{ok:false,error:"not found"}`（no-store）**（Infra Q2・コメントと一致）。harness へ同期し dev/miniflare で実測: `/no-such-path`→404 / `/health`→200 / `/api/ping`→200 / `/admin/items`(認証なし)→401、**integration 再実行 9/9 維持**。Infra §6-β に beta 3 点検証を dev/prod 経路を区別して記録（① Worker 到達=dev 実測+prod 例外到達 / ② 本番デプロイ実績・`/`配信は prod のみ / ③ 未知=404 catch-all 修正後 / ④ 401 傍証 / `run_worker_first` 不要）+ デプロイ実績（database_id ab3e84bc… 転記・secret put・Actions deploy・migrations 0001+0002+0003 本番適用済み・初回実デプロイ完了・過程で F-8 と catch-all 発見）。**残**は F-8+catch-all 反映の再デプロイ後 prod curl（①200・③404・②index.html）→ beta CLOSE（自明・疎通のみ）。aidlc-state: **U2 Code Generation + Build & Test を完了**に（unit+PBT 33 緑 / integration 9 / 本番デプロイ済み）。**U2 CLOSE**。per-unit ループ次段は U3（研究者・管理）Functional Design。新規 backend コードは src/ 配下（F-8）。
 **Context**: CONSTRUCTION - U2 完了 → U3 Functional Design 開始待ち
+
+---
+
+## U3 Functional Design - Part 1（Plan + 質問）生成
+**Timestamp**: 2026-07-14T08:45:00Z
+**User Input**: "（Infra §6-β ④注記・README 運用メモ追記後）その後 U3 に進む"
+**AI Response**: U2 完了（CLOSE）を受け、per-unit ループ次段 U3（研究者・管理）の Functional Design Part 1 を実行。stories（US-R01 進捗モニタリング / US-R02 エクスポート / US-R03 暫定勝率）・unit-of-work U3（C-FE-ADMIN/C-SVC-ADMIN/C-SVC-EXPORT/C-AUTH/C-API）・既存基盤（backend/admin の Basic 認証チョークポイント DP-U4a-01・schema EXPORT_FORMAT_VERSION=1.0.0・Repository）を精読。中核論点＝(1) エクスポート契約の確定（US-R04/U4b BT 入力との整合を US-R02 で固定, 練習除外, トークン紐付け, 判定は pairs join で item ペア込み）(2) 管理 UI の配信・認証境界（既存 Basic 認証チョークポイントの再利用範囲）(3) 進捗/暫定勝率の集計意味論（練習除外・非 BT）。`construction/plans/u3-functional-design-plan.md` に中核論点・スコープ境界・質問（各 ★A デフォルト・[Answer] 欄）を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U3 Functional Design Part 1（Planning）承認待ち
