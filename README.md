@@ -62,7 +62,12 @@ nazokake-judge/
 └── .github/workflows/   # CI（テスト + デプロイ）
 ```
 
-> **実装規約（本番 smoke test で確定）**: フレームワークは FastAPI ではなく **raw workers API + Pydantic v2**（起動 CPU 制限のため）。Worker ハンドラは module-level `on_fetch(request, env)`。デプロイは CI（GitHub Actions）経由。
+> **実装規約（本番 smoke test で確定）**: フレームワークは FastAPI ではなく **raw workers API + Pydantic v2**（起動 CPU 制限のため）。Worker ハンドラは module-level `on_fetch(request, env)`。デプロイは CI（GitHub Actions）経由。バックエンドは **`src/` レイアウト**（`main = "src/entry.py"` / `src/backend/` / `src/schema/`。Python Workers は `main` のディレクトリのみをバンドルするため, F-8）。
+
+## 運用メモ（実験期間中）
+
+- **参加者が「開けない」と言ったら、まず一度リロードを案内する**。Cloudflare エッジのコールドスタート等で**初回アクセス時に一過性エラー**（503 等）が起こりうる。リロードで解消するのが通常。
+- 実害が出るのは**初回アクセス**くらい。**判定・Likert 送信は冪等（DB 一意制約）+ クライアント自動リトライ**で守られており、途中離脱は**同一トークンで続きから再開**できる（トークンに有効期限なし）。参加者データが二重・欠落することはない。
 
 ## 注意事項
 

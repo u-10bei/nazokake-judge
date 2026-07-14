@@ -69,6 +69,7 @@ Static Assets × Python Workers は G-1（FastAPI 起動 CPU）と同種の「**
 | ② | `[assets]` 設定・deploy 同梱 | harness は `[assets]` なしのため dev では非対象 | **本番デプロイ実績**（`directory="frontend"`）。`/`→index.html の配信は本番でのみ確認可 |
 | ③ | 未知パスの扱い | **確認** `/no-such-path`→`404 {ok:false,error:"not found"}`（catch-all 修正後）／`/health`→200／`/admin/items`(認証なし)→**401** | catch-all 修正後の 404 は再デプロイ + curl 1 回で確定 |
 
+- **④ は再測定で 401 確定**（初回 `503` は一過性のエッジ/コールドスタート由来。**コード側に 503 を返す経路がないことを確認済み**＝AuthGuard は不一致で 401 のみ）。
 - **catch-all 修正の位置づけ**: `run_worker_first` 相当の明示設定は**不要**（アセット非一致パスが `on_fetch` へ到達する既定挙動を dev で実測）。未知パス 404 は entry.py 側の分岐修正で担保（アセット機構ではなく Worker のルーティング責務）。
 - **デプロイ実績（本番）**: 手元 `wrangler d1 create nazokake-judge` → `database_id` を `wrangler.toml` に転記・commit（`ab3e84bc…`）→ `wrangler secret put ADMIN_BASIC_USER/PASSWORD`（一回きり）→ Actions `deploy.yml`（test → `d1 migrations apply --remote`〈**0001+0002+0003 本番適用済み**〉→ deploy）で **初回実デプロイ完了**。この過程で F-8（バンドル）と entry.py catch-all を発見。
 - **残**: F-8 + catch-all を反映した**再デプロイ後**に prod ①（`/api/ping`=200）・③（未知=404）・②（`/`=index.html）を **curl で最終確認 → beta CLOSED**。ルーティング/秘匿/冪等ロジック自体は dev+integration で実証済みのため、残るは本番配信の疎通確認のみ。
