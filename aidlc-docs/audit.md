@@ -409,3 +409,19 @@
 **User Input**: "全 12 問回答済み・承認（2026-07-14）。Q3 のみ ★A を修正（選定機構を今実装し、選定方針はプール凍結時に確定＝likert_fixed_targets 追加・固定優先+seed 層均等補充）。Q3-b=A（都度導出）。Q1/Q5/Q8 に明確化補足（Q1=5 状態機械・instruction 除外の UI 前置 / Q5=トークン露出の理屈+Cache-Control: no-store / Q8=Likert は DO NOTHING 初回不変・Survey のみ upsert）。他は推奨どおり。Part 2 指示: 5 状態機械と教示前置を状態遷移に明記 / select_likert_targets を Testable Properties に / no-store とログのトークン非出力を business-rules 化 / migration 0003 と Repository 追加を U1 波及として明示。"
 **AI Response**: 回答分析 → 全問明確・矛盾なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 12 問（Q3=X・Q3-b 含む）バックフィル。Part 2 実行: business-logic-model.md（構成要素・5 状態 derive_phase・start_or_resume/再開/新規開始・select_likert_targets 機構・送信 3 フロー・XC-02 クローズ・PU2-1〜8・U1 波及）／business-rules.md（BR-U2-01〜30）／domain-entities.md（ビュー型・AssignmentParams.likert_fixed_targets・migration 0003 UNIQUE・出自非公開）／frontend-components.md（5 画面階層・サーバ権威状態・操作フロー・検証・API 結合・XC-04）を生成。**H-3 の宿題（XC-02 ラウンドトリップ対象）を Q2=A で DB 行復元に確定＝クローズ**。標準 2 択（Request Changes / Continue → NFR Requirements〈U2〉）を提示予定。
 **Context**: CONSTRUCTION - U2 Functional Design Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U2 Functional Design - 承認 & NFR Requirements 開始
+**Timestamp**: 2026-07-14T01:10:00Z
+**User Input**: "承認します、NFR Requirements に進んで"
+**AI Response**: U2 Functional Design（5 状態機械 / derive_phase / start_or_resume・再開・新規開始 / select_likert_targets 機構 / 送信 3 フロー / XC-02=DB 行復元で H-3 クローズ / BR-U2-01〜30 / ビュー型 + AssignmentParams.likert_fixed_targets + migration 0003 / frontend-components）を承認完了。aidlc-state の U2 Functional Design を承認済みに更新し、per-unit ループ次段の NFR Requirements〈U2〉へ移行。nfr-requirements.md ルールに従い Part 1（Plan + 質問）を作成: FD を分析し NFR カテゴリ適用性を判定、参加者フロー固有の論点（トークン=資格の衛生・出自秘匿による評価健全性・UI 可用性/アクセシビリティ・性能 SLO 姿勢・migration 0003）を全 8 問（各 ★A デフォルト・[Answer] 欄）で `construction/plans/u2-nfr-requirements-plan.md` に作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U2 NFR Requirements Part 1（Planning）承認待ち
+
+---
+
+## U2 NFR Requirements - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-14T01:40:00Z
+**User Input**: "全 8 問回答済み・承認。全問 ★A。Q3 補足=相関ハッシュは SHA-256 先頭 8 文字等を参加者系ログ全体で単一規約。Q4=出自秘匿を NFR に昇格（ItemView={item_id,body} 固定・フラグ出し分け不採用）。Q5=楽観更新なし（サーバ応答待ち）・正式 WCAG 準拠は非目標。Q8=トークン無期限（BR-04 は失効ではない）。Scalability/Resiliency=N/A に同意。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 8 問バックフィル。Part 2 実行: nfr-requirements.md（U2-NFR-01〜15: セキュリティ衛生=トークン=資格/no-store/ログ非出力+相関ハッシュ規約/body 渡し/SQLi、研究健全性=出自秘匿の NFR 昇格 ItemView={item_id,body}、可用性=モバイル/日本語/合理的 a11y/楽観更新なし、信頼性=DB 側冪等/完了順序/露出競合許容/トークン無期限、性能=SLO なし、可観測性、テスト容易性=PBT PU2-1/3/6・integration PU2-2/4/5/7/8、データ=migration 0003 + likert_fixed_targets、非目標節）／tech-stack-decisions.md（TSD-U2-01〜06: /api/* ルーティング・相関ハッシュ・ビュー型/ItemView 秘匿・derive_phase/select_likert_targets 純関数・migration 0003+Repository 追加・バニラ JS SPA/テスト振り分け）を生成。標準 2 択（Request Changes / Continue → NFR Design〈U2〉）を提示予定。
+**Context**: CONSTRUCTION - U2 NFR Requirements Part 2 完了・レビュー待ち（GATE）
