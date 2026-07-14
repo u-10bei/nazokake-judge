@@ -34,3 +34,17 @@ curl -s http://127.0.0.1:8788/run | python3 -m json.tool
 
 ## 実行実績
 - 2026-07-13 ローカル（miniflare, pywrangler dev）で **全 4 項目 PASS**（`result-integration.json`）。
+- U4a: `drive_u4a.py`（`/admin/*` 越し PU4a-1/2/3a/3b/4/6）。
+- U2: `drive_u2.py`（`/api/*` 越し 参加者フロー一巡 + PU2-2/4/5/7/8）。**migration は 0001+0002+0003 を適用**してから実行。
+
+## U2 参加者フロー統合（drive_u2.py）
+```bash
+cd tests/integration
+rm -rf src/schema src/backend && cp -r ../../schema src/schema && cp -r ../../backend src/backend
+uv sync
+uv run pywrangler d1 migrations apply nazokake-it --local     # 0001+0002+0003
+uv run pywrangler dev --port 8788 &
+python drive_u2.py | python3 -m json.tool                      # → result-u2-integration.json 相当
+```
+検証項目: セッション開始（出自秘匿）/ PU2-4 判定冪等 / PU2-2 再開の非重複 / PU2-8 完了順序 /
+PU2-7 Likert 初回不変 / PU2-5 練習の集計除外 / 完了・再アクセス。

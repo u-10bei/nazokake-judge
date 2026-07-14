@@ -60,6 +60,8 @@ derive_exposure(all_sessions) -> ExposureCounts
 - セッション開始時: `seed` をサーバ生成し、`exposure_snapshot`（その時点の導出露出）と共に Session に保存。
 - 監査時: `generate_pairs(pool, exposure_snapshot, seed, params)` を再実行すれば**保存済みペア列を完全再現**できる（PBT が本番で反例を発見した際の調査に直結）。
 
+> **改訂注記（2026-07-14, U2 Code Generation Q1 由来）**: Q4=B の本質（**seed + exposure_snapshot を保存し完全リプレイ可能にする**）は維持したまま、**seed の生成方法のみ**を「サーバ乱数生成」から **「トークン由来の決定論シード」`seed = int(SHA-256(token) 先頭 8 バイト)`** に改訂する。理由: 監査の自己記述性向上（token から seed を再導出可能）・RNG 状態不要（Pyodide 制約回避）。RNG 品質は 128-bit ランダムトークンのハッシュゆえ問題なく、seed は参加者レスポンスに出さない（U2-NFR-06）ため漏洩経路なし。**`sessions.seed` への保存は従来どおり継続**（導出値と保存値の一致を監査で検証できる二重化）。黙示の上書きではなく本改訂として明示記録。詳細は `u2-code-generation-plan.md` Q1 / audit.md。
+
 ---
 
 ## 5. Testable Properties（XC-01→PBT-03, XC-02→PBT-02。PBT-01 は Partial では advisory だが重点箇所として明示）

@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U2 Infrastructure Design Part 2 生成完了・承認待ち（GATE）
+- **Current Stage**: CONSTRUCTION - U2 Code Generation Part 2 生成完了・レビュー待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -61,8 +61,9 @@
 - [x] Functional Design — **承認済み**（2026-07-14）。Q3=X（Likert 選定機構実装・方針は後日）、他は★A。**H-3 宿題クローズ**（XC-02=DB 行復元）。成果物 4 件（business-logic-model / business-rules BR-U2-01〜30 / domain-entities / frontend-components）
 - [x] NFR Requirements — **承認済み**（2026-07-14）。全 8 問★A。U2-NFR-01〜15（出自秘匿の NFR 昇格・no-store・相関ハッシュ・楽観更新なし・migration 0003）+ TSD-U2-01〜06
 - [x] NFR Design — **承認済み**（2026-07-14）。全 5 問★A。DP-U2-01〜07（出自秘匿の型排除が要）+ LC-U2-01〜08 + Repository/ビュー型拡張
-- [~] Infrastructure Design — **Part 2 生成完了・承認待ち**（2026-07-14）。全 5 問★A。Workers Static Assets 同一オリジン配信・CORS なし・migration 0003・deploy.yml 無変更・beta 3 点検証を Code Gen 冒頭に
-- [ ] Code Generation - EXECUTE
+- [x] Infrastructure Design — **承認済み**（2026-07-14）。全 5 問★A。Workers Static Assets 同一オリジン配信・CORS なし・migration 0003・deploy.yml 無変更・beta 3 点検証を Code Gen 冒頭に
+- [x] Code Generation Part 1（Planning）— **承認済み**（2026-07-14, 全 6 決定点★A / Q1=U1 FD Q4=B の生成方法改訂を記録）
+- [x] Code Generation Part 2（Generation）— **生成完了・レビュー待ち**（2026-07-14, 全 16 ステップ）。unit+PBT 33 緑（U1/U4a 回帰含む）。integration/beta はユーザー実機（実行実績提示）
 - [ ] Build and Test - EXECUTE
 
 ### 🟢 CONSTRUCTION PHASE（U3 / U4b 未着手）
@@ -74,11 +75,11 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U2）
-- **Current Stage**: **U2 Infrastructure Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
+- **Current Stage**: **U2 Code Generation Part 2 — 生成完了・レビュー待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1（完了）／U4a（完了・承認済み 2026-07-13）／**U2 Functional Design + NFR Requirements + NFR Design（承認済み 2026-07-14）**
-- **Next Stage**: U2 Infrastructure Design 承認 → **U2 Code Generation**（冒頭に Static Assets×Python Workers の beta 3 点検証）
-- **Status**: U2 Infrastructure Design の成果物を生成（全 5 問★A / Workers Static Assets 同一オリジン / migration 0003 / deploy.yml 無変更）。plan の [Answer] 欄バックフィル済み。承認後 Code Generation〈U2〉へ
+- **Completed**: U1（完了）／U4a（完了・承認済み 2026-07-13）／**U2 全設計フェーズ + Code Gen Part 1（承認済み 2026-07-14）**
+- **Next Stage**: U2 Code Generation 承認 → **Build & Test〈U2〉**（beta 検証 + integration の実機実行実績）
+- **Status**: U2 Code Generation Part 2 完了（全 16 ステップ・6 決定点★A）。**unit+PBT 33 緑**（U1/U4a 回帰含む・default None で既存不変）＋サービス層 Fake 一巡確認。integration（drive_u2.py）/beta 検証はユーザー実機。ガバナンス: U1 FD Q4=B の seed 生成方法を改訂（U1 §4 注記済み）
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）

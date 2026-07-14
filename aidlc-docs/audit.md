@@ -457,3 +457,26 @@
 **User Input**: "全 5 問回答済み・承認。全問 ★A。Q1 に beta 3 点検証（Static Assets × Python Workers を Code Generation 冒頭の smoke で確定、受け皿は是正→C(Worker 埋め込み)→B(Pages) の順）。Q2 に SPA フォールバック不使用（/ のみで完結・未知パス 404 可・検証対象外）。deploy.yml は 0003 追加で無変更。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: infrastructure-design.md（差分中心: LC-U2→インフラ、Workers Static Assets 同一 Worker/同一オリジン配信・/api/* ルーティング（アセット非一致で Worker）・SPA フォールバック不使用・CORS なし・新規シークレットなし・migration 0003 適用順・deploy.yml 無変更＝versioned 自動適用〈RT-1 消化の配当〉・**6-β Static Assets×Python Workers の beta 3 点検証を Code Generation 冒頭に**・デプロイ手順・トレーサビリティ）を生成。共有分は shared-infrastructure.md 参照（新規共有インフラなし）。標準 2 択（Request Changes / Continue → Code Generation〈U2〉）を提示予定。
 **Context**: CONSTRUCTION - U2 Infrastructure Design Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U2 Infrastructure Design - 承認 & Code Generation 開始
+**Timestamp**: 2026-07-14T03:20:00Z
+**User Input**: "承認します"
+**AI Response**: U2 Infrastructure Design（Workers Static Assets 同一オリジン配信 / /api/* ルーティング / CORS なし / migration 0003 / deploy.yml 無変更 / 6-β beta 3 点検証）を承認完了。aidlc-state の U2 Infrastructure Design を承認済みに更新し、per-unit ループ次段の Code Generation〈U2〉Part 1（Planning）へ移行。code-generation.md ルールに従い番号付き生成ステップ（beta 検証冒頭 → schema ビュー型/params 拡張 → migration 0003 → domain select_likert_targets → Repository 拡張 → backend/participant〈phase/log/view/session/response/survey/api〉→ entry.py 配線 → frontend SPA → wrangler [assets] → PBT/integration → U1/U4a 回帰 → Documentation）と決定点を含む `construction/plans/u2-code-generation-plan.md` を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U2 Code Generation Part 1（Planning）承認待ち
+
+---
+
+## U2 Code Generation - Part 1 承認 & Part 2 開始（+ U1 FD Q4=B 生成方法の改訂）
+**Timestamp**: 2026-07-14T03:40:00Z
+**User Input**: "Part 1 全 6 決定点回答済み・承認。全問★A。Q1 は U1 FD Q4=B（seed 生成方法）の改訂として audit 記録 + U1 側注記必須。Part 2 注記: レビュー時 Claude 環境で unit+PBT 実行、integration と beta 検証は実行実績提示。Q1 改訂記録を Part 2 commit に含める。"
+**AI Response**: Part 1 計画承認、plan の Answer 欄に全★A を記入。**ガバナンス記録（Q1=U1 FD Q4=B の改訂）**: U1 FD Q4=B の本質（seed+exposure_snapshot 保存で完全リプレイ）は維持し、**seed 生成方法のみ**を「サーバ乱数」→「トークン由来決定論シード `seed=int(SHA-256(token) 先頭 8 バイト)`」に改訂。理由=監査の自己記述性向上・RNG 状態不要（Pyodide 制約回避）、RNG 品質は 128-bit トークンのハッシュゆえ問題なし、seed は参加者非出力（U2-NFR-06）。`sessions.seed` 保存は継続（導出と保存値の一致を監査で検証できる二重化）。**黙示の上書きにせず** U1 側 `u1/functional-design/business-logic-model.md §4` に改訂注記を追加済み。Part 2 生成開始: 全 16 ステップ（beta 検証冒頭 → schema params/ビュー型 → migration 0003 → select_likert_targets+PBT → Repository 拡張 → derive_phase+PBT → ParticipantLog → ViewSerializer → Services → ParticipantApi+entry 配線 → frontend SPA+wrangler assets → integration → U1/U4a 回帰 → Documentation）。
+**Context**: CONSTRUCTION - U2 Code Generation Part 2（Generation）実行中
+
+---
+
+## U2 Code Generation - Part 2 Generation 完了（unit+PBT 33 緑、integration/beta はユーザー実機）
+**Timestamp**: 2026-07-14T05:30:00Z
+**AI Response**: U2 全 16 ステップ生成。**schema**: `AssignmentParams.likert_fixed_targets` 追加、`schema/views.py`（ItemView={item_id,body} 等・出自を型で排除 DP-U2-02）。**migration 0003**（likert UNIQUE INDEX・deploy.yml 無変更）。**domain**: `select_likert_targets`（純関数）。**Repository 拡張**: insert_likert（初回不変）/upsert_survey/get_session/get_pairs/answered_pair_ids/answered_likert_refs/survey_exists。**backend/participant/**（新規パッケージ）: phase（derive_phase 純粋述語+is_complete）/log（participant_log+token_hash SHA-256 先頭8）/view（ViewSerializer 出自秘匿一点集約）/session（start_or_resume・build_view 単一再同期経路・seed_from_token=トークン由来決定論シード Q1）/response（submit_judgment サーバ is_practice 判定・冪等）/survey（submit_likert 初回不変・submit_survey 完了順序サーバ確認）/api（/api/* ルーティング・トークン検証チョークポイント・no-store ヘルパ・統一封筒）/errors。entry.py に /api/* 配線。**frontend/**（SPA 3 ファイル・data-testid・楽観更新なし・localStorage トークンのみ）+ wrangler.toml [assets]。**テスト**: PBT test_likert_selection（PU2-6）/test_phase（PU2-3）、integration drive_u2.py（/api/* 越し PU2-2/4/5/7/8）+ it_entry 補助ルート。**検証（この環境）**: unit+PBT 33 passed（ci 200 examples、U1/U4a 回帰緑・default None で既存不変）／サービス層 Fake Repository 一巡（practice→judging→likert→survey→done・冪等・初回不変・完了順序・出自秘匿）／py_compile 全 OK。**ユーザー実機（実行実績提示）**: beta 検証（Static Assets×Python Workers, /api/ping）・integration（実 D1・0001+0002+0003）。**ガバナンス**: U1 FD Q4=B の seed 生成方法を改訂（U1 business-logic-model §4 に注記済み）。code/README.md 生成、ルート README ディレクトリ構成更新。plan 全 Step [x]。標準 2 択（Request Changes / Continue → Build & Test）を提示予定。
+**Context**: CONSTRUCTION - U2 Code Generation Part 2 完了・レビュー待ち（GATE）

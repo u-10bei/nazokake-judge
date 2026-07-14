@@ -39,25 +39,26 @@
 
 ## ディレクトリ構成
 
-案 A′（Cloudflare Python Workers + D1）で確定。U1（共有基盤）を実装済み。
+案 A′（Cloudflare Python Workers + D1）で確定。U1（共有基盤）・U4a（スクリプト+管理 API）・U2（参加者フロー）を実装済み。
 
 ```
 nazokake-judge/
 ├── aidlc-docs/          # AI-DLC の計画・設計ドキュメント
-├── schema/              # データ契約: Pydantic モデル + トークン契約 + 形式バージョン（U1・全ユニット共有）
+├── schema/              # データ契約: Pydantic モデル + トークン契約 + 形式版 + ビュー型（U1/U4a/U2 共有）
+│   └── views.py         #   参加者 API レスポンス契約（ItemView 等・出自秘匿を型で強制, U2）
 ├── backend/
-│   ├── domain/          # AssignmentEngine（純粋）+ Serializer + pool_sufficiency（U1/U4a）
-│   ├── repo/            # D1 Repository（唯一の I/O 境界。書込は U4a で拡張）
+│   ├── domain/          # AssignmentEngine（純粋）+ Serializer + pool_sufficiency + likert 選定（U1/U4a/U2）
+│   ├── repo/            # D1 Repository（唯一の I/O 境界。書込は U4a/U2 で拡張）
 │   ├── admin/           # 管理 API（/admin/*）+ Basic 認証 + 秘匿ログ（U4a）
+│   ├── participant/     # 参加者フロー（/api/*）: phase/log/view/session/response/survey/api（U2）
 │   ├── log.py           # 構造化ログ（U1）
-│   ├── entry.py         # Worker エントリ（on_fetch。/admin/* を配線、参加者ルートは U2）
-│   └── participant/     # 参加者フロー（U2, 未生成）
-├── frontend/            # 静的 HTML/JS（U2/U3, 未生成）
+│   └── entry.py         # Worker エントリ（on_fetch。/admin/*・/api/* を配線）
+├── frontend/            # 静的 SPA（参加者ウィザード: index.html/app.js/styles.css。U2）
 ├── scripts/             # pool_ingest・token_issue（U4a）／bt_aggregate（U4b, 未生成）
-├── migrations/          # D1 versioned マイグレーション
-├── tests/{unit,pbt}/    # 単体 + プロパティベーステスト（Hypothesis）
+├── migrations/          # D1 versioned マイグレーション（0001 U1 / 0002 U4a / 0003 U2）
+├── tests/{unit,pbt,integration}/  # 単体 + PBT（Hypothesis）+ 実 D1 統合
 ├── pyproject.toml       # 依存（Pydantic v2）・ツールチェーン（uv + pywrangler）
-├── wrangler.toml        # Workers 設定（python_workers / D1 binding / workers_dev）
+├── wrangler.toml        # Workers 設定（python_workers / D1 binding / [assets] / workers_dev）
 └── .github/workflows/   # CI（テスト + デプロイ）
 ```
 

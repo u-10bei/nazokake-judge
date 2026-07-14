@@ -219,6 +219,84 @@ class Repository:
             )
         await self._db.batch(to_js_maybe(stmts))
 
+    # ---------------------------------------------------------- 参加者フロー読取（U2）
+
+    async def get_session(self, token: str) -> Session | None:
+        """セッション行を取得（再開・監査再現用, U2）。"""
+        row = await (
+            self._db.prepare(
+                "SELECT token, phase, seed, exposure_snapshot, created_at "
+                "FROM sessions WHERE token = ?"
+            ).bind(token).first()
+        )
+        if row is None:
+            return None
+        d = to_py(row)
+        d["exposure_snapshot"] = json.loads(d.get("exposure_snapshot") or "{}")
+        return Session.model_validate(d)
+
+    async def get_pairs(self, token: str) -> list[Pair]:
+        """あるトークンの確定ペア列を index 昇順で取得（U2 再開・進捗）。"""
+        res = await self._db.prepare(
+            "SELECT token, pair_id, idx, item_left, item_right, is_practice "
+            "FROM pairs WHERE token = ? ORDER BY idx"
+        ).bind(token).all()
+        return [_row_to_pair(r) for r in to_py(res)["results"]]
+
+    async def answered_pair_ids(self, token: str) -> set[str]:
+        """判定済み pair_id 集合（進捗・フェーズ導出・再開位置, U2）。"""
+        res = await self._db.prepare(
+            "SELECT pair_id FROM judgments WHERE token = ?"
+        ).bind(token).all()
+        return {r["pair_id"] for r in to_py(res)["results"]}
+
+    async def answered_likert_refs(self, token: str) -> set[str]:
+        """評定済み Likert target_ref 集合（フェーズ導出・次対象, U2）。"""
+        res = await self._db.prepare(
+            "SELECT target_ref FROM likert_responses WHERE token = ?"
+        ).bind(token).all()
+        return {r["target_ref"] for r in to_py(res)["results"]}
+
+    async def survey_exists(self, token: str) -> bool:
+        """事後アンケート行の有無（完了順序のサーバ確認, BR-U2-24）。"""
+        row = await self._db.prepare(
+            "SELECT 1 FROM survey_responses WHERE token = ?"
+        ).bind(token).first()
+        return row is not None
+
+    # ---------------------------------------------------------- 参加者フロー書込（U2）
+
+    async def insert_likert(
+        self, token: str, target_ref: str, rating: int, now_iso: str
+    ) -> int:
+        """Likert 評定を冪等に挿入し、**保存されている rating**（初回優先）を返す。
+
+        UNIQUE(token,target_ref)（migration 0003）+ ON CONFLICT DO NOTHING で初回不変
+        （BR-U2-17。判定 insert_judgment と同型）。
+        """
+        await (
+            self._db.prepare(
+                "INSERT INTO likert_responses (token, target_ref, rating, created_at) "
+                "VALUES (?, ?, ?, ?) ON CONFLICT(token, target_ref) DO NOTHING"
+            ).bind(token, target_ref, rating, now_iso).run()
+        )
+        kept = await (
+            self._db.prepare(
+                "SELECT rating FROM likert_responses WHERE token = ? AND target_ref = ?"
+            ).bind(token, target_ref).first("rating")
+        )
+        return to_py(kept)
+
+    async def upsert_survey(self, token: str, answers: dict, now_iso: str) -> None:
+        """事後アンケートを upsert（PK=token, 再送・修正で 1 行, BR-U2-21）。"""
+        await (
+            self._db.prepare(
+                "INSERT INTO survey_responses (token, answers, created_at) "
+                "VALUES (?, ?, ?) ON CONFLICT(token) DO UPDATE SET "
+                "answers = excluded.answers, created_at = excluded.created_at"
+            ).bind(token, json.dumps(answers), now_iso).run()
+        )
+
     # ---------------------------------------------------------- 冪等判定（DP-02）
 
     async def insert_judgment(

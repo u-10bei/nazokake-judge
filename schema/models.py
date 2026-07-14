@@ -153,6 +153,9 @@ class AssignmentParams(BaseModel):
     cross_layer_min_ratio: float = Field(default=0.65, ge=0.0, le=1.0)  # 層間ペア比率下限（BR-03）
     max_item_occurrence_k: int = Field(default=3, ge=1)   # セッション内 同一項目出現上限（BR-02）
     inactive_threshold_hours: int = Field(default=48, ge=1)  # 非アクティブ除外閾値（BR-04）
+    # Likert 固定アンカー（U2, BR-U2-15）。None/空なら全 seed ランダム、指定時は優先採用し
+    # 不足分を seed 層均等補充。方針（全固定/混合/全ランダム）はプール凍結時に確定（Negotiable）。
+    likert_fixed_targets: tuple[str, ...] | None = None
 
 
 # ExposureCounts は item_id → 露出回数 の写像（導出値・非永続, H-2）。

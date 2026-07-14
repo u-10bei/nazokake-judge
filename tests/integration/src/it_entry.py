@@ -31,6 +31,31 @@ async def on_fetch(request, env):
             await env.DB.prepare(f"DELETE FROM {t}").run()
         return _j({"reset": True})
 
+    # U2: 素の unused トークンを 1 件 seed（発行ゲートを介さず参加者フローを開始するため）。
+    if path == "/it/seed-token":
+        tok = urlparse(request.url).query.split("token=")[-1] or "ptok"
+        await env.DB.prepare(
+            "INSERT OR IGNORE INTO tokens (token, status, issued_at, last_active_at) "
+            "VALUES (?, 'unused', '2026-07-14T00:00:00Z', NULL)").bind(tok).run()
+        return _j({"seeded_token": tok})
+
+    # U2: 保存済み Likert rating を読む（初回不変 PU2-7 検証用）。
+    if path == "/it/likert-rating":
+        from urllib.parse import parse_qs
+        q = parse_qs(urlparse(request.url).query)
+        tok = q.get("token", [""])[0]
+        ref = q.get("ref", [""])[0]
+        row = await env.DB.prepare(
+            "SELECT rating FROM likert_responses WHERE token = ? AND target_ref = ?"
+        ).bind(tok, ref).first("rating")
+        return _j({"rating": row})
+
+    # U2: 露出導出（練習が集計除外されることの確認 PU2-5 用）。
+    if path == "/it/exposure":
+        from backend.repo import Repository
+        exp = await Repository(env.DB).read_exposure_counts(now_iso="2026-07-14T00:00:00Z")
+        return _j({"exposure": exp, "total_exposure": sum(exp.values())})
+
     if path == "/it/seed-frozen":
         # frozen001 を pairs から参照させる（= 凍結対象）。other001 は相方。
         await env.DB.prepare(

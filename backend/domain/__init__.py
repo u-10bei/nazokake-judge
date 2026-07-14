@@ -10,8 +10,9 @@ from backend.domain.assignment import (
     generate_pairs,
     updated_exposure,
 )
+from backend.domain.likert import select_likert_targets
 from backend.domain.pool_sufficiency import pool_sufficiency
-from backend.domain.serializer import deserialize, serialize
+from backend.domain.serializer import deserialize, next_unanswered_index, serialize
 
 __all__ = [
     "generate_pairs",
@@ -20,5 +21,7 @@ __all__ = [
     "SessionExposure",
     "serialize",
     "deserialize",
+    "next_unanswered_index",
     "pool_sufficiency",
+    "select_likert_targets",
 ]

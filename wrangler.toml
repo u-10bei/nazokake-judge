@@ -6,6 +6,13 @@ compatibility_date = "2025-06-01"
 compatibility_flags = ["python_workers"]
 workers_dev = true   # 既定に依存せず明示（F-6）
 
+# 静的フロント（U2 参加者 SPA）を同一 Worker・同一オリジンで配信（Infra Q1=A）。
+# 既定挙動: パスがアセットに一致すればアセット応答、しなければ Worker(on_fetch)。
+# よって `/api/*` はアセット非一致で on_fetch に到達する（Step 1 beta 検証で実機確認）。
+# SPA フォールバック（not_found_handling）は不使用＝未知パスは 404（Infra Q2）。
+[assets]
+directory = "frontend"
+
 # D1 バインディング。database_id は環境ごとに設定（CI/ダッシュボードで作成）。
 [[d1_databases]]
 binding = "DB"

@@ -39,6 +39,16 @@ from schema.tokens import (
     is_valid_token,
 )
 from schema.version import EXPORT_FORMAT_VERSION
+from schema.views import (
+    ApiError,
+    ItemView,
+    LikertScale,
+    LikertTargetView,
+    PairView,
+    Progress,
+    SessionView,
+    SubmitResult,
+)
 
 __all__ = [
     # モデル型
@@ -48,6 +58,9 @@ __all__ = [
     # U4a ペイロードモデル
     "ItemIngestRequest", "IngestResult", "RejectedItem", "SufficiencyResult",
     "TokenIssueRequest", "TokenIssueResult",
+    # U2 ビュー型（参加者 API レスポンス契約）
+    "ItemView", "PairView", "LikertScale", "LikertTargetView", "Progress",
+    "SessionView", "SubmitResult", "ApiError",
     # 列挙
     "Layer", "TokenStatus", "SessionPhase", "Choice",
     # 明示バリデート関数（トークン契約）
