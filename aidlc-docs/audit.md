@@ -393,3 +393,19 @@
 **AI Response**: U4a Code Generation（schema 波及=Item.body / payloads / pool_sufficiency / Repository 拡張 / backend/admin / scripts / deploy.yml=RT-1 CLOSED）を承認完了。U4a は Code Generation 内で integration（実 D1 全 7 シナリオ）+ unit/PBT 27 を実施済みのため **Build & Test も実質完了**として扱い、aidlc-state の U4a を完了に更新。**U4a 完了**（token_issue/pool_ingest + 管理 API 先行導入）。per-unit ループ次段は **U2（参加者フロー）**。U2 は backend/admin の Basic 認証・Item.body 表示・Repository（save_pair_sequence/insert_judgment/get_token 等）・generate_pairs を消費する。次は U2 Functional Design（Part 1）。
 **Context**: CONSTRUCTION - U4a 完了 → U2 Functional Design 開始
 
+
+---
+
+## U2 Functional Design - Part 1（Plan + 質問）生成
+**Timestamp**: 2026-07-13T14:10:00Z
+**User Input**: "U2 の Functional Design を始めて"
+**AI Response**: functional-design.md ルールに従い U2（参加者セッション）の Part 1 を実行。unit-of-work.md / story-map / stories.md（US-P01〜08・XC-02/04）・既存 U1/U4a 成果物・schema/models.py・Repository・AssignmentEngine・serializer・entry.py・admin/api.py を精読。U1/U4a が土台提供済みのため U2 の新規設計を 3 点（フェーズ状態機械の駆動 / XC-02 ラウンドトリップ対象=H-3 宿題 / Likert 対象選定）に集約し、`construction/plans/u2-functional-design-plan.md` に中核論点・スコープ境界・全 12 問（Q1〜Q12 + Q3-b、各 ★A デフォルト・[Answer] 欄）を作成し回答待機（GATE）。
+**Context**: CONSTRUCTION - U2 Functional Design Part 1（Planning）承認待ち
+
+---
+
+## U2 Functional Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-14T00:30:00Z
+**User Input**: "全 12 問回答済み・承認（2026-07-14）。Q3 のみ ★A を修正（選定機構を今実装し、選定方針はプール凍結時に確定＝likert_fixed_targets 追加・固定優先+seed 層均等補充）。Q3-b=A（都度導出）。Q1/Q5/Q8 に明確化補足（Q1=5 状態機械・instruction 除外の UI 前置 / Q5=トークン露出の理屈+Cache-Control: no-store / Q8=Likert は DO NOTHING 初回不変・Survey のみ upsert）。他は推奨どおり。Part 2 指示: 5 状態機械と教示前置を状態遷移に明記 / select_likert_targets を Testable Properties に / no-store とログのトークン非出力を business-rules 化 / migration 0003 と Repository 追加を U1 波及として明示。"
+**AI Response**: 回答分析 → 全問明確・矛盾なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 12 問（Q3=X・Q3-b 含む）バックフィル。Part 2 実行: business-logic-model.md（構成要素・5 状態 derive_phase・start_or_resume/再開/新規開始・select_likert_targets 機構・送信 3 フロー・XC-02 クローズ・PU2-1〜8・U1 波及）／business-rules.md（BR-U2-01〜30）／domain-entities.md（ビュー型・AssignmentParams.likert_fixed_targets・migration 0003 UNIQUE・出自非公開）／frontend-components.md（5 画面階層・サーバ権威状態・操作フロー・検証・API 結合・XC-04）を生成。**H-3 の宿題（XC-02 ラウンドトリップ対象）を Q2=A で DB 行復元に確定＝クローズ**。標準 2 択（Request Changes / Continue → NFR Requirements〈U2〉）を提示予定。
+**Context**: CONSTRUCTION - U2 Functional Design Part 2 完了・レビュー待ち（GATE）

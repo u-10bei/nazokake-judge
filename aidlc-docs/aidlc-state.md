@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4a 完了（承認済み）→ U2 Functional Design 開始待ち
+- **Current Stage**: CONSTRUCTION - U2 Functional Design Part 2 生成完了・承認待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
 
 ## Workspace State
@@ -57,24 +57,28 @@
 - [x] Code Generation Part 2 (Generation) — 承認済み 2026-07-13（unit+PBT 27 + integration 7 全 PASS。RT-1 CLOSED）
 - [x] Build & Test — Code Generation 内で実施（integration 実 D1 全 7 シナリオ + unit/PBT 27）。**U4a 完了**
 
-### 🟢 CONSTRUCTION PHASE
-- [ ] Functional Design - EXECUTE
+#### U2: 参加者セッション（participant）
+- [~] Functional Design — **Part 2 生成完了・承認待ち**（2026-07-14）。Q3=X（Likert 選定機構実装・方針は後日）、他は★A。**H-3 宿題クローズ**（XC-02=DB 行復元）。成果物 4 件（business-logic-model / business-rules BR-U2-01〜30 / domain-entities / frontend-components）
 - [ ] NFR Requirements - EXECUTE
 - [ ] NFR Design - EXECUTE
 - [ ] Infrastructure Design - EXECUTE
 - [ ] Code Generation - EXECUTE
 - [ ] Build and Test - EXECUTE
 
+### 🟢 CONSTRUCTION PHASE（U3 / U4b 未着手）
+- [ ] U3（研究者・管理）: Functional Design 以降
+- [ ] U4b（bt_aggregate）: Functional Design 以降
+
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U1）
-- **Current Stage**: U1 Code Generation Part 1（Planning）— 生成完了・承認待ち（standardized 2-option GATE）
+- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U2）
+- **Current Stage**: **U2 Functional Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1 Functional Design（cb57583）／NFR Requirements（c70340a）／NFR Design（9cf22aa）／Infrastructure Design（承認済み 2026-07-12, H-1=(c) 確定, 8a4dc6f）
-- **Next Stage**: U2（参加者フロー）の Functional Design。実装順 U1→U4a→**U2**→U3→U4b
-- **Status**: **U4a 完了・承認済み**（2026-07-13）。unit+PBT 27 + integration 7 全 PASS。RT-1 CLOSED。次は U2 Functional Design
+- **Completed**: U1（完了）／U4a（完了・承認済み 2026-07-13）
+- **Next Stage**: U2 Functional Design 承認 → **U2 NFR Requirements**
+- **Status**: U2 FD の 4 成果物を生成（Q3=X: Likert 選定機構実装・方針は後日 / 他★A / **H-3 宿題クローズ**）。plan の [Answer] 欄バックフィル済み。承認後 NFR Requirements〈U2〉へ
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
