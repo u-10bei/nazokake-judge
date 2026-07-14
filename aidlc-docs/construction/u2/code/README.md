@@ -60,9 +60,20 @@
 - **全 Python 構文チェック（py_compile）**: OK。
 - **PU2-1（serialize/deserialize ラウンドトリップ）**: 既存 `tests/pbt/test_serializer` 相当（U1 serializer, XC-02）で担保。
 
-## ユーザー側で実施する実機検証（実行実績提示）
-1. **beta 検証（Step 1, Infra §6-β）**: Static Assets × Python Workers — `/api/ping` が Worker 到達 / アセット `/` 配信 / deploy 同梱。想定外→是正 → C（Worker 埋め込み）→ B（Pages）。
-2. **integration**（実 D1・miniflare）: `tests/integration/`（`cp` で本体同期 → `d1 migrations apply --local`（0001+0002+0003）→ `pywrangler dev` → `python drive_u2.py`）。PU2-2/4/5/7/8 + 一巡。
+## integration 実行実績（実 D1 / miniflare, 2026-07-14）
+`tests/integration/`（本体同期 → `d1 migrations apply --local`〈0001+0002+0003〉→ `pywrangler dev` → `python drive_u2.py`）で **全 9 項目 PASS**（`result-u2-integration.json`）:
+PU2-start-session（出自秘匿 leaked=false）/ PU2-4 判定冪等 / PU2-2 再開の非重複 / PU2-reach-likert /
+PU2-8 完了順序 / PU2-7 Likert 初回不変（stored=3）/ PU2-complete / PU2-5 練習の集計除外（80==80）/ 再アクセス completed。
+
+### 実機で発見・修正したバグ（seed の D1 bind オーバーフロー）
+- **症状**: `GET /api/session`（新規開始）で `D1_TYPE_ERROR: Type 'bigint' not supported`。
+- **原因**: `seed_from_token` が SHA-256 先頭 **8 バイト（最大 1.8e19）** を返し、`sessions.seed` の D1 bind が **JS 安全整数（2^53-1）** を超える int を bigint 化して拒否。
+- **修正**: seed を **先頭 6 バイト（48bit, < 2^53）** に短縮（`backend/participant/session.py`）。決定論性・監査再現性・トークン由来の性質は不変（RNG 品質は 128-bit トークンのハッシュゆえ十分）。plan/audit の「先頭 8 バイト」は本実装制約により 6 バイトへ確定（自己記述コメント付き）。
+- **教訓**: pure-Python/PBT では検出できない D1 bind の型制約を integration が捕捉（U4a の `body_ref None` bind 事例と同型の価値）。
+
+## ユーザー側で実施する実機検証（残 1 件・実行実績提示）
+- **beta 検証（Step 1, Infra §6-β）**: Static Assets × Python Workers — 初回実デプロイと兼ねる。`/api/ping` が Worker 到達（**dev で確認済み**）/ アセット `/` 配信（要デプロイ）/ deploy 同梱。想定外→是正 → C（Worker 埋め込み）→ B（Pages）。
+  - 補足: `/api/*` の Worker 到達は本 integration 環境（miniflare, [assets] なし）でも `/api/ping` 応答で確認済み。残るはアセット配信（`/`→index.html）の実デプロイ確認のみ。
 
 ## 決定点の実装対応
 | 決定点 | 実装 |

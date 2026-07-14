@@ -1,0 +1,76 @@
+{
+  "overall_pass": true,
+  "results": [
+    {
+      "item": "PU2-start-session",
+      "pass": true,
+      "detail": {
+        "status": "in_progress",
+        "phase": "practice",
+        "leaked": false
+      }
+    },
+    {
+      "item": "PU2-4-judgment-idempotent",
+      "pass": true,
+      "detail": {
+        "r1": "A",
+        "r2": "A",
+        "dup2": true
+      }
+    },
+    {
+      "item": "PU2-2-resume-no-dup",
+      "pass": true,
+      "detail": {
+        "answered": "p000",
+        "next": "p001"
+      }
+    },
+    {
+      "item": "PU2-reach-likert",
+      "pass": true,
+      "detail": {
+        "phase": "likert"
+      }
+    },
+    {
+      "item": "PU2-8-completion-ordering",
+      "pass": true,
+      "detail": {
+        "status": "in_progress",
+        "phase": "likert"
+      }
+    },
+    {
+      "item": "PU2-7-likert-initial-value",
+      "pass": true,
+      "detail": {
+        "stored": 3
+      }
+    },
+    {
+      "item": "PU2-complete",
+      "pass": true,
+      "detail": {
+        "status": "completed",
+        "phase": "done"
+      }
+    },
+    {
+      "item": "PU2-5-practice-excluded",
+      "pass": true,
+      "detail": {
+        "total_exposure": 80,
+        "expected": 80
+      }
+    },
+    {
+      "item": "PU2-reaccess-completed",
+      "pass": true,
+      "detail": {
+        "status": "completed"
+      }
+    }
+  ]
+}

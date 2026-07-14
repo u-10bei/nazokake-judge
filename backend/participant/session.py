@@ -25,9 +25,15 @@ def now_iso() -> str:
 
 
 def seed_from_token(token: str) -> int:
-    """トークン由来の決定論シード（Q1=A）。同一トークン → 同一ペア列・Likert 対象。"""
+    """トークン由来の決定論シード（Q1=A）。同一トークン → 同一ペア列・Likert 対象。
+
+    **D1 bind 制約**: `sessions.seed` は D1(SQLite) に保存され、D1 の bind は JS の安全整数
+    （2^53-1）を超える Python int を bigint として拒否する（D1_TYPE_ERROR）。よって SHA-256
+    ダイジェストの**先頭 6 バイト（48bit）**を用いる（< 2^53、決定論性・監査再現性は不変。
+    RNG 品質は 128-bit トークンのハッシュゆえ十分）。
+    """
     digest = hashlib.sha256(token.encode("utf-8")).digest()
-    return int.from_bytes(digest[:8], "big")
+    return int.from_bytes(digest[:6], "big")
 
 
 async def start_or_resume(repo, token: str, params: AssignmentParams) -> SessionView:

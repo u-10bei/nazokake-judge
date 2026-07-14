@@ -63,7 +63,7 @@
 - [x] NFR Design — **承認済み**（2026-07-14）。全 5 問★A。DP-U2-01〜07（出自秘匿の型排除が要）+ LC-U2-01〜08 + Repository/ビュー型拡張
 - [x] Infrastructure Design — **承認済み**（2026-07-14）。全 5 問★A。Workers Static Assets 同一オリジン配信・CORS なし・migration 0003・deploy.yml 無変更・beta 3 点検証を Code Gen 冒頭に
 - [x] Code Generation Part 1（Planning）— **承認済み**（2026-07-14, 全 6 決定点★A / Q1=U1 FD Q4=B の生成方法改訂を記録）
-- [x] Code Generation Part 2（Generation）— **生成完了・レビュー待ち**（2026-07-14, 全 16 ステップ）。unit+PBT 33 緑（U1/U4a 回帰含む）。integration/beta はユーザー実機（実行実績提示）
+- [x] Code Generation Part 2（Generation）— **生成完了・レビュー待ち**（2026-07-14, 全 16 ステップ）。unit+PBT 33 緑（U1/U4a 回帰含む）。**integration 全 9 項目 PASS**（実 D1/miniflare, result-u2-integration.json。seed の D1 bind バグを捕捉・修正=先頭6バイト）。残る実機は beta のアセット配信（初回実デプロイ時）
 - [ ] Build and Test - EXECUTE
 
 ### 🟢 CONSTRUCTION PHASE（U3 / U4b 未着手）
