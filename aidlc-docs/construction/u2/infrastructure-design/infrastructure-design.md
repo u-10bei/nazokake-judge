@@ -59,7 +59,19 @@ Static Assets × Python Workers は G-1（FastAPI 起動 CPU）と同種の「**
 
 **検証結果（2026-07-14, 初回実デプロイの過程で確定）**:
 - **① の確認過程で F-8 を発見・是正**: 初回デプロイ後 `/api/ping` が 1101・tail に `ModuleNotFoundError: No module named 'backend'`。原因＝Python Workers は `main` のディレクトリのみをモジュールルートにバンドルするため、`main="backend/entry.py"` ではルートが `backend/` になり `backend.…`/`schema.…` の絶対 import が解決不能（integration が PASS したのは harness が `src/` 隔離コピーで正しいレイアウトだったから＝本番設定に未伝播）。→ **src/ レイアウトへ移行**（`main="src/entry.py"`・`src/backend/`・`src/schema/`、`pythonpath=["src","."]`、scripts `_bootstrap`、harness cp 元更新）。**F-8 として知見昇格**（§2.1 / shared-infrastructure）。
-- **例外がスローされた＝ルーティングは Worker に到達**していたため **beta ① は半分成立済み**。Static Assets 併用不能の C/B フォールバックは**不要**（本件は assets 無関係のバンドル規則の問題）。是正後の残作業は正常応答の確認（`/api/ping` JSON・`/` index.html・`/no-such-path` 404・`/admin/items` 401）のみ＝再デプロイで消化。
+- **例外がスローされた＝ルーティングは Worker に到達**していたため **beta ① は半分成立済み**。Static Assets 併用不能の C/B フォールバックは**不要**（本件は assets 無関係のバンドル規則の問題）。
+- **③ の確認で entry.py の catch-all を発見・修正**: 未知パスがヘルス JSON（200）を返す実装で、コメント/Infra Q2（未知パス=404）と不一致だった。→ **ヘルスを専用パス `/health` に限定し、未知パスは 404 + 統一封筒 `{ok:false,error:"not found"}`（no-store）** に修正（`src/entry.py`）。
+
+**beta 3 点検証（2026-07-14）** — 確認経路を明記（dev=miniflare 実測 / prod=本番デプロイ）:
+| # | 項目 | dev/miniflare（実測） | prod（本番） |
+|---|---|---|---|
+| ① | `/api/*` が `on_fetch`（Worker）到達 | **確認** `/api/ping`→`200 {ok:true,unit:U2,route:api}` | 初回デプロイで**例外到達＝ルーティングは Worker に届いていた**（F-8 是正後の 200 応答は再デプロイ + curl 1 回で確定） |
+| ② | `[assets]` 設定・deploy 同梱 | harness は `[assets]` なしのため dev では非対象 | **本番デプロイ実績**（`directory="frontend"`）。`/`→index.html の配信は本番でのみ確認可 |
+| ③ | 未知パスの扱い | **確認** `/no-such-path`→`404 {ok:false,error:"not found"}`（catch-all 修正後）／`/health`→200／`/admin/items`(認証なし)→**401** | catch-all 修正後の 404 は再デプロイ + curl 1 回で確定 |
+
+- **catch-all 修正の位置づけ**: `run_worker_first` 相当の明示設定は**不要**（アセット非一致パスが `on_fetch` へ到達する既定挙動を dev で実測）。未知パス 404 は entry.py 側の分岐修正で担保（アセット機構ではなく Worker のルーティング責務）。
+- **デプロイ実績（本番）**: 手元 `wrangler d1 create nazokake-judge` → `database_id` を `wrangler.toml` に転記・commit（`ab3e84bc…`）→ `wrangler secret put ADMIN_BASIC_USER/PASSWORD`（一回きり）→ Actions `deploy.yml`（test → `d1 migrations apply --remote`〈**0001+0002+0003 本番適用済み**〉→ deploy）で **初回実デプロイ完了**。この過程で F-8（バンドル）と entry.py catch-all を発見。
+- **残**: F-8 + catch-all を反映した**再デプロイ後**に prod ①（`/api/ping`=200）・③（未知=404）・②（`/`=index.html）を **curl で最終確認 → beta CLOSED**。ルーティング/秘匿/冪等ロジック自体は dev+integration で実証済みのため、残るは本番配信の疎通確認のみ。
 
 ## 7. Deployment（Q5）
 - U1/U4a の **dev（miniflare/ローカル D1）/ prod（実験用サブドメイン・本番 D1）** 分離を流用。

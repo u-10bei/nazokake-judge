@@ -3,8 +3,8 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U2 Code Generation Part 2 生成完了・レビュー待ち（GATE）
-- **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(FastAPI) + D1、PBT=Hypothesis（案 B はフォールバック温存）
+- **Current Stage**: CONSTRUCTION - **U2 完了**（Code Gen + Build & Test）→ U3 Functional Design 開始待ち
+- **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
 - **Existing Code**: No
@@ -63,8 +63,8 @@
 - [x] NFR Design — **承認済み**（2026-07-14）。全 5 問★A。DP-U2-01〜07（出自秘匿の型排除が要）+ LC-U2-01〜08 + Repository/ビュー型拡張
 - [x] Infrastructure Design — **承認済み**（2026-07-14）。全 5 問★A。Workers Static Assets 同一オリジン配信・CORS なし・migration 0003・deploy.yml 無変更・beta 3 点検証を Code Gen 冒頭に
 - [x] Code Generation Part 1（Planning）— **承認済み**（2026-07-14, 全 6 決定点★A / Q1=U1 FD Q4=B の生成方法改訂を記録）
-- [x] Code Generation Part 2（Generation）— **生成完了・レビュー待ち**（2026-07-14, 全 16 ステップ）。unit+PBT 33 緑（U1/U4a 回帰含む）。**integration 全 9 項目 PASS**（実 D1/miniflare, result-u2-integration.json。seed の D1 bind バグを捕捉・修正=先頭6バイト）。残る実機は beta のアセット配信（初回実デプロイ時）
-- [ ] Build and Test - EXECUTE
+- [x] Code Generation（Part 1+2）— **承認済み・完了**（2026-07-14, 全 16 ステップ / 6 決定点★A）。unit+PBT 33 緑（U1/U4a 回帰含む）。実機で 2 バグ捕捉・修正: **F-7**（seed の D1 bind オーバーフロー→48bit）・**F-8**（バンドル module root→src/ レイアウト移行）+ entry.py catch-all→404。Q1=U1 FD Q4=B の生成方法改訂を記録
+- [x] Build & Test — **完了**（2026-07-14）。unit+PBT **33 緑** / integration **全 9 項目 PASS**（実 D1/miniflare, result-u2-integration.json: PU2-2/4/5/7/8 + 一巡・出自秘匿）/ **本番初回デプロイ完了**（migrations 0001+0002+0003 本番適用済み）/ beta 3 点は dev 実測で確定（①api 到達・③未知=404・④admin 401・health 200）。**残**: F-8+catch-all 反映の**再デプロイ後の prod curl 疎通**（①=200・③=404・②`/`=index.html）→ beta 最終 CLOSE（自明・疎通のみ）。**U2 完了**
 
 ### 🟢 CONSTRUCTION PHASE（U3 / U4b 未着手）
 - [ ] U3（研究者・管理）: Functional Design 以降
@@ -74,12 +74,12 @@
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U2）
-- **Current Stage**: **U2 Code Generation Part 2 — 生成完了・レビュー待ち**（standardized 2-option GATE）
+- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, **U2 完了 → U3 へ**）
+- **Current Stage**: **U2 完了**（Code Generation + Build & Test）。次は U3 Functional Design
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1（完了）／U4a（完了・承認済み 2026-07-13）／**U2 全設計フェーズ + Code Gen Part 1（承認済み 2026-07-14）**
-- **Next Stage**: U2 Code Generation 承認 → **Build & Test〈U2〉**（beta 検証 + integration の実機実行実績）
-- **Status**: U2 Code Generation Part 2 完了（全 16 ステップ・6 決定点★A）。**unit+PBT 33 緑**（U1/U4a 回帰含む・default None で既存不変）＋サービス層 Fake 一巡確認。integration（drive_u2.py）/beta 検証はユーザー実機。ガバナンス: U1 FD Q4=B の seed 生成方法を改訂（U1 §4 注記済み）
+- **Completed**: U1（完了）／U4a（完了・承認済み 2026-07-13）／**U2（完了 2026-07-14: 全設計 + Code Gen + Build & Test）**
+- **Next Stage**: **U3（研究者・管理）の Functional Design**（進捗モニタリング US-R01 / エクスポート US-R02 / 暫定勝率 US-R03。既存 backend/admin の Basic 認証・schema エクスポート形式を消費）
+- **Status**: U2 完了。unit+PBT 33 緑 / integration 9 項目 PASS / 本番初回デプロイ済み（migrations 0001〜0003 適用）。実機で F-7（seed bind）・F-8（バンドル src/ レイアウト）・entry.py catch-all を捕捉・修正。beta 3 点は dev 実測で確定、prod 最終疎通は再デプロイ後 curl のみ（自明・残作業）。**新規 backend コードは src/ 配下に置く（F-8）**
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
