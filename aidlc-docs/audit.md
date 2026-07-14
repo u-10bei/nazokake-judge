@@ -441,3 +441,19 @@
 **User Input**: "全 5 問回答済み・承認。全問 ★A。適用性評価（キャッシュ/キュー/CB/ロック/スケール=N/A）同意。Q2 の (a) 出自秘匿=型で排除が要（Item を直接シリアライズせず ItemView のみ通す＝layer は出力型に存在せず事故で出せない）。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: nfr-design-patterns.md（DP-U2-01〜07: トークン検証チョークポイント軽量版・出自秘匿の型排除〈本ユニットの要〉・トークン非ログ単一ラッパ+ハッシュ規約・no-store 共通ヘルパ・純粋述語 derive_phase/純関数 select_likert_targets・DB 側冪等+完了順序サーバ確認・統一封筒+SessionView 再同期契約、非採用部品表）／logical-components.md（LC-U2-01 ParticipantApi / 02 SessionService / 03 ResponseService / 04 SurveyService / 05 ViewSerializer〈出自秘匿の一点集約〉/ 06 ParticipantLog〈秘匿〉/ 07 LikertSelector / 08 ParticipantFrontend + Repository 拡張 + ビュー型 DataContract 拡張・依存方向図・層の逆流禁止）を生成。標準 2 択（Request Changes / Continue → Infrastructure Design〈U2〉）を提示予定。
 **Context**: CONSTRUCTION - U2 NFR Design Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U2 NFR Design - 承認 & Infrastructure Design 開始
+**Timestamp**: 2026-07-14T02:45:00Z
+**User Input**: "承認します"
+**AI Response**: U2 NFR Design（DP-U2-01〜07 / LC-U2-01〜08）を承認完了。aidlc-state の U2 NFR Design を承認済みに更新し、per-unit ループ次段の Infrastructure Design〈U2〉へ移行。infrastructure-design.md ルールに従い Part 1（Plan + 質問）を作成: U1/U4a の共有インフラ（D1 + schema/ + CI デプロイ）を流用し差分中心。U2 固有の最大論点＝**静的フロント（SPA）の配信方法**（TSD-U2-01 の申し送り）と、それに従属する CORS/配信オリジン、migration 0003 の適用、deploy.yml への 0003 追加を質問化して `construction/plans/u2-infrastructure-design-plan.md` に作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U2 Infrastructure Design Part 1（Planning）承認待ち
+
+---
+
+## U2 Infrastructure Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-14T03:05:00Z
+**User Input**: "全 5 問回答済み・承認。全問 ★A。Q1 に beta 3 点検証（Static Assets × Python Workers を Code Generation 冒頭の smoke で確定、受け皿は是正→C(Worker 埋め込み)→B(Pages) の順）。Q2 に SPA フォールバック不使用（/ のみで完結・未知パス 404 可・検証対象外）。deploy.yml は 0003 追加で無変更。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: infrastructure-design.md（差分中心: LC-U2→インフラ、Workers Static Assets 同一 Worker/同一オリジン配信・/api/* ルーティング（アセット非一致で Worker）・SPA フォールバック不使用・CORS なし・新規シークレットなし・migration 0003 適用順・deploy.yml 無変更＝versioned 自動適用〈RT-1 消化の配当〉・**6-β Static Assets×Python Workers の beta 3 点検証を Code Generation 冒頭に**・デプロイ手順・トレーサビリティ）を生成。共有分は shared-infrastructure.md 参照（新規共有インフラなし）。標準 2 択（Request Changes / Continue → Code Generation〈U2〉）を提示予定。
+**Context**: CONSTRUCTION - U2 Infrastructure Design Part 2 完了・レビュー待ち（GATE）
