@@ -520,3 +520,19 @@
 **User Input**: "全 7 問回答済み・承認。Q1=X（★A + items{item_id,layer} / pair_index / exported_at を契約に追加＝U4b 自己完結・順序効果分析・スナップショット自己記述）。Q2〜Q7=A。Q4 補足=管理 HTML は assets 非配置（src/ 埋め込み）を business-rules 化。Q7 補足=XC-04 からの意識的逸脱を記録。Part 2 指示: ExportBundle を domain-entities に正本として定義し U4b 申し送り明記、assets 非配置と XC-04 逸脱を BR 番号付き固定、Testable Properties に練習除外の出力段保証と winrate 定義整合を含める。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 7 問（Q1=X 含む）バックフィル。Part 2 実行: business-logic-model.md（進捗/暫定勝率/エクスポートの各フロー・集計の Repository 集約・PU3-1〜5・U4b 申し送り）／business-rules.md（BR-U3-01〜10: 認証一本化・**管理 HTML の assets 非配置=src/ 埋め込み**・**練習除外の出力段保証**・進捗内訳・非BT 明示・**ExportBundle 契約と版管理**・秘匿ログ・集計の Repository 集約・**XC-04 意識的逸脱**）／domain-entities.md（**ExportBundle 正本**: schema_version/exported_at/items{item_id,layer}/judgments{...pair_index...本番のみ}/likert/surveys、U4b 入力契約・自己完結・body 非格納）／frontend-components.md（管理ダッシュボード = 進捗+暫定勝率+エクスポート、Worker が Basic 認証背後で /admin/ 配信・デスクトップ主）を生成。U3 は読み取り専用（migration なし）。標準 2 択（Request Changes / Continue → NFR Requirements〈U3〉）を提示予定。
 **Context**: CONSTRUCTION - U3 Functional Design Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U3 Functional Design - 承認 & NFR Requirements 開始
+**Timestamp**: 2026-07-15T01:00:00Z
+**User Input**: "承認します、NFR Requirements に進んで"
+**AI Response**: U3 Functional Design（進捗/暫定勝率/エクスポート・BR-U3-01〜10・ExportBundle 正本・管理 UI）を承認完了。aidlc-state の U3 Functional Design を承認済みに更新し、per-unit ループ次段の NFR Requirements〈U3〉へ移行。nfr-requirements.md ルールに従い Part 1（Plan + 質問）を作成: U3 は既存 Basic 認証境界の再利用・読み取り専用のため差分は小さいが、(1) エクスポート秘匿（トークン付きデータの取扱・攻撃面）(2) 認証（U4a Basic を管理 UI にも）(3) 性能（集計クエリの SLO 姿勢）(4) テスト振り分けが論点。`construction/plans/u3-nfr-requirements-plan.md` に質問（各 ★A デフォルト・[Answer] 欄）を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U3 NFR Requirements Part 1（Planning）承認待ち
+
+---
+
+## U3 NFR Requirements - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-15T01:30:00Z
+**User Input**: "全 5 問回答済み・承認。全問 ★A。Data/Migration・Scalability/Resiliency=N/A（読み取り専用・migration なし）に同意。Q1=実トークンを認証背後で返す（仮名化は分析側の選択）。Q2=既存 Basic 境界再利用・src/ 埋め込み・CORS なしで正式決着。Q4=PBT は PU3-3 のみ候補・他は非該当明記。Q5=非BT 明示を可用性要件に昇格。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: nfr-requirements.md（U3-NFR-01〜11: 認証一本化・管理 HTML の assets 非配置・エクスポート秘匿〈no-store/ログ非出力/body 非含有/実トークン返却・仮名化しない〉・CORS なし正式決着・SLO なし・読み取り専用の整合は集計の正しさで担保・秘匿ログ・単体/統合振り分け・PBT は PU3-3 のみ非該当明記・非BT 明示の可用性要件昇格 + 非目標節）／tech-stack-decisions.md（TSD-U3-01〜05: 認証再利用・管理 HTML の src/ 埋め込み・集計 SQL の Repository 集約〈練習除外を SQL に〉・ビュー/バンドル型と CSV 純粋直列化・テスト振り分け）を生成。Infra は差分極小（migration なし・新規シークレットなし・GET ルート追加のみ）と申し送り。標準 2 択（Request Changes / Continue → NFR Design〈U3〉）を提示予定。
+**Context**: CONSTRUCTION - U3 NFR Requirements Part 2 完了・レビュー待ち（GATE）
