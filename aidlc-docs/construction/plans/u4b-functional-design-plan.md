@@ -6,6 +6,14 @@
 
 このドキュメントは **Part 1（Plan + 質問）**。回答・承認後に `business-logic-model.md` / `business-rules.md` / `domain-entities.md` を生成します（**UI なし** = CLI・scripts のため frontend-components は N/A）。
 
+## 生成予定の成果物（Part 2）→ 生成済み（2026-07-15）
+- [x] `construction/u4b/functional-design/business-logic-model.md`（BT 集計フロー・MM 反復・連結成分/正則化・Likert 較正・BTResult 組立・Testable Properties PU4b-1〜6・判定装置一巡のクローズ）
+- [x] `construction/u4b/functional-design/business-rules.md`（BR-U4b-01〜: 観測ペア限定スムージング・最大連結成分内 Σθ=0・target_ref=item_id 結合・version 不一致=既定エラー・matches/wins は U3 と同一・source エコーバック）
+- [x] `construction/u4b/functional-design/domain-entities.md`（BTResult 正本・BTItemScore・Calibration・入力 ExportBundle の消費）
+- [x] frontend-components: **N/A**（CLI・scripts）
+
+**回答サマリ**: 全 7 問 A。Q2=観測ペア限定スムージング + 最大連結成分内 Σθ=0。Q3=target_ref=item_id 結合（U2 確認）・非アンカー除外+警告。Q4=除外 item を bt_score=null+component で残す・matches/wins は U3 と同一・**source エコーバック**。Q5=version 不一致は既定エラー（--allow-version-mismatch で緩和）。
+
 ---
 
 ## 中核論点（このユニットの肝）
@@ -34,38 +42,38 @@ U4b は**統計推定**が本体。BT 推定の正しさが「新作の位置確
 - **B**: `scipy.optimize` で負の対数尤度を最小化。→ scipy 依存を足す価値がこの規模では薄い（MM で十分・再現性も高い）。ただし将来必要なら差し替え可能な構造にする。
 - **C**: numpy ベースのロジスティック回帰として解く。→ numpy 依存。MM の pure-Python で足りる。
 
-[Answer]:
+[Answer]: A — MM（**Hunter 2004 の標準反復**）純 Python・依存ゼロ・θ=log π 出力・反復回数/収束閾値パラメータ化。items 約 95・判定数千で数秒未満収束、実装が短く監査可能＝研究コードとして再現性最優先。B/C 不採用。
 
 ### Q2【識別可能性・安定化】比較グラフの連結性と疎データ
 - **★A（推奨）**: (i) **比較グラフの連結成分を検出**し、非連結なら **警告 + 最大連結成分のみで推定**（コンポーネント間は比較不能である旨を出力に明記）。(ii) 疎データ安定化として **弱い正則化（各ペアに仮想的な引き分け 1 件を加える Bayesian prior 相当＝スムージング）** を既定 ON（新作の対戦数が少なくても発散しない）。(iii) 完全勝ち/完全負けの item も正則化で有限スコアに収まる。強度は正規化（幾何平均 = 1 / Σθ = 0）して位置を固定。
 - **B**: 連結性を見ず素朴に MM。→ 非連結・完全分離でスコアが発散/非同定。研究データの誤読を招く。
 
-[Answer]:
+[Answer]: A ＋ 一点明確化: **スムージングの「各ペア」は観測されたペアのみに適用し、全 item ペアには張らない**。全ペアに仮想引き分けを張ると比較グラフが人工的に完全連結化し (i) の連結成分検出が無意味化（非連結という研究上重要な事実の隠蔽）。観測ペア限定なら正則化（発散防止・完全勝敗の有限化）と連結性診断が両立する。正規化 Σθ=0 は**推定対象の最大連結成分内**で行う。
 
 ### Q3【Likert 較正アンカー】BT 尺度の解釈
 ブリッジ Likert（一部作品の 1–7 絶対評定）を較正アンカーに使う（US-R04 チェックリスト）。
 - **★A（推奨）**: **アンカー作品（Likert 評定あり）について「平均 Likert」と「BT スコア θ」の対応から線形写像（θ → 解釈可能スコア）を最小二乗で当て**、全作品の BT スコアをその写像で**解釈可能尺度（Likert 相当）に較正**して併記。生の θ と較正後スコアの両方を出力。アンカーが 2 件未満なら較正はスキップ（生 θ のみ・警告）。**層（layer）を各作品に付与**し「新作のプロ水準に対する相対位置」を層別サマリで示す。
 - **B**: Likert を推定に組み込む（BT + Likert の同時モデル）。→ モデルが複雑化。US-R04 は「較正アンカーとして**解釈に利用**」＝事後の写像で足りる。分離が明快。
 
-[Answer]:
+[Answer]: A ＋ 前提固定: **`likert.target_ref` = 評定対象の `item_id`**（U2 実装で確認済み: `select_likert_targets` は item_id 列を返し `submit_likert` が `target_ref ∈ targets` を検証）。この対応で結合。**ExportBundle の自己完結保証は judgments のみで likert には及ばない**ため、`target_ref ∉ items` のアンカーは**較正から除外 + 警告**。アンカー 2 件未満、またはアンカーの θ 分散ゼロ（全同点）も**較正スキップ + 生 θ のみ + 警告**。層別サマリ含め A のとおり。
 
 ### Q4【出力形式】BTResult
 - **★A（推奨）**: **`BTResult = { schema_version入力の確認, n_items, n_comparisons, n_components, converged, iterations, items: [{item_id, layer, bt_score(θ), calibrated_score|null, rank, matches, wins}], calibration: {anchors, slope, intercept}|null, warnings: [] }`**。出力は **JSON（機械可読）+ 人間可読テーブル**（層別・スコア降順、新作＝層ラベルで判別）。ファイル + stdout。
 - **B**: スコアのみの CSV。→ 収束情報・較正・警告・層が失われ研究解釈に不足。
 
-[Answer]:
+[Answer]: A ＋ 追加 3 点: (1) **非連結時に推定から除外された item も items 配列に残し `bt_score=null` + `component`（成分 ID）で除外を可視化**（黙って消えると「新作の位置確認」で見落とす）。(2) **matches/wins の定義は U3 winrate と同一**（出場数/勝ち数, choice=A→item_left 勝ち）で U3 ダッシュボードと突合可能（PU3-2 と対の整合チェックが U4b でも可能）。(3) **BTResult に `source: {schema_version, exported_at}` をエコーバック**（反復判定装置＝複数スナップショットで回すため、結果がどの時点のエクスポート由来か結果ファイル単体で追える。取り違え防止）。
 
 ### Q5【入力・CLI】エクスポート JSON の受け取り
 - **★A（推奨）**: CLI 引数で **エクスポート JSON ファイルパス**（US-R04「US-R02 のエクスポートファイル」）。`schema_version` を読み **`EXPORT_FORMAT_VERSION` と一致を検証**（不一致は警告/エラー＝契約 BR-U3-07 の版管理と対応）。U3 からの取得は curl（Infra 申し送り）で別途。出力先はオプション（既定 stdout + `--out` でファイル）。**judgments は本番のみ前提**（U3 が保証済み・U4b で再フィルタしない）。
 - **B**: 標準入力パイプのみ。→ ファイル入力の方が反復運用（複数スナップショット比較）に向く。
 
-[Answer]:
+[Answer]: A ＋ 版検証の明確化: **`schema_version` 不一致は既定エラー（終了）**。BR-U3-07 は版上げを伴う契約変更と定義済みゆえ、不一致を警告で通すと契約の意味が消える。必要時のみ **`--allow-version-mismatch`** で明示的に緩められる（その場合 `warnings` に記録）。judgments の再フィルタなし（U3 保証を信頼）も A のとおり。
 
 ### Q6【依存管理】scripts の依存
 - **★A（推奨）**: **追加依存なし（pure-Python 標準ライブラリのみ）**。BT=MM・較正=最小二乗（手実装）・JSON 標準。`pyproject.toml` に U4b 用の新規依存を足さない（F-1 の依存制約は Worker 側の話だが、scripts も依存最小が保守上有利）。将来 numpy/scipy が必要になれば dev 依存で追加可能な構造。
 - **B**: numpy/scipy を scripts 依存に追加。→ この規模（items 約 95・判定 数千）では pure-Python で十分高速。
 
-[Answer]:
+[Answer]: A — 追加依存なし。MM・最小二乗（単回帰＝閉形式で書ける）・JSON すべて標準ライブラリで足りる。
 
 ### Q7【Testable Properties】PBT/単体の対象
 - **★A（推奨）**: **BT 推定の不変条件を PBT**（PBT-03 系, U4b は純粋関数中心ゆえ PBT 適用が自然）:
@@ -77,7 +85,7 @@ U4b は**統計推定**が本体。BT 推定の正しさが「新作の位置確
   単体（example）で CLI 入出力・schema_version 検証・出力形式。
 - **B**: example ベースのみ。→ 推定の不変条件の反例探索が弱い。
 
-[Answer]:
+[Answer]: A ＋ 補足: **スケール正規化の PBT は Q2 で固定した「最大連結成分内で Σθ=0」に合わせる**。単調性（A 常勝 → θ_A > θ_B）は対称スムージング下でも保存されるので正則化 ON のまま検証可能。較正の係数復元は既知線形データで example + PBT 両方。
 
 ---
 

@@ -607,3 +607,11 @@
 **User Input**: "承認します、U4b の Functional Design に進んで"
 **AI Response**: U3 Code Generation（進捗/暫定勝率/エクスポート API・管理 UI・軽微修正 2 点）を承認完了。U3 は integration 実 D1 全 8 項目 PASS + unit/PBT 39 を実施済みのため **Build & Test も実質完了**として扱い、aidlc-state の U3 を完了に更新。**U3 完了（CLOSE）**。per-unit ループ最終段 U4b（bt_aggregate）へ移行。functional-design.md ルールに従い Part 1（Plan + 質問）を作成: U4b は U3 の ExportBundle（JSON 正本）を入力に取るオフライン BT 集計スクリプト（scripts/・Worker 非依存）。中核=(1) BT 推定手法（MM 純 Python vs scipy・比較グラフ連結性/識別可能性）(2) Likert 較正アンカーの使い方（相対 BT 尺度→解釈可能尺度）(3) 出力形式（新作のプロ水準相対位置）。`construction/plans/u4b-functional-design-plan.md` に質問（各 ★A デフォルト・[Answer] 欄）を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
 **Context**: CONSTRUCTION - U4b Functional Design Part 1（Planning）承認待ち
+
+---
+
+## U4b Functional Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-15T06:30:00Z
+**User Input**: "全問 A + Q2/Q3/Q5 固定点。Q2=観測ペア限定スムージング（全ペアに張らない＝連結性診断を保つ）+ 最大連結成分内 Σθ=0。Q3=target_ref=item_id 結合（意味論確認）・target_ref∉items のアンカー除外+警告・アンカー<2/θ分散0 は較正スキップ。Q4=除外 item を bt_score=null+component で残す・matches/wins は U3 と同一・source{schema_version,exported_at} エコーバック。Q5=version 不一致は既定エラー（--allow-version-mismatch で緩和）。Q7=正規化 PBT は最大成分内 Σθ=0 に合わせる。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。**target_ref=item_id を実コードで確認**（select_likert_targets が item_id 列を返し submit_likert が target_ref∈targets を検証）。運用ルールに従い plan の [Answer] 欄を全 7 問バックフィル。Part 2 実行: business-logic-model.md（bt_aggregate フロー・MM=Hunter 2004・連結成分/観測ペア限定正則化・Likert 較正・BTResult 組立・PU4b-1〜7・判定装置一巡クローズ）／business-rules.md（BR-U4b-01〜13: MM 推定・最大連結成分・観測ペア限定スムージング・成分内 Σθ=0・target_ref=item_id 較正・較正スキップ条件・除外 item 可視化・U3 突合・source エコーバック・層付与・版検証既定エラー・本番のみ再フィルタなし・scripts 分離依存最小）／domain-entities.md（BTResult 正本: source/items[BTItemScore]/calibration/warnings、schema/bt.py 追加・DDL 変更なし）を生成。frontend-components=N/A（CLI）。標準 2 択（Request Changes / Continue → NFR Requirements〈U4b〉）を提示予定。
+**Context**: CONSTRUCTION - U4b Functional Design Part 2 完了・レビュー待ち（GATE）
