@@ -8,6 +8,7 @@
 
 ### LC-U4b-01: aggregate（純・正準集計）
 - **役割**: `aggregate(judgments) -> (wins, pair_counts)`。**正準集計の 3 点セット**（DP-U4b-01）: ペアキー `sorted((i,j))` 正規化で `n_ij` を数え、勝敗は item 単位（`w_i`）で向き非依存に集計。**正準化の通過必須点**。
+- **α 適用位置の不変条件（明文固定）**: `aggregate` が返す `wins`/`pair_counts` は**生の観測カウント**であり、擬似データ α（`w̃_ij=w_ij+α/2, ñ_ij=n_ij+α`）は **`fit_bt` の内部でのみ**適用する。**`BTResult.matches`/`wins` は生カウント**（BR-U4b-08 の U3 突合＝winrate 定義一致の成立条件）。α を `aggregate` 側に混ぜると matches/wins に擬似分が乗り U3 の winrate 定義と食い違う。PU4b-6（U3 突合）が捕捉するが、MM 式の教訓（テストで検出されない仕様も明文で固定）に従い一行で固定する。
 - **依存**: `schema`（ExportJudgment）。純粋。
 
 ### LC-U4b-02: connected_components（純）
@@ -67,3 +68,4 @@
 ## 後続への申し送り（Infrastructure Design / Code Generation）
 - **Infrastructure Design（U4b）**: **`scripts/` にファイル追加のみ**（Worker/D1/デプロイ/migration/シークレット無関係）＝差分ほぼゼロ。実行はローカル/CI、入力は U3 から curl 取得（Infra 申し送り）。
 - **Code Generation**: `scripts/bt_aggregate`（LC-U4b-01〜07）、`src/schema/bt.py`、PBT（PU4b-1〜5・連結/非連結 + 左右反転ジェネレータ）+ unit（CLI・版検証・終了コード・U3 突合）。
+  - **Step 記述に一行固定**（LC-U4b-01 の不変条件）: 「**aggregate=生カウント、α 適用は fit_bt 内部のみ、BTResult の matches/wins は生**」。U3 突合（BR-U4b-08/PU4b-6）の winrate 定義一致の成立条件。

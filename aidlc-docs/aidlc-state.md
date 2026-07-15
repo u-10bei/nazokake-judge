@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4b NFR Design Part 2 生成完了・承認待ち（GATE）
+- **Current Stage**: CONSTRUCTION - U4b Infrastructure Design Part 2 生成完了・承認待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -78,18 +78,19 @@
 #### U4b: BT 集計スクリプト（bt_aggregate・最終ユニット）
 - [x] Functional Design — **承認済み**（2026-07-15, Request Changes 反映=MM 擬似データ定式化・BR 番号是正）。US-R04。MM=Hunter 2004・観測ペア限定正則化（w̃_ij=w_ij+α/2, ñ_ij=n_ij+α）・最大成分内 Σθ=0・target_ref=item_id 較正・BTResult〈source エコーバック・除外 item 可視化〉。BR-U4b-01〜13。schema/bt.py・DDL 変更なし
 - [x] NFR Requirements — **承認済み**（2026-07-15）。全 5 問 A。U4b-NFR-01〜13（行順序不問決定論=item_id 正準ソート・未収束 exit0・token 非参照・終了コード網羅）+ TSD-U4b-01〜06
-- [~] NFR Design — **Part 2 生成完了・承認待ち**（2026-07-15）。全 4 問 A。DP-U4b-01〜04（正準集計 3 点セット・restrict_to_component 切り出し）+ LC-U4b-01〜07（6 純関数+CLI）
+- [x] NFR Design — **承認済み**（2026-07-15）。全 4 問 A。DP-U4b-01〜04（正準集計 3 点セット・restrict_to_component 切り出し）+ LC-U4b-01〜07（6 純関数+CLI）。**α 適用位置の不変条件を明文固定**（aggregate=生カウント / α は fit_bt 内部のみ / BTResult.matches/wins は生＝BR-U4b-08/PU4b-6 U3 突合の成立条件・Code Gen Step へ一行申し送り）
+- [~] Infrastructure Design — **Part 2 生成完了・承認待ち**（2026-07-15）。全 4 問 A。差分ほぼゼロ（`scripts/bt_aggregate` + `src/schema/bt.py` のファイル追加のみ・Worker/D1/deploy/migration/secret/CORS/assets 全て無変更）。入力=U3 curl 経路（取得と推定の分離・スナップショット監査単位=ファイル）・schema_version 検証・PBT+unit で検証完結（実機確認対象なし）・α 適用位置の不変条件を Code Gen へ申し送り
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U4b 進行中・最終ユニット）
-- **Current Stage**: **U4b NFR Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
+- **Current Stage**: **U4b Infrastructure Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b FD + NFR Requirements（承認済み 2026-07-15）**
-- **Next Stage**: U4b NFR Design 承認 → Infrastructure Design〈U4b〉（差分ほぼゼロ）→ Code Generation（最終）
-- **Status**: U4b NFR Design の 2 成果物を生成（全 4 問 A / DP-U4b-01〜04 / LC-U4b-01〜07 = 6 純関数+CLI・restrict_to_component 切り出し）。承認後 Infrastructure Design〈U4b〉へ（差分ほぼゼロ）
+- **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b FD + NFR Requirements + NFR Design（承認済み 2026-07-15）**
+- **Next Stage**: U4b Infra Design 承認 → Code Generation〈U4b・最終ユニット〉→ Build & Test → **U4b 完了 = 全ユニット完了**
+- **Status**: Infrastructure Design〈U4b〉Part 2 生成（全 4 問 A）。差分ほぼゼロ＝`scripts/bt_aggregate` + `src/schema/bt.py` のファイル追加のみ・Worker/D1/deploy/migration/secret/CORS/assets 全て無変更。入力=U3 curl 経路（取得と推定の分離）・PBT+unit で検証完結。**α 適用位置の不変条件を Code Gen へ申し送り済み**。承認後 Code Generation（最終）へ
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
