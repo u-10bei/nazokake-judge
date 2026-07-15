@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U3 NFR Design Part 2 生成完了・承認待ち（GATE）
+- **Current Stage**: CONSTRUCTION - U3 Infrastructure Design Part 2 生成完了・承認待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -69,8 +69,9 @@
 #### U3: 研究者・管理（admin）
 - [x] Functional Design — **承認済み**（2026-07-15）。Q1=X（ExportBundle に items/pair_index/exported_at 追加）他★A。成果物 4 件（business-logic-model / business-rules BR-U3-01〜10 / **domain-entities: ExportBundle 正本** / frontend-components）。U3 は読み取り専用（migration なし）
 - [x] NFR Requirements — **承認済み**（2026-07-15）。全 5 問★A。U3-NFR-01〜11（エクスポート秘匿・CORS なし決着・読み取り専用）+ TSD-U3-01〜05。PBT は PU3-3 のみ
-- [~] NFR Design — **Part 2 生成完了・承認待ち**（2026-07-15）。全 4 問★A。DP-U3-01〜05（body 非含有=型排除・練習除外の SQL 出力段保証）+ LC-U3-01〜06。管理 HTML=ui.py 定数
-- [ ] Infrastructure Design / Code Generation / Build & Test
+- [x] NFR Design — **承認済み**（2026-07-15）。全 4 問★A。DP-U3-01〜05（body 非含有=型排除・練習除外の SQL 出力段保証）+ LC-U3-01〜06。管理 HTML=ui.py 定数
+- [~] Infrastructure Design — **Part 2 生成完了・承認待ち**（2026-07-15）。全 4 問★A。差分実質ゼロ（/admin/* GET 追加のみ・migration/シークレット/CORS/assets/deploy.yml 無変更）。curl 経路を U4b 自動化の正として申し送り
+- [ ] Code Generation / Build & Test
 
 ### 🟢 CONSTRUCTION PHASE（U4b 未着手）
 - [ ] U4b（bt_aggregate）: Functional Design 以降（U3 のエクスポート形式を入力）
@@ -80,11 +81,11 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U3 進行中）
-- **Current Stage**: **U3 NFR Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
+- **Current Stage**: **U3 Infrastructure Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1（完了）／U4a（完了 2026-07-13）／U2（完了 2026-07-14）／**U3 FD + NFR Requirements（承認済み 2026-07-15）**
-- **Next Stage**: U3 NFR Design 承認 → **Infrastructure Design〈U3〉**（差分極小の見込み）
-- **Status**: U3 NFR Design の 2 成果物を生成（全 4 問★A / DP-U3-01〜05 / LC-U3-01〜06）。承認後 Infrastructure Design〈U3〉へ（migration/シークレット/CORS なし・GET ルート追加のみ）
+- **Completed**: U1（完了）／U4a（完了 2026-07-13）／U2（完了 2026-07-14）／**U3 FD + NFR Req + NFR Design（承認済み 2026-07-15）**
+- **Next Stage**: U3 Infrastructure Design 承認 → **Code Generation〈U3〉**（差分実装: /admin/* GET・AdminService/ExportService・ui.py・Repository read_*・ビュー/バンドル型・テスト）
+- **Status**: U3 全設計フェーズ完了（Infra 差分実質ゼロ）。承認後 Code Generation〈U3〉へ。migration/wrangler.toml/deploy.yml 変更なし・新規シークレットなし
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）

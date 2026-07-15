@@ -552,3 +552,19 @@
 **User Input**: "全 4 問回答済み・承認。全問 ★A。適用性評価（キャッシュ/キュー/CB/ロック/ページング=N/A・読み取り専用）同意。Q2=管理 HTML は src/backend/admin/ui.py のモジュール定数（ビルドステップなし）。Q3=エンドポイント 1:1 の集計クエリ・練習除外は SQL 内。Q4=CSV エスケープに単体テスト集中。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 4 問バックフィル。Part 2 実行: nfr-design-patterns.md（DP-U3-01〜05: 認証ルート相乗り〈チョークポイント再利用〉・エクスポート秘匿の 3 強制点〈no-store ヘルパ / body 非含有=型排除 / トークン非ログ=AdminLog 再利用〉・集計の Repository 集約 + 練習除外の SQL 出力段保証・純粋整形〈CSV エスケープ/ビュー/バンドル〉・統一封筒、管理 UI=ui.py モジュール定数〈ビルドなし〉、非採用部品表）／logical-components.md（LC-U3-01 AdminApi 拡張 / 02 AdminService / 03 ExportService / 04 純粋整形 / 05 Repository 集計拡張〈読み取り専用〉/ 06 AdminUI〈src/ 埋め込み〉+ ビュー/バンドル型 DataContract 拡張・依存方向図・層の逆流禁止）を生成。Infra 差分は極小（migration なし・シークレットなし・CORS なし・GET ルート追加のみ）と申し送り。標準 2 択（Request Changes / Continue → Infrastructure Design〈U3〉）を提示予定。
 **Context**: CONSTRUCTION - U3 NFR Design Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U3 NFR Design - 承認 & Infrastructure Design 開始
+**Timestamp**: 2026-07-15T03:00:00Z
+**User Input**: "承認します、Infrastructure Design に進んで"
+**AI Response**: U3 NFR Design（DP-U3-01〜05 / LC-U3-01〜06）を承認完了。aidlc-state の U3 NFR Design を承認済みに更新し、per-unit ループ次段の Infrastructure Design〈U3〉へ移行。infrastructure-design.md ルールに従い Part 1（Plan + 質問）を作成: U3 は U1/U4a/U2 の共有インフラ（D1 + 同一 Worker + CI デプロイ + Basic 認証）を全面流用し、**migration なし・新規シークレットなし・CORS なし**のため差分は「GET ルート追加のみ」で極小。確認的な少数質問（デプロイ対象・管理 UI 配信・[assets] 無関係の確認）を `construction/plans/u3-infrastructure-design-plan.md` に作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U3 Infrastructure Design Part 1（Planning）承認待ち
+
+---
+
+## U3 Infrastructure Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-15T03:20:00Z
+**User Input**: "全 4 問回答済み・承認。全問 ★A。U3 のインフラ差分は実質ゼロ。Q2 補足=エクスポートはブラウザ直接 DL + curl 経路（-u Basic）も同一境界で可＝U4b 自動化の正として申し送り。Q3=deploy.yml 無変更・beta 検証不要。Q4=API は統合テスト・UI はデプロイ後手動確認（data-testid で将来自動化余地確保）。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 4 問バックフィル。Part 2 実行: infrastructure-design.md（差分中心・実質ゼロ: LC-U3→インフラ、/admin/* GET ルート追加のみ・管理 UI Worker 配信〈assets 非配置〉・migration/シークレット/CORS/[assets]/deploy.yml すべて無変更・beta 不要・エクスポート受領〈ブラウザ + curl 経路を U4b 自動化の正として申し送り〉・動作確認方針〈API=統合テスト / UI=手動〉・トレーサビリティ）を生成。共有分は shared-infrastructure.md 参照（新規共有インフラなし）。標準 2 択（Request Changes / Continue → Code Generation〈U3〉）を提示予定。
+**Context**: CONSTRUCTION - U3 Infrastructure Design Part 2 完了・レビュー待ち（GATE）
