@@ -536,3 +536,19 @@
 **User Input**: "全 5 問回答済み・承認。全問 ★A。Data/Migration・Scalability/Resiliency=N/A（読み取り専用・migration なし）に同意。Q1=実トークンを認証背後で返す（仮名化は分析側の選択）。Q2=既存 Basic 境界再利用・src/ 埋め込み・CORS なしで正式決着。Q4=PBT は PU3-3 のみ候補・他は非該当明記。Q5=非BT 明示を可用性要件に昇格。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: nfr-requirements.md（U3-NFR-01〜11: 認証一本化・管理 HTML の assets 非配置・エクスポート秘匿〈no-store/ログ非出力/body 非含有/実トークン返却・仮名化しない〉・CORS なし正式決着・SLO なし・読み取り専用の整合は集計の正しさで担保・秘匿ログ・単体/統合振り分け・PBT は PU3-3 のみ非該当明記・非BT 明示の可用性要件昇格 + 非目標節）／tech-stack-decisions.md（TSD-U3-01〜05: 認証再利用・管理 HTML の src/ 埋め込み・集計 SQL の Repository 集約〈練習除外を SQL に〉・ビュー/バンドル型と CSV 純粋直列化・テスト振り分け）を生成。Infra は差分極小（migration なし・新規シークレットなし・GET ルート追加のみ）と申し送り。標準 2 択（Request Changes / Continue → NFR Design〈U3〉）を提示予定。
 **Context**: CONSTRUCTION - U3 NFR Requirements Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U3 NFR Requirements - 承認 & NFR Design 開始
+**Timestamp**: 2026-07-15T02:00:00Z
+**User Input**: "承認します"
+**AI Response**: U3 NFR Requirements（U3-NFR-01〜11 / TSD-U3-01〜05）を承認完了。aidlc-state の U3 NFR Requirements を承認済みに更新し、per-unit ループ次段の NFR Design〈U3〉へ移行。nfr-design.md ルールに従い Part 1（Plan + 質問）を作成: U3 は既存 DP/LC の再利用が大半のため差分中心。設計パターン適用性（キャッシュ/キュー/CB/ロック=N/A）を評価し、(1) 認証チョークポイントへの GET ルート相乗り (2) エクスポート秘匿の強制点（no-store ヘルパ・ログ非出力・body 非含有の型排除）(3) 集計の Repository 集約と純粋整形層 (4) 管理 HTML の src/ 埋め込み配信 を質問化して `construction/plans/u3-nfr-design-plan.md` に作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U3 NFR Design Part 1（Planning）承認待ち
+
+---
+
+## U3 NFR Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-15T02:30:00Z
+**User Input**: "全 4 問回答済み・承認。全問 ★A。適用性評価（キャッシュ/キュー/CB/ロック/ページング=N/A・読み取り専用）同意。Q2=管理 HTML は src/backend/admin/ui.py のモジュール定数（ビルドステップなし）。Q3=エンドポイント 1:1 の集計クエリ・練習除外は SQL 内。Q4=CSV エスケープに単体テスト集中。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 4 問バックフィル。Part 2 実行: nfr-design-patterns.md（DP-U3-01〜05: 認証ルート相乗り〈チョークポイント再利用〉・エクスポート秘匿の 3 強制点〈no-store ヘルパ / body 非含有=型排除 / トークン非ログ=AdminLog 再利用〉・集計の Repository 集約 + 練習除外の SQL 出力段保証・純粋整形〈CSV エスケープ/ビュー/バンドル〉・統一封筒、管理 UI=ui.py モジュール定数〈ビルドなし〉、非採用部品表）／logical-components.md（LC-U3-01 AdminApi 拡張 / 02 AdminService / 03 ExportService / 04 純粋整形 / 05 Repository 集計拡張〈読み取り専用〉/ 06 AdminUI〈src/ 埋め込み〉+ ビュー/バンドル型 DataContract 拡張・依存方向図・層の逆流禁止）を生成。Infra 差分は極小（migration なし・シークレットなし・CORS なし・GET ルート追加のみ）と申し送り。標準 2 択（Request Changes / Continue → Infrastructure Design〈U3〉）を提示予定。
+**Context**: CONSTRUCTION - U3 NFR Design Part 2 完了・レビュー待ち（GATE）
