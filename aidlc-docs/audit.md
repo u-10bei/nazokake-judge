@@ -591,3 +591,11 @@
 **Timestamp**: 2026-07-15T05:00:00Z
 **AI Response**: U3 全 10 ステップ生成。**schema**: `admin_views.py`（ProgressView/WinrateRow/**ExportBundle 正本**〈ExportItem=body なし・ExportJudgment=pair_index〉）。**Repository 拡張**（読み取り専用）: read_progress/read_winrates〈judgments×pairs UNION 展開・is_practice=0〉/read_export_rows〈本番のみ・pair_index=idx〉。**backend/admin**: format.py〈標準 csv モジュール RFC4180・build_progress/winrates/export_bundle〉/service.py〈get_progress/get_winrates/export・ExportRequestError〉/ui.py〈管理 UI モジュール定数・data-testid・非BT 注記・assets 非配置〉/api.py に GET 配線〈/admin/ UI・progress・winrates・export、no-store 共通ヘルパ・attachment・filename ts=exported_at・admin_log 秘匿〉。**テスト**: unit test_format（CSV エスケープ境界・winrate 定義・bundle 自己完結）/PBT test_export_selfcontained（PU3-3）/integration drive_u3。**検証（この環境）**: unit+PBT 39 passed（ci 200 examples・U1/U2/U4a 回帰緑 + U3 追加 6）／**integration 実 D1/miniflare 全 8 項目 PASS**（result-u3-integration.json: PU3-5 認証401 / PU3-4 進捗整合 / PU3-1 練習除外の出力段保証〈export=40==progress=40〉 / PU3-3 自己完結・body なし〈items=95〉 / PU3-2 winrate 定義整合〈総試合80=40×2〉 / CSV judgments 41 行 / CSV entity 未指定 400 / UI HTML 200）。**migration/wrangler.toml/deploy.yml 変更なし**を確認。code/README・ルート README 更新。plan 全 Step [x]。標準 2 択（Request Changes / Continue → Build & Test〈U3〉）を提示予定。
 **Context**: CONSTRUCTION - U3 Code Generation Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U3 Build & Test - 軽微修正 2 点（filename コロン / winrate 未出場注記）
+**Timestamp**: 2026-07-15T05:40:00Z
+**User Input**: "非ブロッキング観察 2 点: (1) filename のコロンが Windows で自動置換され監査整合が崩れる→filename 側だけ replace(':','') の一行修正で済む（bundle の exported_at は ISO のまま）。(2) winrate の LEFT JOIN が全 items を返し未出場が matches=0 で並ぶ→露出監視に有用ゆえ設計整合、ただし『matches=0=未出場』と読める前提を頭に。"
+**AI Response**: 両点対応（Build & Test の直しに含める）。(1) `service.export` で filename の ts を `exported_at.replace(":","")` に（bundle 内 exported_at は ISO8601 維持）。実機で `Content-Disposition: filename="export-bundle-2026-07-15T053740Z.json"`（コロンなし）確認。(2) LEFT JOIN は露出監視有用ゆえ維持し、UI 注記に「対戦数 0 は未出場」を追記（誤読防止）。**検証**: unit+PBT 39 緑・integration 再実行 8/8 維持。code/README に両点記録。U4b BT 集計は judgments 起点ゆえ影響なし。
+**Context**: CONSTRUCTION - U3 Code Generation Part 2（軽微修正済み）・レビュー待ち（GATE）

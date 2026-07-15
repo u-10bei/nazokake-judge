@@ -47,10 +47,15 @@ async def export(repo, fmt_kind: str, entity: str | None, exported_at: str) -> t
     - csv: entity 必須（items/judgments/likert/surveys）。未指定/不正は ExportRequestError。
     filename の <ts> は exported_at と同一値（監査証跡を揃える, U3 CG Q3）。
     """
+    # filename のタイムスタンプは exported_at と同一時点だが、コロンを除去する
+    # （Windows は ':' を不正文字とし DL 時に自動置換＝監査整合が崩れるため, U3 CG 補足）。
+    # bundle 内の exported_at は ISO8601 のまま維持する。
+    ts_file = exported_at.replace(":", "")
+
     if fmt_kind == "json":
         bundle = await build_bundle(repo, exported_at)
         return (bundle.model_dump_json(), "application/json",
-                f"export-bundle-{exported_at}.json")
+                f"export-bundle-{ts_file}.json")
 
     if fmt_kind == "csv":
         if entity not in _ENTITIES:
@@ -59,6 +64,6 @@ async def export(repo, fmt_kind: str, entity: str | None, exported_at: str) -> t
             )
         rows = await repo.read_export_rows(entity)
         body = fmt.to_csv(fmt.CSV_HEADERS[entity], rows)
-        return (body, "text/csv; charset=utf-8", f"export-{entity}-{exported_at}.csv")
+        return (body, "text/csv; charset=utf-8", f"export-{entity}-{ts_file}.csv")
 
     raise ExportRequestError("format は json か csv")

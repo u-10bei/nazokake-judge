@@ -53,7 +53,7 @@ ADMIN_HTML = """<!DOCTYPE html>
 
   <section data-testid="winrate-panel">
     <h2>暫定勝率</h2>
-    <div class="note">これは<strong>簡易表示</strong>であり、正式な BT（Bradley–Terry）推定ではありません。傾向確認用です。</div>
+    <div class="note">これは<strong>簡易表示</strong>であり、正式な BT（Bradley–Terry）推定ではありません。傾向確認用です。<br>対戦数（matches）が 0 の作品は本番でまだ<strong>未出場</strong>です（露出監視用に一覧へ表示されます）。</div>
     <table data-testid="winrate-table">
       <thead><tr>
         <th data-k="item_id">item_id</th><th data-k="layer">layer</th>

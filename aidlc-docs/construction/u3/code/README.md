@@ -43,6 +43,10 @@
   PU3-5 認証 401（progress/winrates/export/ui）/ PU3-4 進捗整合（issued≥started≥completed=1・judgments_total=40 本番のみ）/ **PU3-1 練習除外の出力段保証（export=40==progress=40）** / **PU3-3 自己完結・body なし（items=95）** / **PU3-2 winrate 定義整合（総試合=80=40×2）** / CSV judgments（41 行）/ CSV entity 未指定 400 / UI HTML 200。
 - **変更なしの確認**: `migrations/`・`wrangler.toml`・`deploy.yml`・`frontend/`（参加者 assets）に変更なし。
 
+## Build & Test の軽微修正（2026-07-15・非ブロッキング観察 2 点）
+1. **filename のコロン除去**: `_now_iso()` は `2026-07-15T05:37:40Z` 形式でコロンを含み、Windows で DL 時に自動置換され「filename の ts = exported_at」の監査整合が崩れる。→ **filename 側だけ `exported_at.replace(":", "")`**（`service.export`）。**bundle 内の `exported_at` は ISO8601 のまま維持**。実機で `Content-Disposition: filename="export-bundle-2026-07-15T053740Z.json"`（コロンなし）を確認。U4b の正経路は `curl -o export.json` ゆえ実害なし。
+2. **暫定勝率の未出場行**: `read_winrates` は `items LEFT JOIN` で全 items を返すため、本番未出場（練習専用含む）の item が `matches=0 / winrate=0.0` で並ぶ。**露出監視に有用ゆえ設計整合として維持**。UI 注記に「対戦数 0 は未出場」を明示（誤読防止）。U4b の BT 集計は judgments 起点ゆえ影響なし。
+
 ## 決定点の実装対応
 | 決定点 | 実装 |
 |---|---|
