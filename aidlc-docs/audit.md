@@ -623,3 +623,19 @@
 **User Input**: "レビュー完了・Request Changes 2 点。(1)【実質・Code Gen 波及】MM 正則化式 `π_i ← (w_i+α)/Σ n_ij/(π_i+π_j)` は分子に一律 α を足すだけで対応する試合数増加が分母になく『仮想引き分け』になっていない。Q2-A で確定した Bayesian prior 相当の正しい定式化は擬似データ拡張: 各観測ペアに仮想引き分け α 件 → w̃_ij=w_ij+α/2, ñ_ij=n_ij+α、素の Hunter π_i←w̃_i/Σ ñ_ij/(π_i+π_j)（w̃_i=w_i+(α/2)·d_i）。書かれた式は別 regularizer で疎な新作の縮小の効き方が意図と変わる。PU4b-1 単調性は両式で通り検出されず Code Gen に流れる誤り。BR-U4b-01・ロジックモデル §3・フロー step 5 の 3 箇所を修正せよ。(2)【機械的】BR 番号ずれ 3 箇所: ロジックモデル step 2 版検証 (BR-U4b-07)→11、PU4b-6 (BR-U4b-06)→08、PU4b-7 (BR-U4b-07)→11。非ブロッキング観察 2 点（layer=pro は仮ラベル→実 items.layer と突合 / 較正回帰方向は defensible ゆえ現状維持）。"
 **AI Response**: 2 点修正。(1) **擬似データ拡張の正しい定式化**に BR-U4b-01・business-logic-model §3・フロー step 5 の 3 箇所を書き換え（w̃_ij=w_ij+α/2, ñ_ij=n_ij+α, 素の Hunter π_i←w̃_i/Σ ñ_ij/(π_i+π_j), w̃_i=w_i+(α/2)·d_i）。BR-U4b-01 に「分子一律 α 加算は拡張データの最尤に非対応の別 regularizer ゆえ不採用／PU4b-1 では検出されないため仕様固定」の注記を追加。BR-U4b-03 のスムージング記述も「仮想引き分け α 件=各側 α/2 勝き配分」に整合。(2) business-logic-model の 3 箇所の BR 番号を修正（step2→BR-U4b-11、PU4b-6→BR-U4b-08、PU4b-7→BR-U4b-11）。検証: 旧式の実効使用なし・擬似データ式が 3 文書に一貫・残る BR-U4b-06/07 参照は正しい参照（過剰修正なし）。非ブロッキング 2 点は対応不要（layer 実値が "pro"・較正方向は明記済み defensible）。標準 2 択（Request Changes / Continue → NFR Requirements〈U4b〉）を再提示。
 **Context**: CONSTRUCTION - U4b Functional Design Part 2（Request Changes 反映）・再レビュー待ち（GATE）
+
+---
+
+## U4b Functional Design - 承認 & NFR Requirements 開始
+**Timestamp**: 2026-07-15T07:20:00Z
+**User Input**: "承認します"
+**AI Response**: U4b Functional Design（Request Changes 反映済み: MM 擬似データ定式化・BR 番号是正）を承認完了。aidlc-state の U4b Functional Design を承認済みに更新し、per-unit ループ最終段の NFR Requirements〈U4b〉へ移行。nfr-requirements.md ルールに従い Part 1（Plan + 質問）を作成: U4b はオフライン pure-Python スクリプト（Worker/D1 非依存）ゆえ NFR は「再現性・数値安定性・性能・テスト戦略（PBT 中心）」が論点、Security/Availability/Data-Migration は N/A 中心。`construction/plans/u4b-nfr-requirements-plan.md` に質問（各 ★A デフォルト・[Answer] 欄）を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U4b NFR Requirements Part 1（Planning）承認待ち
+
+---
+
+## U4b NFR Requirements - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-15T07:50:00Z
+**User Input**: "全 5 問 A + 強化点。Q1=決定論を『同一データ（行順序不問）→同一出力』に強化＝item_id 正準ソート（浮動小数の加算順依存を除去）+ 未収束は converged=false+warnings で exit0。Q2=PU4b-2 に置換不変性追加・非連結ジェネレータ明記・PBT-02 非該当。Q4=終了コード網羅（版不一致/ファイル不在/JSON パース不能/検証失敗=非0、warnings 系=0）。Q5=事実是正: token は BT 推定も較正も一切使わない＝『BTResult は token 非含有かつ計算経路自体が token 非参照』。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: nfr-requirements.md（U4b-NFR-01〜13: 行順序不問決定論〈item_id 正準ソート〉・完全決定論・未収束 exit0・数値安定・パラメータ監査・PBT/example 振り分け〈PU4b-2 置換不変性〉・連結/非連結ジェネレータ・PBT-02 非該当・SLO なし・CLI 出力・終了コード網羅・token 非参照非含有・ローカル保管運用責任 + 非目標）／tech-stack-decisions.md（TSD-U4b-01〜06: MM 擬似データ・正準ソート・pure-Python 標準ライブラリのみ・argparse CLI/終了コード・schema/bt.py・PBT/unit 振り分け）を生成。Infra 差分ほぼゼロ（scripts 追加のみ）と申し送り。標準 2 択（Request Changes / Continue → NFR Design〈U4b〉）を提示予定。
+**Context**: CONSTRUCTION - U4b NFR Requirements Part 2 完了・レビュー待ち（GATE）
