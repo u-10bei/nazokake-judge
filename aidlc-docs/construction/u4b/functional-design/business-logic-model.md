@@ -24,14 +24,15 @@
 ```
 1. CLI: エクスポート JSON ファイルパスを引数で受ける（--out で出力先, --allow-version-mismatch）
 2. 読込・版検証: bundle.schema_version と EXPORT_FORMAT_VERSION を比較
-     不一致 → 既定エラーで終了（BR-U4b-07）。--allow-version-mismatch 時のみ warnings 記録で続行
+     不一致 → 既定エラーで終了（BR-U4b-11）。--allow-version-mismatch 時のみ warnings 記録で続行
 3. 比較集計: judgments（本番のみ・U3 保証）から
      各 (winner, loser) を集計。choice=A→item_left 勝ち / B→item_right 勝ち（BR-U3-05 と同一）
      w[i] = item i の勝ち数、n[i][j] = i,j 間の対戦数（観測ペアのみ）
 4. 連結成分検出: 観測ペアを辺とする無向グラフの連結成分を求める（BR-U4b-02）
      非連結 → warnings に記録。**最大連結成分のみを推定対象**とする
 5. MM 推定（最大成分内）: Hunter 2004 の反復（BR-U4b-01）
-     π_i を初期 1 → π'_i = (w_i + α) / Σ_j n_ij/(π_i+π_j)  を収束まで反復（正則化 α）
+     擬似データ拡張（BR-U4b-01/03）: 各観測ペアに仮想引き分け α 件 → w̃_ij=w_ij+α/2, ñ_ij=n_ij+α
+     π_i を初期 1 → 素の Hunter 更新 π'_i = w̃_i / Σ_j ñ_ij/(π_i+π_j)  を収束まで反復
      **スムージングは観測ペアのみに適用**（全ペアには張らない, BR-U4b-03）
      θ_i = log π_i。**最大連結成分内で Σθ=0 に正規化**（BR-U4b-04）
 6. Likert 較正: likert を target_ref(=item_id, BR-U4b-05) で各 item の平均 rating に集計
@@ -48,7 +49,8 @@
 ## 3. MM アルゴリズム（BR-U4b-01, Hunter 2004）
 
 - BT モデル: P(i beats j) = π_i / (π_i + π_j)。対数尤度を MM で単調増加させる標準反復。
-- 更新式（正則化付き）: `π_i ← (w_i + α) / Σ_{j≠i} n_ij / (π_i + π_j)`（分母は観測ペアのみ和）。
+- **正則化 = 擬似データ拡張**（BR-U4b-01/03）: 各観測ペア (i,j) に仮想引き分け α 件 → `w̃_ij = w_ij + α/2`、`ñ_ij = n_ij + α`。ゆえに `w̃_i = w_i + (α/2)·d_i`（`d_i`=観測対戦相手数）。
+- 更新式は**素の Hunter**: `π_i ← w̃_i / Σ_{j≠i} ñ_ij / (π_i + π_j)`（分母は観測ペアのみ和）。**分子に一律 α を足すだけ（`(w_i+α)/…`）の形は拡張データの最尤に対応しない別 regularizer ゆえ不採用**（BR-U4b-01 注記）。
 - 収束: θ の最大変化 < 閾値、または最大反復到達。**決定論**（初期値・反復固定 → 同一入力同一出力, P-6）。
 - 正則化 α（既定小さな値）で完全勝ち/完全負けの item も有限スコアに収まる。
 
@@ -68,8 +70,8 @@
 | **PU4b-3（正規化）** | **最大連結成分内で Σθ = 0**（Q2 と整合） | BR-U4b-04 |
 | **PU4b-4（識別可能性）** | 非連結グラフ → warnings + 最大成分のみ推定・除外 item は bt_score=null+component | BR-U4b-02 |
 | **PU4b-5（較正整合）** | 既知の線形 (Likert, θ) データで単回帰係数を復元（example + PBT） | BR-U4b-05 |
-| **PU4b-6（U3 突合）** | matches/wins が U3 winrate 定義と一致（同一エクスポートで U3 と同値） | BR-U4b-06 |
-| **PU4b-7（版検証）** | schema_version 不一致 → 既定エラー終了 / --allow-version-mismatch で warnings 続行 | BR-U4b-07 |
+| **PU4b-6（U3 突合）** | matches/wins が U3 winrate 定義と一致（同一エクスポートで U3 と同値） | BR-U4b-08 |
+| **PU4b-7（版検証）** | schema_version 不一致 → 既定エラー終了 / --allow-version-mismatch で warnings 続行 | BR-U4b-11 |
 
 - 純関数中心ゆえ PBT（Hypothesis）適用が自然（U4b は PBT-03 が主）。CLI 入出力・版検証・出力形式は example。
 
