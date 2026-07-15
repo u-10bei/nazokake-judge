@@ -639,3 +639,19 @@
 **User Input**: "全 5 問 A + 強化点。Q1=決定論を『同一データ（行順序不問）→同一出力』に強化＝item_id 正準ソート（浮動小数の加算順依存を除去）+ 未収束は converged=false+warnings で exit0。Q2=PU4b-2 に置換不変性追加・非連結ジェネレータ明記・PBT-02 非該当。Q4=終了コード網羅（版不一致/ファイル不在/JSON パース不能/検証失敗=非0、warnings 系=0）。Q5=事実是正: token は BT 推定も較正も一切使わない＝『BTResult は token 非含有かつ計算経路自体が token 非参照』。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 5 問バックフィル。Part 2 実行: nfr-requirements.md（U4b-NFR-01〜13: 行順序不問決定論〈item_id 正準ソート〉・完全決定論・未収束 exit0・数値安定・パラメータ監査・PBT/example 振り分け〈PU4b-2 置換不変性〉・連結/非連結ジェネレータ・PBT-02 非該当・SLO なし・CLI 出力・終了コード網羅・token 非参照非含有・ローカル保管運用責任 + 非目標）／tech-stack-decisions.md（TSD-U4b-01〜06: MM 擬似データ・正準ソート・pure-Python 標準ライブラリのみ・argparse CLI/終了コード・schema/bt.py・PBT/unit 振り分け）を生成。Infra 差分ほぼゼロ（scripts 追加のみ）と申し送り。標準 2 択（Request Changes / Continue → NFR Design〈U4b〉）を提示予定。
 **Context**: CONSTRUCTION - U4b NFR Requirements Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U4b NFR Requirements - 承認 & NFR Design 開始（正準化 3 点セットの申し送り）
+**Timestamp**: 2026-07-15T08:10:00Z
+**User Input**: "Continue → NFR Design で承認。申し送り: TSD-U4b-02 の正準ソートは (1) ペアキー正準化〈無順序ペア (i,j) を sorted tuple に正規化してから集計〉(2) item 列正準ソート (3) Σ 加算順固定 の 3 点セットとして DP に落とすべき。(i,j)と(j,i)を別キーで数えると n_ij が分裂し擬似データ α 配分も二重になる（集計の正しさの問題）。ExportBundle の judgments は pair_id 単位で向き固定だが同じ item 組が別セッションで逆向き出現は普通に起きる。PU4b-2 の置換不変性 PBT はシャッフル+左右反転を含むジェネレータで 3 点まとめて反例探索できる。"
+**AI Response**: U4b NFR Requirements（U4b-NFR-01〜13 / TSD-U4b-01〜06）を承認完了。aidlc-state の U4b NFR Requirements を承認済みに更新し、per-unit ループ次段の NFR Design〈U4b〉へ移行。nfr-design.md ルールに従い Part 1（Plan + 質問）を作成: U4b は純関数中心・オフライン。中核 DP は **正準集計の強制点（3 点セット: ペアキー正準化 sorted tuple / item 列正準ソート / Σ 加算順固定）**＝集計の正しさ（n_ij 分裂・α 二重配分の防止）と行順序不問決定論を同時担保。PU4b-2 の置換不変性 PBT はシャッフル+左右反転ジェネレータ。他に純関数 LC 配置・エラー/終了コード契約・適用性（cache/queue/lock/scale=N/A）を質問化して `construction/plans/u4b-nfr-design-plan.md` に作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U4b NFR Design Part 1（Planning）承認待ち
+
+---
+
+## U4b NFR Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-15T08:40:00Z
+**User Input**: "全 4 問 A。Q2 精緻化=restrict_to_component(wins,pair_counts,component)->(wins,pair_counts) を独立純関数に切り出し、fit_bt を成分非依存に（PU4b-4 を純関数合成 connected_components→restrict→fit_bt で直接検証、fit_bt の PBT は連結入力前提で単純化）＝LC 6 純関数+CLI。これは A 案の精緻化で方針変更なし。Part 2 生成へ。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。plan の [Answer] 欄を全 4 問バックフィル。Part 2 実行: nfr-design-patterns.md（DP-U4b-01 正準集計 3 点セット〈ペアキー正準化 sorted tuple・item 列昇順・Σ 加算順固定〉= 通過必須の純関数集約・PBT 左右反転ジェネレータ / DP-U4b-02 純関数分離 + restrict_to_component 切り出し〈PU4b-4 純合成検証〉/ DP-U4b-03 終了コード契約 CLI 集約 / DP-U4b-04 決定論数値安定、非採用部品表）／logical-components.md（LC-U4b-01 aggregate / 02 connected_components / 03 restrict_to_component / 04 fit_bt〈成分非依存〉/ 05 calibrate / 06 assemble_result / 07 CLI + schema/bt.py・依存方向図・層の逆流禁止・Infra 差分ほぼゼロ申し送り）を生成。標準 2 択（Request Changes / Continue → Infrastructure Design〈U4b〉）を提示予定。
+**Context**: CONSTRUCTION - U4b NFR Design Part 2 完了・レビュー待ち（GATE）

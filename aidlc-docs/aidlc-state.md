@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4b NFR Requirements Part 2 生成完了・承認待ち（GATE）
+- **Current Stage**: CONSTRUCTION - U4b NFR Design Part 2 生成完了・承認待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -77,18 +77,19 @@
 
 #### U4b: BT 集計スクリプト（bt_aggregate・最終ユニット）
 - [x] Functional Design — **承認済み**（2026-07-15, Request Changes 反映=MM 擬似データ定式化・BR 番号是正）。US-R04。MM=Hunter 2004・観測ペア限定正則化（w̃_ij=w_ij+α/2, ñ_ij=n_ij+α）・最大成分内 Σθ=0・target_ref=item_id 較正・BTResult〈source エコーバック・除外 item 可視化〉。BR-U4b-01〜13。schema/bt.py・DDL 変更なし
-- [~] NFR Requirements — **Part 2 生成完了・承認待ち**（2026-07-15）。全 5 問 A。U4b-NFR-01〜13（行順序不問決定論=item_id 正準ソート・未収束 exit0・token 非参照・終了コード網羅）+ TSD-U4b-01〜06
+- [x] NFR Requirements — **承認済み**（2026-07-15）。全 5 問 A。U4b-NFR-01〜13（行順序不問決定論=item_id 正準ソート・未収束 exit0・token 非参照・終了コード網羅）+ TSD-U4b-01〜06
+- [~] NFR Design — **Part 2 生成完了・承認待ち**（2026-07-15）。全 4 問 A。DP-U4b-01〜04（正準集計 3 点セット・restrict_to_component 切り出し）+ LC-U4b-01〜07（6 純関数+CLI）
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U3 進行中）
-- **Current Stage**: **U4b NFR Requirements Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
+- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U4b 進行中・最終ユニット）
+- **Current Stage**: **U4b NFR Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b Functional Design（承認済み 2026-07-15）**
-- **Next Stage**: U4b NFR Requirements 承認 → NFR Design〈U4b〉…（最終ユニット）
-- **Status**: U4b NFR Requirements の 2 成果物を生成（全 5 問 A / 行順序不問決定論=item_id 正準ソート / token 非参照 / 終了コード網羅）。承認後 NFR Design〈U4b〉へ
+- **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b FD + NFR Requirements（承認済み 2026-07-15）**
+- **Next Stage**: U4b NFR Design 承認 → Infrastructure Design〈U4b〉（差分ほぼゼロ）→ Code Generation（最終）
+- **Status**: U4b NFR Design の 2 成果物を生成（全 4 問 A / DP-U4b-01〜04 / LC-U4b-01〜07 = 6 純関数+CLI・restrict_to_component 切り出し）。承認後 Infrastructure Design〈U4b〉へ（差分ほぼゼロ）
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
