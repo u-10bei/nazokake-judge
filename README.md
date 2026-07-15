@@ -49,7 +49,7 @@ nazokake-judge/
 ├── backend/
 │   ├── domain/          # AssignmentEngine（純粋）+ Serializer + pool_sufficiency + likert 選定（U1/U4a/U2）
 │   ├── repo/            # D1 Repository（唯一の I/O 境界。書込は U4a/U2 で拡張）
-│   ├── admin/           # 管理 API（/admin/*）+ Basic 認証 + 秘匿ログ（U4a）
+│   ├── admin/           # 管理 API（/admin/*）+ Basic 認証 + 秘匿ログ（U4a）+ 進捗/勝率/エクスポート/管理UI（U3）
 │   ├── participant/     # 参加者フロー（/api/*）: phase/log/view/session/response/survey/api（U2）
 │   ├── log.py           # 構造化ログ（U1）
 │   └── entry.py         # Worker エントリ（on_fetch。/admin/*・/api/* を配線）

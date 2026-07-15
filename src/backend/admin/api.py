@@ -32,24 +32,91 @@ def _json(model, status: int = 200) -> Response:
                     headers={"content-type": "application/json"})
 
 
+def _json_str(body: str, status: int = 200) -> Response:
+    """no-store 付き JSON 応答（U3 管理 API・DP-U3-02）。"""
+    return Response(body, status=status,
+                    headers={"content-type": "application/json", "cache-control": "no-store"})
+
+
+def _download(body: str, content_type: str, filename: str) -> Response:
+    """エクスポートのダウンロード応答（no-store + attachment, DP-U3-02/05）。"""
+    return Response(body, status=200, headers={
+        "content-type": content_type,
+        "cache-control": "no-store",
+        "content-disposition": f'attachment; filename="{filename}"',
+    })
+
+
 def _now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
 async def handle_admin(request, env, path: str) -> Response:
     """`/admin/*` の単一チョークポイント（認証 → ディスパッチ）。"""
-    if not check_basic(request, env):  # DP-U4a-01
+    if not check_basic(request, env):  # DP-U4a-01（GET/POST 共通の単一認証点）
         admin_log("admin_auth_failed", "error", endpoint=path)
         return unauthorized()
 
     repo = Repository(env.DB)
     method = str(request.method)
+
+    # POST（U4a: pool_ingest / token_issue）
     if path == "/admin/items" and method == "POST":
         return await _handle_items(request, repo)
     if path == "/admin/tokens" and method == "POST":
         return await _handle_tokens(request, repo)
+
+    # GET（U3: 管理 UI / 進捗 / 暫定勝率 / エクスポート）
+    if method == "GET":
+        if path == "/admin/" or path == "/admin":
+            from backend.admin.ui import ADMIN_HTML
+            return Response(ADMIN_HTML, headers={
+                "content-type": "text/html; charset=utf-8", "cache-control": "no-store"})
+        if path == "/admin/progress":
+            return await _handle_progress(repo)
+        if path == "/admin/winrates":
+            return await _handle_winrates(repo)
+        if path == "/admin/export":
+            return await _handle_export(request, repo)
+
     return Response(json.dumps({"error": "not found"}), status=404,
                     headers={"content-type": "application/json"})
+
+
+# ------------------------------------------------------------ U3 GET ハンドラ
+
+async def _handle_progress(repo) -> Response:
+    from backend.admin import service
+    view = await service.get_progress(repo)
+    admin_log("admin_progress", "info", endpoint="/admin/progress")
+    return _json_str(view.model_dump_json())
+
+
+async def _handle_winrates(repo) -> Response:
+    from backend.admin import service
+    rows = await service.get_winrates(repo)
+    admin_log("admin_winrates", "info", endpoint="/admin/winrates", count=len(rows))
+    body = "[" + ",".join(r.model_dump_json() for r in rows) + "]"
+    return _json_str(body)
+
+
+async def _handle_export(request, repo) -> Response:
+    from urllib.parse import parse_qs, urlparse
+
+    from backend.admin import service
+    qs = parse_qs(urlparse(request.url).query)
+    fmt_kind = (qs.get("format", ["json"]) or ["json"])[0]
+    entity = (qs.get("entity", [None]) or [None])[0]
+    exported_at = _now_iso()
+    try:
+        body, content_type, filename = await service.export(
+            repo, fmt_kind, entity, exported_at)
+    except service.ExportRequestError as e:
+        admin_log("admin_export_bad_request", "error", endpoint="/admin/export")
+        return _json_str(json.dumps({"ok": False, "error": str(e)}), status=400)
+    admin_log("admin_export", "info", endpoint="/admin/export",
+              result=f"{fmt_kind}:{entity or 'bundle'}")
+    return _download(body, content_type, filename)
 
 
 async def _handle_items(request, repo: Repository) -> Response:

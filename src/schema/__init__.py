@@ -49,6 +49,15 @@ from schema.views import (
     SessionView,
     SubmitResult,
 )
+from schema.admin_views import (
+    ExportBundle,
+    ExportItem,
+    ExportJudgment,
+    ExportLikert,
+    ExportSurvey,
+    ProgressView,
+    WinrateRow,
+)
 
 __all__ = [
     # モデル型
@@ -61,6 +70,9 @@ __all__ = [
     # U2 ビュー型（参加者 API レスポンス契約）
     "ItemView", "PairView", "LikertScale", "LikertTargetView", "Progress",
     "SessionView", "SubmitResult", "ApiError",
+    # U3 管理/エクスポート型（ExportBundle は U4b 入力契約の正本）
+    "ProgressView", "WinrateRow", "ExportBundle", "ExportItem",
+    "ExportJudgment", "ExportLikert", "ExportSurvey",
     # 列挙
     "Layer", "TokenStatus", "SessionPhase", "Choice",
     # 明示バリデート関数（トークン契約）

@@ -568,3 +568,26 @@
 **User Input**: "全 4 問回答済み・承認。全問 ★A。U3 のインフラ差分は実質ゼロ。Q2 補足=エクスポートはブラウザ直接 DL + curl 経路（-u Basic）も同一境界で可＝U4b 自動化の正として申し送り。Q3=deploy.yml 無変更・beta 検証不要。Q4=API は統合テスト・UI はデプロイ後手動確認（data-testid で将来自動化余地確保）。"
 **AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 4 問バックフィル。Part 2 実行: infrastructure-design.md（差分中心・実質ゼロ: LC-U3→インフラ、/admin/* GET ルート追加のみ・管理 UI Worker 配信〈assets 非配置〉・migration/シークレット/CORS/[assets]/deploy.yml すべて無変更・beta 不要・エクスポート受領〈ブラウザ + curl 経路を U4b 自動化の正として申し送り〉・動作確認方針〈API=統合テスト / UI=手動〉・トレーサビリティ）を生成。共有分は shared-infrastructure.md 参照（新規共有インフラなし）。標準 2 択（Request Changes / Continue → Code Generation〈U3〉）を提示予定。
 **Context**: CONSTRUCTION - U3 Infrastructure Design Part 2 完了・レビュー待ち（GATE）
+
+---
+
+## U3 Infrastructure Design - 承認 & Code Generation Part 1 開始
+**Timestamp**: 2026-07-15T03:40:00Z
+**User Input**: "承認します"
+**AI Response**: U3 Infrastructure Design（差分実質ゼロ）を承認完了。aidlc-state の U3 Infrastructure Design を承認済みに更新し、per-unit ループ次段の Code Generation〈U3〉Part 1（Planning）へ移行。code-generation.md ルールに従い番号付き生成ステップ（schema ビュー/バンドル型 → Repository read_* 集計 → 純粋整形〈CSV/ビュー/バンドル〉 → AdminService/ExportService → ui.py 埋め込み → handle_admin GET 配線 → unit/PBT/integration → docs）と決定点を含む `construction/plans/u3-code-generation-plan.md` を作成し回答待機（GATE）。migration/wrangler.toml/deploy.yml 変更なし。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U3 Code Generation Part 1（Planning）承認待ち
+
+---
+
+## U3 Code Generation - Part 1 承認 & Part 2 開始
+**Timestamp**: 2026-07-15T04:00:00Z
+**User Input**: "全 4 決定点回答済み・承認。Q1=A（judgments×pairs 単一クエリ・is_practice=0・UNION 展開・pair_index=p.idx）。Q2=A（admin_views.py 分離）。Q3=A ＋ 一点修正=to_csv は標準 csv モジュール（io.StringIO+csv.writer）で RFC4180 準拠、filename の ts は exported_at と同一。Q4=A（U1/U2/U4a 全緑ブロッキング）。"
+**AI Response**: Part 1 計画承認、plan の Answer 欄に全★A 記入（Q3 の csv モジュール修正を Step 3 に反映）。Part 2 生成開始: 全 10 ステップ（schema admin_views 型 → Repository read_progress/read_winrates/read_export_rows〈単一クエリ・is_practice=0 SQL 除外〉 → 純粋整形 format.py〈標準 csv〉 → AdminService/ExportService → ui.py 埋め込み UI → handle_admin GET 配線〈no-store/attachment・filename ts=exported_at〉 → unit/PBT PU3-3/integration drive_u3 → 回帰/docs）。migration/wrangler.toml/deploy.yml 変更なし。
+**Context**: CONSTRUCTION - U3 Code Generation Part 2（Generation）実行中
+
+---
+
+## U3 Code Generation - Part 2 Generation 完了（unit+PBT 39 緑・integration 8 項目 PASS）
+**Timestamp**: 2026-07-15T05:00:00Z
+**AI Response**: U3 全 10 ステップ生成。**schema**: `admin_views.py`（ProgressView/WinrateRow/**ExportBundle 正本**〈ExportItem=body なし・ExportJudgment=pair_index〉）。**Repository 拡張**（読み取り専用）: read_progress/read_winrates〈judgments×pairs UNION 展開・is_practice=0〉/read_export_rows〈本番のみ・pair_index=idx〉。**backend/admin**: format.py〈標準 csv モジュール RFC4180・build_progress/winrates/export_bundle〉/service.py〈get_progress/get_winrates/export・ExportRequestError〉/ui.py〈管理 UI モジュール定数・data-testid・非BT 注記・assets 非配置〉/api.py に GET 配線〈/admin/ UI・progress・winrates・export、no-store 共通ヘルパ・attachment・filename ts=exported_at・admin_log 秘匿〉。**テスト**: unit test_format（CSV エスケープ境界・winrate 定義・bundle 自己完結）/PBT test_export_selfcontained（PU3-3）/integration drive_u3。**検証（この環境）**: unit+PBT 39 passed（ci 200 examples・U1/U2/U4a 回帰緑 + U3 追加 6）／**integration 実 D1/miniflare 全 8 項目 PASS**（result-u3-integration.json: PU3-5 認証401 / PU3-4 進捗整合 / PU3-1 練習除外の出力段保証〈export=40==progress=40〉 / PU3-3 自己完結・body なし〈items=95〉 / PU3-2 winrate 定義整合〈総試合80=40×2〉 / CSV judgments 41 行 / CSV entity 未指定 400 / UI HTML 200）。**migration/wrangler.toml/deploy.yml 変更なし**を確認。code/README・ルート README 更新。plan 全 Step [x]。標準 2 択（Request Changes / Continue → Build & Test〈U3〉）を提示予定。
+**Context**: CONSTRUCTION - U3 Code Generation Part 2 完了・レビュー待ち（GATE）

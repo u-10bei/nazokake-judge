@@ -319,6 +319,69 @@ class Repository:
         )
         return to_py(kept)
 
+    # ---------------------------------------------------------- 管理集計（U3・読み取り専用）
+
+    async def read_progress(self) -> dict:
+        """進捗カウント（US-R01, BR-U3-04）。judgments は本番のみ（is_practice=0）。"""
+        row = await self._db.prepare(
+            "SELECT "
+            "(SELECT COUNT(*) FROM tokens) AS tokens_issued, "
+            "(SELECT COUNT(*) FROM tokens WHERE status IN ('in_progress','completed')) AS tokens_started, "
+            "(SELECT COUNT(*) FROM tokens WHERE status='completed') AS tokens_completed, "
+            "(SELECT COUNT(*) FROM judgments j JOIN pairs p "
+            "   ON j.token=p.token AND j.pair_id=p.pair_id WHERE p.is_practice=0) AS judgments_total, "
+            "(SELECT COUNT(*) FROM likert_responses) AS likert_total, "
+            "(SELECT COUNT(*) FROM survey_responses) AS survey_total"
+        ).first()
+        return to_py(row)
+
+    async def read_winrates(self) -> list[dict]:
+        """暫定勝率（US-R03, BR-U3-05）。本番判定を item 単位に UNION 展開して集計。
+
+        各本番判定について item_left/item_right の 2 項目が「1 試合」、choice 側が勝ち。
+        matches = 出場数、wins = 勝ち数、winrate = wins/matches（matches=0 は 0）。
+        """
+        res = await self._db.prepare(
+            "WITH prod AS ("
+            "  SELECT p.item_left, p.item_right, j.choice "
+            "  FROM judgments j JOIN pairs p ON j.token=p.token AND j.pair_id=p.pair_id "
+            "  WHERE p.is_practice=0"
+            "), tallies AS ("
+            "  SELECT item_left AS item_id, CASE WHEN choice='A' THEN 1 ELSE 0 END AS win FROM prod "
+            "  UNION ALL "
+            "  SELECT item_right AS item_id, CASE WHEN choice='B' THEN 1 ELSE 0 END AS win FROM prod"
+            ") "
+            "SELECT i.item_id AS item_id, i.layer AS layer, "
+            "       COUNT(t.item_id) AS matches, COALESCE(SUM(t.win),0) AS wins "
+            "FROM items i LEFT JOIN tallies t ON t.item_id=i.item_id "
+            "GROUP BY i.item_id, i.layer"
+        ).all()
+        return to_py(res)["results"]
+
+    async def read_export_rows(self, entity: str) -> list[dict]:
+        """エクスポート用の行を返す（entity 別, BR-U3-06/07）。判定は本番のみ。"""
+        if entity == "items":
+            res = await self._db.prepare("SELECT item_id, layer FROM items").all()
+        elif entity == "judgments":
+            res = await self._db.prepare(
+                "SELECT j.token AS token, j.pair_id AS pair_id, p.idx AS pair_index, "
+                "       p.item_left AS item_left, p.item_right AS item_right, "
+                "       j.choice AS choice, j.created_at AS created_at "
+                "FROM judgments j JOIN pairs p ON j.token=p.token AND j.pair_id=p.pair_id "
+                "WHERE p.is_practice=0"
+            ).all()
+        elif entity == "likert":
+            res = await self._db.prepare(
+                "SELECT token, target_ref, rating, created_at FROM likert_responses"
+            ).all()
+        elif entity == "surveys":
+            res = await self._db.prepare(
+                "SELECT token, answers, created_at FROM survey_responses"
+            ).all()
+        else:
+            return []
+        return to_py(res)["results"]
+
 
 def _row_to_pair(r: dict) -> Pair:
     """pairs 行（idx / is_practice int）を Pair モデルへ写像する。"""

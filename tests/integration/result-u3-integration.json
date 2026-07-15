@@ -1,0 +1,76 @@
+{
+  "overall_pass": true,
+  "results": [
+    {
+      "item": "PU3-5-auth-401",
+      "pass": true,
+      "detail": {
+        "progress": 401,
+        "winrates": 401,
+        "export": 401,
+        "ui": 401
+      }
+    },
+    {
+      "item": "PU3-4-progress",
+      "pass": true,
+      "detail": {
+        "tokens_issued": 1,
+        "tokens_started": 1,
+        "tokens_completed": 1,
+        "judgments_total": 40,
+        "likert_total": 10,
+        "survey_total": 1
+      }
+    },
+    {
+      "item": "PU3-1-practice-excluded",
+      "pass": true,
+      "detail": {
+        "export_judgments": 40,
+        "progress_judgments": 40
+      }
+    },
+    {
+      "item": "PU3-3-selfcontained-nobody",
+      "pass": true,
+      "detail": {
+        "items": 95,
+        "selfcontained": true,
+        "no_body": true
+      }
+    },
+    {
+      "item": "PU3-2-winrate-definition",
+      "pass": true,
+      "detail": {
+        "rows": 95,
+        "total_matches": 80,
+        "expected": 80
+      }
+    },
+    {
+      "item": "PU3-csv-judgments",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "lines": 41,
+        "expected": 41
+      }
+    },
+    {
+      "item": "PU3-csv-entity-required",
+      "pass": true,
+      "detail": {
+        "status": 400
+      }
+    },
+    {
+      "item": "PU3-ui-html",
+      "pass": true,
+      "detail": {
+        "status": 200
+      }
+    }
+  ]
+}
