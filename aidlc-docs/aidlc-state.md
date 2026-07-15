@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - **U4b 完了 = 全ユニット完了**（U1/U4a/U2/U3/U4b 全て CLOSE）
+- **Current Stage**: **CONSTRUCTION PHASE 完了**（U1/U4a/U2/U3/U4b 全て CLOSE, 2026-07-15）→ OPERATIONS
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -82,14 +82,14 @@
 - [x] Infrastructure Design — **承認済み**（2026-07-15）。全 4 問 A。差分ほぼゼロ（`scripts/bt_aggregate` + `src/schema/bt.py` のファイル追加のみ・Worker/D1/deploy/migration/secret/CORS/assets 全て無変更）。入力=U3 curl 経路（取得と推定の分離・スナップショット監査単位=ファイル）・schema_version 検証・PBT+unit で検証完結（実機確認対象なし）・α 適用位置の不変条件を Code Gen へ申し送り
 - [x] Code Generation Part 1（Planning）— **承認済み**（2026-07-15, 全 4 問 A / Q1=パッケージ分割 / Q2=α 適用位置不変条件 / Q3=α=1.0・max_iter=10000・tol=1e-10 / Q4=回帰全緑ブロッキング）+ Step 6 に rank 同値処理・Step 10 に α 感度注記を追記
 - [x] Code Generation（Part 1+2）— **承認済み・完了**（2026-07-15, 全 10 Step）。`src/schema/bt.py`（BTResult/BTItemScore/Calibration）+ `scripts/bt_aggregate/`（aggregate/graph/mm/calibrate/assemble/__main__ = LC-U4b-01〜07 一対一）。unit+PBT **57 緑**（U1/U2/U3/U4a 回帰含む・ci profile）。**PBT 反例で 1 発見**: PU4b-1 単調性は正則化 ON では**次数対称な完全総当たり**でのみ堅牢（不規則グラフは α が疎 item を非対称に縮め順位入替＝BR-U4b-01「疎な新作ほど強く縮む」の実証）→ ジェネレータを完全総当たりに限定。**α 適用位置の不変条件**を aggregate/mm/assemble 3 箇所 + PU4b-6 で二重固定。**migration/wrangler.toml/deploy.yml/src/backend 変更なし**。実機 CLI 一巡確認（pro→rank1・新作→最下位・孤立 item=null・Σθ=0・calibrated が Likert 尺度へ写像・版検証 exit 1/0）
-- [x] Build & Test — **完了**（Code Generation 内で実施: unit+PBT **61 緑** + 実データ CLI 一巡・終了コード契約・非連結/較正/除外 item 検証）。**Request Changes 1 件反映（クローズ前必須）**: `--alpha 0/負値`で `math.log(0)` 未捕捉例外（生トレースバック漏れ）/ 負値は θ 全 0 の無意味結果を exit 0 返却 → **CLI 境界でパラメータ検証**（`--alpha>0`/`--max-iter≥1`/`--tol>0` を強制・違反は EXIT_FAIL＝U4b-NFR-11 の非0リストに「パラメータ不正」追加, DP-U4b-03）+ unit テスト 4 ケース追加。README 終了コード表更新。U4b は非デプロイ・実機確認対象なし（U4b-NFR-13）ゆえ PBT+unit で検証完結。**U4b 完了 = 全ユニット完了**
+- [x] Build & Test — **承認済み・完了**（2026-07-15, 最終確認承認）。unit+PBT **61 緑** + 実データ CLI 一巡・終了コード契約・非連結/較正/除外 item 検証。**Request Changes 1 件反映（クローズ前必須・承認済み）**: `--alpha 0/負値`で `math.log(0)` 未捕捉例外（生トレースバック漏れ）/ 負値は θ 全 0 の無意味結果を exit 0 返却 → **CLI 境界でパラメータ検証**（`--alpha>0`/`--max-iter≥1`/`--tol>0` を強制・違反は EXIT_FAIL＝U4b-NFR-11 の非0リストに「パラメータ不正」追加, DP-U4b-03）+ unit テスト 4 ケース追加。README 終了コード表更新。U4b は非デプロイ・実機確認対象なし（U4b-NFR-13）ゆえ PBT+unit で検証完結。**U4b 完了 = 全ユニット完了**
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U4b 進行中・最終ユニット）
-- **Current Stage**: **U4b 完了 = 全ユニット完了**（CONSTRUCTION PHASE 完了）
+- **Lifecycle Phase**: **CONSTRUCTION PHASE 完了**（全 5 ユニット CLOSE, 2026-07-15）→ OPERATIONS へ
+- **Current Stage**: **U4b 承認・クローズ = 全ユニット完了**（判定装置の一巡クローズ達成）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
 - **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
 - **Next Stage**: OPERATIONS PHASE（あるいは本番デプロイ運用）。判定装置の一巡クローズ達成: 投入(U4a)→発行(U4a)→参加(U2)→進捗/エクスポート(U3)→BT 集計(U4b)→新作の位置確認
