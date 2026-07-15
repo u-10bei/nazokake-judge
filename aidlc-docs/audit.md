@@ -512,3 +512,11 @@
 **User Input**: "（Infra §6-β ④注記・README 運用メモ追記後）その後 U3 に進む"
 **AI Response**: U2 完了（CLOSE）を受け、per-unit ループ次段 U3（研究者・管理）の Functional Design Part 1 を実行。stories（US-R01 進捗モニタリング / US-R02 エクスポート / US-R03 暫定勝率）・unit-of-work U3（C-FE-ADMIN/C-SVC-ADMIN/C-SVC-EXPORT/C-AUTH/C-API）・既存基盤（backend/admin の Basic 認証チョークポイント DP-U4a-01・schema EXPORT_FORMAT_VERSION=1.0.0・Repository）を精読。中核論点＝(1) エクスポート契約の確定（US-R04/U4b BT 入力との整合を US-R02 で固定, 練習除外, トークン紐付け, 判定は pairs join で item ペア込み）(2) 管理 UI の配信・認証境界（既存 Basic 認証チョークポイントの再利用範囲）(3) 進捗/暫定勝率の集計意味論（練習除外・非 BT）。`construction/plans/u3-functional-design-plan.md` に中核論点・スコープ境界・質問（各 ★A デフォルト・[Answer] 欄）を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
 **Context**: CONSTRUCTION - U3 Functional Design Part 1（Planning）承認待ち
+
+---
+
+## U3 Functional Design - 回答分析 & Part 2 Generation
+**Timestamp**: 2026-07-15T00:30:00Z
+**User Input**: "全 7 問回答済み・承認。Q1=X（★A + items{item_id,layer} / pair_index / exported_at を契約に追加＝U4b 自己完結・順序効果分析・スナップショット自己記述）。Q2〜Q7=A。Q4 補足=管理 HTML は assets 非配置（src/ 埋め込み）を business-rules 化。Q7 補足=XC-04 からの意識的逸脱を記録。Part 2 指示: ExportBundle を domain-entities に正本として定義し U4b 申し送り明記、assets 非配置と XC-04 逸脱を BR 番号付き固定、Testable Properties に練習除外の出力段保証と winrate 定義整合を含める。"
+**AI Response**: 回答分析 → 全問明確・曖昧語なし・追加質問不要（Step 5 クリア）。運用ルールに従い plan の [Answer] 欄を全 7 問（Q1=X 含む）バックフィル。Part 2 実行: business-logic-model.md（進捗/暫定勝率/エクスポートの各フロー・集計の Repository 集約・PU3-1〜5・U4b 申し送り）／business-rules.md（BR-U3-01〜10: 認証一本化・**管理 HTML の assets 非配置=src/ 埋め込み**・**練習除外の出力段保証**・進捗内訳・非BT 明示・**ExportBundle 契約と版管理**・秘匿ログ・集計の Repository 集約・**XC-04 意識的逸脱**）／domain-entities.md（**ExportBundle 正本**: schema_version/exported_at/items{item_id,layer}/judgments{...pair_index...本番のみ}/likert/surveys、U4b 入力契約・自己完結・body 非格納）／frontend-components.md（管理ダッシュボード = 進捗+暫定勝率+エクスポート、Worker が Basic 認証背後で /admin/ 配信・デスクトップ主）を生成。U3 は読み取り専用（migration なし）。標準 2 択（Request Changes / Continue → NFR Requirements〈U3〉）を提示予定。
+**Context**: CONSTRUCTION - U3 Functional Design Part 2 完了・レビュー待ち（GATE）

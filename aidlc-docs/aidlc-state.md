@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U3 Functional Design Part 1 生成完了・承認待ち（GATE）
+- **Current Stage**: CONSTRUCTION - U3 Functional Design Part 2 生成完了・承認待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -67,7 +67,7 @@
 - [x] Build & Test — **完了**（2026-07-14）。unit+PBT **33 緑** / integration **全 9 項目 PASS**（実 D1/miniflare, result-u2-integration.json: PU2-2/4/5/7/8 + 一巡・出自秘匿）/ **本番初回デプロイ完了**（migrations 0001+0002+0003 本番適用済み）/ beta 3 点は dev 実測で確定（①api 到達・③未知=404・④admin 401・health 200）。**残**: F-8+catch-all 反映の**再デプロイ後の prod curl 疎通**（①=200・③=404・②`/`=index.html）→ beta 最終 CLOSE（自明・疎通のみ）。**U2 完了**
 
 #### U3: 研究者・管理（admin）
-- [~] Functional Design — **Part 1 生成完了・承認待ち**（2026-07-14）。US-R01/R02/R03。中核=エクスポート契約（U4b BT 入力の固定）・認証境界一本化・集計意味論。全 7 問
+- [~] Functional Design — **Part 2 生成完了・承認待ち**（2026-07-15）。Q1=X（ExportBundle に items/pair_index/exported_at 追加）他★A。成果物 4 件（business-logic-model / business-rules BR-U3-01〜10 / **domain-entities: ExportBundle 正本** / frontend-components）。U3 は読み取り専用（migration なし）
 - [ ] NFR Requirements / NFR Design / Infrastructure Design / Code Generation / Build & Test
 
 ### 🟢 CONSTRUCTION PHASE（U4b 未着手）
@@ -77,12 +77,12 @@
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, **U2 完了 → U3 へ**）
-- **Current Stage**: **U2 完了**（Code Generation + Build & Test）。次は U3 Functional Design
+- **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U3 進行中）
+- **Current Stage**: **U3 Functional Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1（完了）／U4a（完了・承認済み 2026-07-13）／**U2（完了 2026-07-14: 全設計 + Code Gen + Build & Test）**
-- **Next Stage**: **U3（研究者・管理）の Functional Design**（進捗モニタリング US-R01 / エクスポート US-R02 / 暫定勝率 US-R03。既存 backend/admin の Basic 認証・schema エクスポート形式を消費）
-- **Status**: U2 完了。unit+PBT 33 緑 / integration 9 項目 PASS / 本番初回デプロイ済み（migrations 0001〜0003 適用）。実機で F-7（seed bind）・F-8（バンドル src/ レイアウト）・entry.py catch-all を捕捉・修正。beta 3 点は dev 実測で確定、prod 最終疎通は再デプロイ後 curl のみ（自明・残作業）。**新規 backend コードは src/ 配下に置く（F-8）**
+- **Completed**: U1（完了）／U4a（完了 2026-07-13）／U2（完了 2026-07-14）
+- **Next Stage**: U3 Functional Design 承認 → **NFR Requirements〈U3〉**
+- **Status**: U3 FD の 4 成果物を生成（Q1=X で ExportBundle に items/pair_index/exported_at 追加＝U4b 自己完結の入力契約を固定 / 他★A）。U3 は読み取り専用（migration なし）・既存 Basic 認証境界を再利用・管理 HTML は assets 非配置（src/ 埋め込み）。**新規 backend コードは src/ 配下（F-8）**
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
