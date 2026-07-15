@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U3 Code Generation Part 2 生成完了・レビュー待ち（GATE）
+- **Current Stage**: CONSTRUCTION - U3 完了（CLOSE）→ U4b Functional Design Part 1 生成完了・承認待ち（GATE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -72,22 +72,22 @@
 - [x] NFR Design — **承認済み**（2026-07-15）。全 4 問★A。DP-U3-01〜05（body 非含有=型排除・練習除外の SQL 出力段保証）+ LC-U3-01〜06。管理 HTML=ui.py 定数
 - [x] Infrastructure Design — **承認済み**（2026-07-15）。全 4 問★A。差分実質ゼロ（/admin/* GET 追加のみ・migration/シークレット/CORS/assets/deploy.yml 無変更）。curl 経路を U4b 自動化の正として申し送り
 - [x] Code Generation Part 1（Planning）— **承認済み**（2026-07-15, 全 4 決定点★A / Q3=標準 csv モジュール）
-- [x] Code Generation Part 2（Generation）— **生成完了・レビュー待ち**（2026-07-15, 全 10 ステップ）。unit+PBT 39 緑（回帰含む）・integration 全 8 項目 PASS（実 D1）。migration/wrangler/deploy 変更なし
-- [ ] Build & Test
+- [x] Code Generation（Part 1+2）— **承認済み・完了**（2026-07-15, 全 10 ステップ）。unit+PBT 39 緑（回帰含む）・integration 全 8 項目 PASS（実 D1）+ 軽微修正 2 点（filename コロン除去・winrate 未出場注記）。migration/wrangler/deploy 変更なし
+- [x] Build & Test — **完了**（Code Generation 内で実施: integration 実 D1 全 8 項目 + unit/PBT 39）。**U3 完了**
 
-### 🟢 CONSTRUCTION PHASE（U4b 未着手）
-- [ ] U4b（bt_aggregate）: Functional Design 以降（U3 のエクスポート形式を入力）
+#### U4b: BT 集計スクリプト（bt_aggregate・最終ユニット）
+- [~] Functional Design — **Part 1 生成完了・承認待ち**（2026-07-15）。US-R04。U3 の ExportBundle を入力とするオフライン BT 推定（scripts/・Worker 非依存）
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U3 進行中）
-- **Current Stage**: **U3 Code Generation Part 2 — 生成完了・レビュー待ち**（standardized 2-option GATE）
+- **Current Stage**: **U4b Functional Design Part 1 — 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1（完了）／U4a（完了 2026-07-13）／U2（完了 2026-07-14）／**U3 全設計 + Code Gen Part 1（承認済み 2026-07-15）**
-- **Next Stage**: U3 Code Generation 承認 → **Build & Test〈U3〉**（実質 integration 済み）→ U3 完了 → **U4b（bt_aggregate）**
-- **Status**: U3 Code Generation Part 2 完了（全 10 ステップ・4 決定点★A）。**unit+PBT 39 緑**（U1/U2/U4a 回帰含む）＋**integration 全 8 項目 PASS**（実 D1/miniflare, result-u3-integration.json: PU3-1/2/3/4/5 + CSV/UI/401）。migration/wrangler.toml/deploy.yml 変更なし・新規シークレットなし
+- **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／**U3（完了 2026-07-15）**
+- **Next Stage**: U4b Functional Design 承認 → NFR Requirements〈U4b〉…（最終ユニット）
+- **Status**: **U3 完了（CLOSE）**。U4b（bt_aggregate・最終ユニット）Functional Design Part 1 生成・回答待ち（GATE）。U4b は U3 の ExportBundle を入力とするオフライン BT 推定（scripts/・Worker 非依存）。完成で「投入→発行→参加→エクスポート→BT 集計→新作の位置確認」の判定装置一巡が閉じる
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）

@@ -599,3 +599,11 @@
 **User Input**: "非ブロッキング観察 2 点: (1) filename のコロンが Windows で自動置換され監査整合が崩れる→filename 側だけ replace(':','') の一行修正で済む（bundle の exported_at は ISO のまま）。(2) winrate の LEFT JOIN が全 items を返し未出場が matches=0 で並ぶ→露出監視に有用ゆえ設計整合、ただし『matches=0=未出場』と読める前提を頭に。"
 **AI Response**: 両点対応（Build & Test の直しに含める）。(1) `service.export` で filename の ts を `exported_at.replace(":","")` に（bundle 内 exported_at は ISO8601 維持）。実機で `Content-Disposition: filename="export-bundle-2026-07-15T053740Z.json"`（コロンなし）確認。(2) LEFT JOIN は露出監視有用ゆえ維持し、UI 注記に「対戦数 0 は未出場」を追記（誤読防止）。**検証**: unit+PBT 39 緑・integration 再実行 8/8 維持。code/README に両点記録。U4b BT 集計は judgments 起点ゆえ影響なし。
 **Context**: CONSTRUCTION - U3 Code Generation Part 2（軽微修正済み）・レビュー待ち（GATE）
+
+---
+
+## U3 Code Generation - 承認 & U3 完了（CLOSE）→ U4b Functional Design 開始
+**Timestamp**: 2026-07-15T06:00:00Z
+**User Input**: "承認します、U4b の Functional Design に進んで"
+**AI Response**: U3 Code Generation（進捗/暫定勝率/エクスポート API・管理 UI・軽微修正 2 点）を承認完了。U3 は integration 実 D1 全 8 項目 PASS + unit/PBT 39 を実施済みのため **Build & Test も実質完了**として扱い、aidlc-state の U3 を完了に更新。**U3 完了（CLOSE）**。per-unit ループ最終段 U4b（bt_aggregate）へ移行。functional-design.md ルールに従い Part 1（Plan + 質問）を作成: U4b は U3 の ExportBundle（JSON 正本）を入力に取るオフライン BT 集計スクリプト（scripts/・Worker 非依存）。中核=(1) BT 推定手法（MM 純 Python vs scipy・比較グラフ連結性/識別可能性）(2) Likert 較正アンカーの使い方（相対 BT 尺度→解釈可能尺度）(3) 出力形式（新作のプロ水準相対位置）。`construction/plans/u4b-functional-design-plan.md` に質問（各 ★A デフォルト・[Answer] 欄）を作成し回答待機（GATE）。運用ルールに従い Part 2 生成時に Answer 欄記入予定。
+**Context**: CONSTRUCTION - U4b Functional Design Part 1（Planning）承認待ち
