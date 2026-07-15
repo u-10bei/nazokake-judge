@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-12T01:50:30Z
-- **Current Stage**: CONSTRUCTION - U4b Infrastructure Design Part 2 生成完了・承認待ち（GATE）
+- **Current Stage**: CONSTRUCTION - **U4b 完了 = 全ユニット完了**（U1/U4a/U2/U3/U4b 全て CLOSE）
 - **Architecture Decision**: 案 A′ = 静的フロント(バニラ JS) + Cloudflare Python Workers(raw workers API + Pydantic v2, **src/ レイアウト F-8**) + D1、PBT=Hypothesis
 
 ## Workspace State
@@ -79,18 +79,21 @@
 - [x] Functional Design — **承認済み**（2026-07-15, Request Changes 反映=MM 擬似データ定式化・BR 番号是正）。US-R04。MM=Hunter 2004・観測ペア限定正則化（w̃_ij=w_ij+α/2, ñ_ij=n_ij+α）・最大成分内 Σθ=0・target_ref=item_id 較正・BTResult〈source エコーバック・除外 item 可視化〉。BR-U4b-01〜13。schema/bt.py・DDL 変更なし
 - [x] NFR Requirements — **承認済み**（2026-07-15）。全 5 問 A。U4b-NFR-01〜13（行順序不問決定論=item_id 正準ソート・未収束 exit0・token 非参照・終了コード網羅）+ TSD-U4b-01〜06
 - [x] NFR Design — **承認済み**（2026-07-15）。全 4 問 A。DP-U4b-01〜04（正準集計 3 点セット・restrict_to_component 切り出し）+ LC-U4b-01〜07（6 純関数+CLI）。**α 適用位置の不変条件を明文固定**（aggregate=生カウント / α は fit_bt 内部のみ / BTResult.matches/wins は生＝BR-U4b-08/PU4b-6 U3 突合の成立条件・Code Gen Step へ一行申し送り）
-- [~] Infrastructure Design — **Part 2 生成完了・承認待ち**（2026-07-15）。全 4 問 A。差分ほぼゼロ（`scripts/bt_aggregate` + `src/schema/bt.py` のファイル追加のみ・Worker/D1/deploy/migration/secret/CORS/assets 全て無変更）。入力=U3 curl 経路（取得と推定の分離・スナップショット監査単位=ファイル）・schema_version 検証・PBT+unit で検証完結（実機確認対象なし）・α 適用位置の不変条件を Code Gen へ申し送り
+- [x] Infrastructure Design — **承認済み**（2026-07-15）。全 4 問 A。差分ほぼゼロ（`scripts/bt_aggregate` + `src/schema/bt.py` のファイル追加のみ・Worker/D1/deploy/migration/secret/CORS/assets 全て無変更）。入力=U3 curl 経路（取得と推定の分離・スナップショット監査単位=ファイル）・schema_version 検証・PBT+unit で検証完結（実機確認対象なし）・α 適用位置の不変条件を Code Gen へ申し送り
+- [x] Code Generation Part 1（Planning）— **承認済み**（2026-07-15, 全 4 問 A / Q1=パッケージ分割 / Q2=α 適用位置不変条件 / Q3=α=1.0・max_iter=10000・tol=1e-10 / Q4=回帰全緑ブロッキング）+ Step 6 に rank 同値処理・Step 10 に α 感度注記を追記
+- [x] Code Generation（Part 1+2）— **承認済み・完了**（2026-07-15, 全 10 Step）。`src/schema/bt.py`（BTResult/BTItemScore/Calibration）+ `scripts/bt_aggregate/`（aggregate/graph/mm/calibrate/assemble/__main__ = LC-U4b-01〜07 一対一）。unit+PBT **57 緑**（U1/U2/U3/U4a 回帰含む・ci profile）。**PBT 反例で 1 発見**: PU4b-1 単調性は正則化 ON では**次数対称な完全総当たり**でのみ堅牢（不規則グラフは α が疎 item を非対称に縮め順位入替＝BR-U4b-01「疎な新作ほど強く縮む」の実証）→ ジェネレータを完全総当たりに限定。**α 適用位置の不変条件**を aggregate/mm/assemble 3 箇所 + PU4b-6 で二重固定。**migration/wrangler.toml/deploy.yml/src/backend 変更なし**。実機 CLI 一巡確認（pro→rank1・新作→最下位・孤立 item=null・Σθ=0・calibrated が Likert 尺度へ写像・版検証 exit 1/0）
+- [x] Build & Test — **完了**（Code Generation 内で実施: unit+PBT 57 緑 + 実データ CLI 一巡・終了コード契約・非連結/較正/除外 item 検証）。U4b は非デプロイ・実機確認対象なし（U4b-NFR-13）ゆえ PBT+unit で検証完結。**U4b 完了 = 全ユニット完了**
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION（per-unit ループ, U4b 進行中・最終ユニット）
-- **Current Stage**: **U4b Infrastructure Design Part 2 — 生成完了・承認待ち**（standardized 2-option GATE）
-- **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）
-- **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b FD + NFR Requirements + NFR Design（承認済み 2026-07-15）**
-- **Next Stage**: U4b Infra Design 承認 → Code Generation〈U4b・最終ユニット〉→ Build & Test → **U4b 完了 = 全ユニット完了**
-- **Status**: Infrastructure Design〈U4b〉Part 2 生成（全 4 問 A）。差分ほぼゼロ＝`scripts/bt_aggregate` + `src/schema/bt.py` のファイル追加のみ・Worker/D1/deploy/migration/secret/CORS/assets 全て無変更。入力=U3 curl 経路（取得と推定の分離）・PBT+unit で検証完結。**α 適用位置の不変条件を Code Gen へ申し送り済み**。承認後 Code Generation（最終）へ
+- **Current Stage**: **U4b 完了 = 全ユニット完了**（CONSTRUCTION PHASE 完了）
+- **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
+- **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
+- **Next Stage**: OPERATIONS PHASE（あるいは本番デプロイ運用）。判定装置の一巡クローズ達成: 投入(U4a)→発行(U4a)→参加(U2)→進捗/エクスポート(U3)→BT 集計(U4b)→新作の位置確認
+- **Status**: **全ユニット完了**。U4b Code Generation 完了（10 Step / 全 4 問 A）。unit+PBT 57 緑・実機 CLI 一巡確認。α 適用位置の不変条件・rank 同値・単調性の適用範囲（完全総当たり）を明文固定。差分は `scripts/bt_aggregate/` + `src/schema/bt.py` のみ（Worker/D1/deploy/migration 無変更）
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）

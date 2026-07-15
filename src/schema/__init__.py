@@ -58,6 +58,12 @@ from schema.admin_views import (
     ProgressView,
     WinrateRow,
 )
+from schema.bt import (
+    BTItemScore,
+    BTResult,
+    BTSource,
+    Calibration,
+)
 
 __all__ = [
     # モデル型
@@ -73,6 +79,8 @@ __all__ = [
     # U3 管理/エクスポート型（ExportBundle は U4b 入力契約の正本）
     "ProgressView", "WinrateRow", "ExportBundle", "ExportItem",
     "ExportJudgment", "ExportLikert", "ExportSurvey",
+    # U4b BT 集計の出力契約（BTResult 正本）
+    "BTResult", "BTItemScore", "BTSource", "Calibration",
     # 列挙
     "Layer", "TokenStatus", "SessionPhase", "Choice",
     # 明示バリデート関数（トークン契約）
