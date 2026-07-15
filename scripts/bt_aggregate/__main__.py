@@ -180,6 +180,21 @@ def main(argv: list[str] | None = None) -> int:
                     help="schema_version 不一致を警告で続行（既定はエラー終了, BR-U4b-11）")
     args = ap.parse_args(argv)
 
+    # --- パラメータ検証（純関数の前提条件を CLI 境界で強制, DP-U4b-03） ---
+    # mm.fit_bt は α>0 のとき w̃_i>0＝log/除算が有限（BR-U4b-03）。α≤0 は math domain error や
+    # 無意味な結果（θ 全 0）を招くため、正規運用経路（README の α 感度チェック）で到達しうる
+    # 不正値を「パラメータ不正」として非0終了に写す（U4b-NFR-11 の非0リストに含める）。
+    if not (args.alpha > 0.0):
+        print(f"[error] --alpha は正の値が必要です（観測ペア限定正則化, BR-U4b-03）: {args.alpha}",
+              file=sys.stderr)
+        return EXIT_FAIL
+    if args.max_iter < 1:
+        print(f"[error] --max-iter は 1 以上が必要です: {args.max_iter}", file=sys.stderr)
+        return EXIT_FAIL
+    if not (args.tol > 0.0):
+        print(f"[error] --tol は正の値が必要です: {args.tol}", file=sys.stderr)
+        return EXIT_FAIL
+
     # --- 入力読込（失敗は非0） ---
     try:
         with open(args.input, encoding="utf-8") as f:

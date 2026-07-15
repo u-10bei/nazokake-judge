@@ -123,6 +123,23 @@ def test_exit_validation_error(tmp_path, capsys):
     assert "検証に失敗" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize("flag,value,frag", [
+    ("--alpha", "0", "--alpha"),      # α=0 → math domain error を招く前提違反
+    ("--alpha", "-1", "--alpha"),     # α<0 → 無意味な結果（θ 全 0）
+    ("--max-iter", "0", "--max-iter"),
+    ("--tol", "0", "--tol"),
+])
+def test_invalid_parameters_are_error(tmp_path, capsys, flag, value, frag):
+    """不正パラメータ（README の α 感度チェックで到達しうる境界）は非0終了（U4b-NFR-11）。
+
+    純関数の前提条件（α>0 等）を CLI 境界で強制し、生トレースバック漏れや無意味な結果の
+    exit 0 返却を防ぐ（DP-U4b-03: 例外は CLI 境界で捕捉して終了コードへ写す）。
+    """
+    path = _write(tmp_path, _bundle(_sample_items(), _sample_judgments()))
+    assert main([path, flag, value]) == EXIT_FAIL
+    assert frag in capsys.readouterr().err
+
+
 def test_normal_run_exit_ok_and_json_shape(tmp_path):
     out = tmp_path / "r.json"
     path = _write(tmp_path, _bundle(_sample_items(), _sample_judgments()))

@@ -46,8 +46,13 @@ uv run python -m scripts.bt_aggregate export.json --alpha 2.0 --out bt_a2.0.json
 ### 終了コード契約（U4b-NFR-11 / DP-U4b-03）
 | コード | 条件 |
 |---|---|
-| **1（失敗）** | 入力ファイル不在・JSON パース不能・ExportBundle 検証失敗・版不一致（既定, BR-U4b-11） |
+| **1（失敗）** | 入力ファイル不在・JSON パース不能・ExportBundle 検証失敗・版不一致（既定, BR-U4b-11）・**パラメータ不正**（`--alpha ≤ 0` / `--max-iter < 1` / `--tol ≤ 0`） |
 | **0（成功）** | 正常 + warnings 系（非連結・較正スキップ・未収束・版不一致緩和・除外 item） |
+
+**パラメータ検証**（DP-U4b-03: 純関数の前提条件は CLI 境界で強制）: `mm.fit_bt` は α>0 のとき
+w̃_i>0＝log/除算が有限（BR-U4b-03）。README の α 感度チェックで境界値を試す運用経路から
+`--alpha 0`（math domain error）や `--alpha -1`（θ 全 0 の無意味な結果）に到達しうるため、
+CLI 境界で `--alpha>0` / `--max-iter≥1` / `--tol>0` を強制し、違反は非0終了に写す。
 
 ---
 
