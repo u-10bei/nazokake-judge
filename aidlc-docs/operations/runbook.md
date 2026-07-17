@@ -72,6 +72,7 @@ uv run python -m scripts.pool_ingest items.json --base-url "$ADMIN_API_BASE"
 
 - **入力**: JSON 配列 または JSONL。各レコード = `{item_id, layer, body, body_ref?}`。
 - **層ラベル（必須）**: `pro`（プロ作品）/ `ai`（AI 生成）/ `edit`（編集・自作）/ `rule`（ルールベース生成）。欠落・不正は投入拒否。
+- **初期投入の件数**: **95 件 = `pro`30 / `ai`20 / `edit`30 / `rule`15**（要件 FR-08。かつ**割当アルゴリズムの α/S 較正を実施した構成**ゆえ大きく外さない）。→ 根拠は `manual-p-rsch.md` §4
 - **段階投入可**: プール未充足でも投入自体は成功し `sufficiency_warnings` が出る（充足はトークン発行時に強制）。
 - **終了コード**: 拒否 or クライアント検証不正があれば **1**。
 
