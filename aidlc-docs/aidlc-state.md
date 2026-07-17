@@ -86,7 +86,8 @@
 
 #### U5: 出題停止（item retirement・追加要件 2026-07-17）
 **背景**: **著作権上の配慮**で投入済み作品の一部を今後出題しない必要が発生。運用者の確定要件: **物理削除は不要 / それまでの判定結果は有効のまま / 進行中セッションへの反映は不要（新規セッションのみ）**。
-- [~] Functional Design — **Part 1（Plan + 質問 6 問）生成・承認待ち**（2026-07-17）。調査で判明: ①削除 API も廃止フラグも未実装（＝設計上の意図: 凍結ガード BR-U4a-03 が更新すら拒否）②**エクスポートは body 非含有ゆえ廃止 item を残せる → 自己完結性 BR-U3-07 維持 → U4b 無改修で「過去結果は有効」が成立**③ペア列は開始時に一括保存＝「新規のみ反映」なら配信段の改修不要 ④**⚠️ Likert ターゲットは未保存・毎回導出 → プールを絞ると進行中セッションのターゲットが変わる**（Q2 の核心）⑤**⚠️ 廃止フラグ付与は UPDATE ＝凍結ガード BR-U4a-03 と正面衝突**（Q3 の核心）。波及: migration 0004 / U4a / U1 / U2 / U3（確認のみ）/ **U4b 無変更**
+- [~] Functional Design — **Part 2 生成完了・承認待ち**（2026-07-17）。全 6 問 A。成果物 3 件（business-rules BR-U5-01〜13 / business-logic-model / domain-entities）。**レビュー指摘 3 点を反映**: ①**読み取り経路の分割を「関数の分割」で明文化**（BR-U5-02: `list_items()` 全件のまま凍結・`list_active_items()` 新設。`list_items()` 自体にフィルタを足すと **export 縮小→PU3-3 違反→U4b 破壊** と **旧セッションのフォールバック導出変化→「新規のみ反映」破れ** の**両輪が同時に壊れる**＝MM 式・α 適用位置と同系の明文固定案件）②**`retired_at`=現在状態 / `admin_log`=履歴の正**（BR-U5-13・unretire が NULL に戻すため）③**練習試行の経路を調査**（BR-U5-02b: 別経路なし・`generate_pairs` が同一プール同一呼び出しで先頭を練習とするだけ→active フィルタが自動で効き漏れなし）。**追加判明**: `select_likert_targets` の導出は **3 箇所**（build_view/check_complete/submit_likert）＝一部だけ切替で「表示されたターゲットの送信が拒否される」不整合→単一アクセサ集約必須。`pairs.item_left/right` に **FK** あり＝物理削除は FK 違反（論理削除が唯一の正解の構造的根拠）
+- 調査で判明した設計の前提: ①削除 API も廃止フラグも未実装（＝設計上の意図: 凍結ガード BR-U4a-03 が更新すら拒否）②**エクスポートは body 非含有ゆえ廃止 item を残せる → 自己完結性 BR-U3-07 維持 → U4b 無改修で「過去結果は有効」が成立**③ペア列は開始時に一括保存＝「新規のみ反映」なら配信段の改修不要 ④**⚠️ Likert ターゲットは未保存・毎回導出 → プールを絞ると進行中セッションのターゲットが変わる**（Q2 の核心）⑤**⚠️ 廃止フラグ付与は UPDATE ＝凍結ガード BR-U4a-03 と正面衝突**（Q3 の核心）。波及: migration 0004 / U4a / U1 / U2 / U3（確認のみ）/ **U4b 無変更**
 
 ### 🟡 OPERATIONS PHASE
 - [x] **Operations — 方法論上は実行対象なし**（`aidlc-workflows/.../operations/operations.md`: "This phase is currently a placeholder"・"The AI-DLC workflow currently ends after the Build and Test phase in CONSTRUCTION"）。plan/質問/ゲートの規定は存在せず、**AI-DLC は U4b Build & Test 承認をもって完走済み**。
@@ -99,11 +100,11 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION 再開（**U5 = 追加要件 2026-07-17**）。U1〜U4b は CLOSE 済み・運用文書 3 冊完備
-- **Current Stage**: **U5 出題停止 — Functional Design Part 1 生成・承認待ち**（standardized 2-option GATE）
+- **Current Stage**: **U5 出題停止 — Functional Design Part 2 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
 - **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
 - **Next Stage**: U5 FD 承認 → NFR Requirements〈U5〉→ …（per-unit ループ）。本番デプロイは U5 完了後が望ましい（migration 0004 を同時に載せられる）
-- **Status**: U1〜U4b 完了（判定装置の一巡クローズ達成: 投入→発行→参加→進捗/エクスポート→BT 集計→新作の位置確認）。運用文書 3 冊完備（`operations/`）。**U5 = 著作権配慮による出題停止**の Functional Design Part 1 生成（6 問 ★A）。核心 2 点: **Likert ターゲットの保存化**（未保存・毎回導出のため進行中セッションが壊れる）と **凍結ガード BR-U4a-03 との整理**（廃止=UPDATE が拒否される。body/layer 不変ゆえガードの趣旨に反しないと整理）
+- **Status**: U1〜U4b 完了（判定装置の一巡クローズ達成）。運用文書 3 冊完備（`operations/`）。**U5 = 著作権配慮による出題停止**の FD Part 2 生成（全 6 問 A / BR-U5-01〜13）。核心 3 点: **読み取り経路を関数分割で固定**（list_items 凍結 / list_active_items 新設）・**Likert ターゲットの保存化**（3 箇所の導出を単一アクセサに集約）・**凍結ガード BR-U4a-03 との整理**（body/layer 不変ゆえ対象外）。**U3/U4b 無変更・EXPORT_FORMAT_VERSION 1.0.0 据え置き**
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
