@@ -7,8 +7,11 @@
   ADMIN_BASIC_USER=... ADMIN_BASIC_PASSWORD=... \
   uv run python -m scripts.token_issue 30 \
       --base-url https://<worker>.workers.dev \
-      --url-template 'https://<worker>.workers.dev/s/{token}' \
+      --url-template 'https://<worker>.workers.dev/?token={token}' \
       --out tokens.dist.txt
+
+**配布 URL は `/?token={token}` が正**: フロント（frontend/app.js）は `?token=` クエリを読む
+（U2-NFR-04）。`/s/{token}` 等の未知パスは SPA フォールバック不使用ゆえ 404（Infra Q2）。
 """
 
 from __future__ import annotations
@@ -31,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("count", type=int, help="発行数")
     ap.add_argument("--base-url", default=None, help="管理 API のベース URL（省略時 ADMIN_API_BASE）")
     ap.add_argument("--url-template", required=True,
-                    help="配布 URL テンプレート（{token} を含める）")
+                    help="配布 URL テンプレート（{token} を含める。例: 'https://<host>/?token={token}'）")
     ap.add_argument("--out", default=None, help="URL 一覧の出力ファイル（配布用・gitignore 対象）")
     args = ap.parse_args(argv)
 

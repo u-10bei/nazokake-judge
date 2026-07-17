@@ -85,11 +85,13 @@
 - [x] Build & Test — **承認済み・完了**（2026-07-15, 最終確認承認）。unit+PBT **61 緑** + 実データ CLI 一巡・終了コード契約・非連結/較正/除外 item 検証。**Request Changes 1 件反映（クローズ前必須・承認済み）**: `--alpha 0/負値`で `math.log(0)` 未捕捉例外（生トレースバック漏れ）/ 負値は θ 全 0 の無意味結果を exit 0 返却 → **CLI 境界でパラメータ検証**（`--alpha>0`/`--max-iter≥1`/`--tol>0` を強制・違反は EXIT_FAIL＝U4b-NFR-11 の非0リストに「パラメータ不正」追加, DP-U4b-03）+ unit テスト 4 ケース追加。README 終了コード表更新。U4b は非デプロイ・実機確認対象なし（U4b-NFR-13）ゆえ PBT+unit で検証完結。**U4b 完了 = 全ユニット完了**
 
 ### 🟡 OPERATIONS PHASE
-- [ ] Operations - PLACEHOLDER
+- [x] **Operations — 方法論上は実行対象なし**（`aidlc-workflows/.../operations/operations.md`: "This phase is currently a placeholder"・"The AI-DLC workflow currently ends after the Build and Test phase in CONSTRUCTION"）。plan/質問/ゲートの規定は存在せず、**AI-DLC は U4b Build & Test 承認をもって完走済み**。
+- [x] **運用 Runbook 作成**（2026-07-15）— 定義の Future Scope（production readiness / maintenance）に相当する実運用手順書 `aidlc-docs/operations/runbook.md`。初回セットアップ / デプロイ（品質ゲート順）/ 一巡手順（プール投入→発行→配布→参加→進捗→エクスポート→BT 集計→α 感度）/ 監視（wrangler tail・admin_log の秘匿方針）/ トラブルシューティング 9 症状 / 運用注意 / 未消化事項。実装済み CLI・API の一次情報に基づく
+  - **作成時に運用地雷 1 件を発見・修正**: `scripts/token_issue.py` の docstring 使用例が `--url-template '.../s/{token}'` を示すが、フロントは `?token=` クエリを読み（U2-NFR-04）未知パスは 404（Infra Q2・SPA フォールバック不使用）＝**例をコピーすると全参加者が 404**。U4a 時点の例が U2 フロント確定後に未更新だったもの。docstring + `--url-template` help を `/?token={token}` に修正（ロジック不変）
 
 ## Current Status
-- **Lifecycle Phase**: **CONSTRUCTION PHASE 完了**（全 5 ユニット CLOSE, 2026-07-15）→ OPERATIONS へ
-- **Current Stage**: **U4b 承認・クローズ = 全ユニット完了**（判定装置の一巡クローズ達成）
+- **Lifecycle Phase**: **AI-DLC 完走**（CONSTRUCTION 完了 = 全 5 ユニット CLOSE / Operations は方法論上プレースホルダ＝実行対象なし, 2026-07-15）
+- **Current Stage**: **全工程クローズ**。運用 Runbook 作成済み（`aidlc-docs/operations/runbook.md`）＝実運用の入口
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
 - **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
 - **Next Stage**: OPERATIONS PHASE（あるいは本番デプロイ運用）。判定装置の一巡クローズ達成: 投入(U4a)→発行(U4a)→参加(U2)→進捗/エクスポート(U3)→BT 集計(U4b)→新作の位置確認
