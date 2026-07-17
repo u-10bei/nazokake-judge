@@ -88,10 +88,14 @@
 - [x] **Operations — 方法論上は実行対象なし**（`aidlc-workflows/.../operations/operations.md`: "This phase is currently a placeholder"・"The AI-DLC workflow currently ends after the Build and Test phase in CONSTRUCTION"）。plan/質問/ゲートの規定は存在せず、**AI-DLC は U4b Build & Test 承認をもって完走済み**。
 - [x] **運用 Runbook 作成**（2026-07-15）— 定義の Future Scope（production readiness / maintenance）に相当する実運用手順書 `aidlc-docs/operations/runbook.md`。初回セットアップ / デプロイ（品質ゲート順）/ 一巡手順（プール投入→発行→配布→参加→進捗→エクスポート→BT 集計→α 感度）/ 監視（wrangler tail・admin_log の秘匿方針）/ トラブルシューティング 9 症状 / 運用注意 / 未消化事項。実装済み CLI・API の一次情報に基づく
   - **作成時に運用地雷 1 件を発見・修正**: `scripts/token_issue.py` の docstring 使用例が `--url-template '.../s/{token}'` を示すが、フロントは `?token=` クエリを読み（U2-NFR-04）未知パスは 404（Infra Q2・SPA フォールバック不使用）＝**例をコピーすると全参加者が 404**。U4a 時点の例が U2 フロント確定後に未更新だったもの。docstring + `--url-template` help を `/?token={token}` に修正（ロジック不変）
+- [x] **ペルソナ別説明書 2 冊**（2026-07-15）— Inception 定義（`inception/user-stories/personas.md`: P-EVAL 評価者 / P-RSCH 研究者の 2 ペルソナ）に忠実に作成。実装済みの実画面・実 CLI に基づく
+  - `operations/manual-p-eval.md`（**参加者へ配布可能な本文**・平易な日本語・モバイル前提）: タスク概要/所要 25〜35 分・進め方（教示→練習→本番約 40 ペア→Likert→アンケート→完了）・中断再開・困ったとき 4 症状・プライバシー。**出自秘匿を最優先制約として本文は 4 層構成に一切触れない**（冒頭に研究者向け警告枠: 「AI と人間の比較」等と説明すると要求特性で実験の妥当性が壊れる旨・配布時は枠を削除）
+  - `operations/manual-p-rsch.md`（研究者向け・**runbook と重複させず「全体像と結果の読み方」に特化**・手順は runbook へ導線）: 装置の意義（なぜ比較判定か）・できること×US-R01〜06・実験設計上の 3 約束（出自秘匿=人間側の運用が最後の穴 / 練習除外 / 露出均衡・層間比率）・充足条件の具体値・**結果の読み方**（暫定勝率 vs BT の違い=論文には BT・θ の 0 は平均・component 越えの比較禁止・bt_score=null は「弱い」ではない・非連結の意味・α 感度チェック）・Pain Point 対処・データ取扱い
+  - `runbook.md` 冒頭に 3 文書の使い分け表を追加
 
 ## Current Status
 - **Lifecycle Phase**: **AI-DLC 完走**（CONSTRUCTION 完了 = 全 5 ユニット CLOSE / Operations は方法論上プレースホルダ＝実行対象なし, 2026-07-15）
-- **Current Stage**: **全工程クローズ**。運用 Runbook 作成済み（`aidlc-docs/operations/runbook.md`）＝実運用の入口
+- **Current Stage**: **全工程クローズ**。運用文書 3 冊完備（`operations/`: runbook.md 手順 / manual-p-rsch.md 研究者・結果の読み方 / manual-p-eval.md 参加者配布用）＝実運用の入口
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
 - **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
 - **Next Stage**: OPERATIONS PHASE（あるいは本番デプロイ運用）。判定装置の一巡クローズ達成: 投入(U4a)→発行(U4a)→参加(U2)→進捗/エクスポート(U3)→BT 集計(U4b)→新作の位置確認

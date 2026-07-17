@@ -3,6 +3,13 @@
 **対象**: 研究者（装置の運用者）。**前提**: 全 5 ユニット完了（CONSTRUCTION CLOSE, 2026-07-15）。
 **位置づけ**: AI-DLC の Operations は方法論上プレースホルダ（規定なし・Build & Test で完走）。本書はその Future Scope（production readiness / maintenance）に相当する**実運用手順書**であり、実装済みの CLI/API に基づく。
 
+> **文書の使い分け**（ペルソナ定義 = `../inception/user-stories/personas.md`）
+> | 文書 | 対象 | 内容 |
+> |---|---|---|
+> | **本書 `runbook.md`** | P-RSCH 研究者 | **コマンド手順**・デプロイ・監視・トラブルシューティング |
+> | `manual-p-rsch.md` | P-RSCH 研究者 | 装置の全体像・**結果の読み方**・実験設計上の約束 |
+> | `manual-p-eval.md` | P-EVAL 評価者 | **参加者へ配布する説明書**（URL と一緒に渡す） |
+
 ## 判定装置の一巡
 
 ```
