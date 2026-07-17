@@ -27,7 +27,9 @@ from schema.models import (
 from schema.payloads import (
     IngestResult,
     ItemIngestRequest,
+    ItemRetireRequest,
     RejectedItem,
+    RetireResult,
     SufficiencyResult,
     TokenIssueRequest,
     TokenIssueResult,
@@ -73,6 +75,8 @@ __all__ = [
     # U4a ペイロードモデル
     "ItemIngestRequest", "IngestResult", "RejectedItem", "SufficiencyResult",
     "TokenIssueRequest", "TokenIssueResult",
+    # U5 出題停止（retire/unretire）ペイロードモデル
+    "ItemRetireRequest", "RetireResult",
     # U2 ビュー型（参加者 API レスポンス契約）
     "ItemView", "PairView", "LikertScale", "LikertTargetView", "Progress",
     "SessionView", "SubmitResult", "ApiError",

@@ -16,7 +16,15 @@ import json
 
 from backend.domain import SessionExposure, derive_exposure
 from backend.repo._d1 import to_js_maybe, to_py
-from schema import ExposureCounts, Item, Pair, RejectedItem, Session, Token
+from schema import (
+    ExposureCounts,
+    Item,
+    Pair,
+    RejectedItem,
+    RetireResult,
+    Session,
+    Token,
+)
 
 
 class Repository:
@@ -64,11 +72,97 @@ class Repository:
     # ---------------------------------------------------------- 刺激プール
 
     async def list_items(self) -> list[Item]:
+        """**全件**を返す（廃止済みを含む）。
+
+        🔒 **凍結（BR-U5-02 / DP-U5-01）**: 本関数に active フィルタを足してはならない
+        （`active_only` 引数の新設も禁止）。踏むと要件の両輪が**同時に**壊れる:
+          (1) export の items が縮む → 自己完結性（judgments の item ⊆ items）が破れる
+              → PU3-3 違反 → U4b 破壊（＝「それまでの結果は有効」が壊れる）
+          (2) 旧セッションの Likert 導出フォールバックが変わる
+              → 進行中セッションのターゲットが変わる（＝「新規のみ反映」が破れる）
+        **出題対象を選ぶ用途には `list_active_items()` を使うこと。**
+
+        呼び出し先（全件が正しい用途）: `build_view` の bodies 写像（進行中セッションの
+        既存ペア列を解決するため必須）／`get_likert_targets` の旧セッション導出。
+        """
         res = await self._db.prepare(
             "SELECT item_id, layer, body, body_ref FROM items"
         ).all()
         rows = to_py(res)["results"]
         return [Item.model_validate(r) for r in rows]
+
+    async def list_active_items(self) -> list[Item]:
+        """**現役のみ**を返す（`retired_at IS NULL`, U5 / LC-U5-01）。
+
+        **「これから出題するものを選ぶ」用途はすべてこちら**（BR-U5-02a）:
+        新規セッションのペア生成・Likert ターゲット選定・充足判定（ingest の warn /
+        issue のゲート）。練習ペアは `generate_pairs` の同一呼び出し由来ゆえ自動的に効く
+        （BR-U5-02b）。
+        """
+        res = await self._db.prepare(
+            "SELECT item_id, layer, body, body_ref FROM items WHERE retired_at IS NULL"
+        ).all()
+        rows = to_py(res)["results"]
+        return [Item.model_validate(r) for r in rows]
+
+    async def retire_items(self, item_ids: list[str], now_iso: str) -> RetireResult:
+        """出題停止（論理削除, BR-U5-06 / LC-U5-02 / DP-U5-03）。
+
+        **冪等性は SQL の WHERE 句が保証する**: `AND retired_at IS NULL` により既に廃止済みは
+        no-op ＝ **初回の廃止時刻が保持される**（証跡が後から書き換わらない）。
+        分類（retired / already_retired / not_found）は UPDATE 直前の SELECT で判定する
+        （batch 直前・ロックなし＝U4a 凍結ガードと同じ窓最小化方針）。**窓は報告用にしか
+        影響しない**——冪等性は WHERE 句が持つ。
+
+        **凍結ガード（BR-U4a-03）は通らない**: 本関数は `insert_items` とは別経路。
+        `retired_at` は body/layer を変えず過去判定の解釈を壊さないため、参照済み item でも
+        廃止できる（BR-U5-05）。
+        """
+        return await self._set_retired(item_ids, now_iso, retire=True)
+
+    async def unretire_items(self, item_ids: list[str]) -> RetireResult:
+        """出題停止の解除（復活, BR-U5-07）。誤操作の回復用。冪等（現役なら no-op）。"""
+        return await self._set_retired(item_ids, None, retire=False)
+
+    async def _set_retired(
+        self, item_ids: list[str], now_iso: str | None, *, retire: bool
+    ) -> RetireResult:
+        ids = list(dict.fromkeys(item_ids))  # 重複除去（順序保持）
+        if not ids:
+            return RetireResult(ok=True)
+
+        placeholders = ", ".join("?" for _ in ids)  # 全パラメータ化（U5-NFR-12）
+
+        # 現状取得（分類用・UPDATE 直前）。
+        res = await self._db.prepare(
+            f"SELECT item_id, retired_at FROM items WHERE item_id IN ({placeholders})"
+        ).bind(*ids).all()
+        current = {r["item_id"]: r["retired_at"] for r in to_py(res)["results"]}
+
+        not_found = [i for i in ids if i not in current]
+        if retire:
+            targets = [i for i in ids if i in current and current[i] is None]
+            noop = [i for i in ids if i in current and current[i] is not None]
+        else:
+            targets = [i for i in ids if i in current and current[i] is not None]
+            noop = [i for i in ids if i in current and current[i] is None]
+
+        if targets:
+            tph = ", ".join("?" for _ in targets)
+            if retire:
+                await self._db.prepare(
+                    f"UPDATE items SET retired_at = ? WHERE item_id IN ({tph}) "
+                    "AND retired_at IS NULL"
+                ).bind(now_iso, *targets).run()
+            else:
+                await self._db.prepare(
+                    f"UPDATE items SET retired_at = NULL WHERE item_id IN ({tph}) "
+                    "AND retired_at IS NOT NULL"
+                ).bind(*targets).run()
+
+        return RetireResult(
+            ok=True, retired=len(targets), already_retired=noop, not_found=not_found
+        )
 
     async def referenced_item_ids(self) -> set[str]:
         """pairs から参照済みの item_id 集合（凍結ガード用, BR-U4a-03）。
@@ -191,22 +285,16 @@ class Repository:
     # ---------------------------------------------------------- 原子確定（DP-01）
 
     async def save_pair_sequence(self, session: Session, pairs: list[Pair]) -> None:
-        """Session + PairSequence + exposure_snapshot を単一 batch で all-or-nothing 保存。
+        """Session + PairSequence + exposure_snapshot + likert_targets を単一 batch で
+        all-or-nothing 保存。
 
         半端なペア列（再開 US-P08 / 露出導出 H-2 を壊す）を原理的に生じさせない（TSD-03）。
+
+        **U5（DP-U5-02）**: `likert_targets` を**同じ batch に載せる**ことで「ペア列は保存
+        されたが Likert ターゲットは未保存」という中間状態が**原理的に生じない**。別経路で
+        保存するとその窓を新設してしまう（＝BR-U5-04 の保証に穴）。
         """
-        stmts = [
-            self._db.prepare(
-                "INSERT INTO sessions (token, phase, seed, exposure_snapshot, created_at) "
-                "VALUES (?, ?, ?, ?, ?)"
-            ).bind(
-                session.token,
-                session.phase.value,
-                session.seed,
-                json.dumps(session.exposure_snapshot),
-                session.created_at,
-            )
-        ]
+        stmts = [self._session_insert_stmt(session)]
         for p in pairs:
             stmts.append(
                 self._db.prepare(
@@ -219,13 +307,40 @@ class Repository:
             )
         await self._db.batch(to_js_maybe(stmts))
 
+    def _session_insert_stmt(self, session: Session):
+        """sessions の INSERT 文（`likert_targets` None は SQL リテラル NULL）。
+
+        D1 は Python None の bind を undefined として拒否するため、None のときは bind せず
+        SQL リテラル NULL を使う（`_item_upsert_stmt` の body_ref と同じイディオム）。
+        """
+        base = ("INSERT INTO sessions "
+                "(token, phase, seed, exposure_snapshot, created_at, likert_targets) ")
+        common = (
+            session.token,
+            session.phase.value,
+            session.seed,
+            json.dumps(session.exposure_snapshot),
+            session.created_at,
+        )
+        if session.likert_targets is None:
+            return self._db.prepare(base + "VALUES (?, ?, ?, ?, ?, NULL)").bind(*common)
+        # 順序を保って保存（提示順が意味を持つ, U5-NFR-07 / PBT-02）。
+        return self._db.prepare(base + "VALUES (?, ?, ?, ?, ?, ?)").bind(
+            *common, json.dumps(session.likert_targets)
+        )
+
     # ---------------------------------------------------------- 参加者フロー読取（U2）
 
     async def get_session(self, token: str) -> Session | None:
-        """セッション行を取得（再開・監査再現用, U2）。"""
+        """セッション行を取得（再開・監査再現用, U2）。
+
+        U5: `likert_targets`（JSON 配列 / NULL）を復元する。NULL → None は「U5 以前に開始した
+        セッション」を意味し、呼び出し側（`get_likert_targets`）が全件導出にフォールバックする
+        （BR-U5-04）。順序はそのまま保たれる（U5-NFR-07 / PBT-02）。
+        """
         row = await (
             self._db.prepare(
-                "SELECT token, phase, seed, exposure_snapshot, created_at "
+                "SELECT token, phase, seed, exposure_snapshot, created_at, likert_targets "
                 "FROM sessions WHERE token = ?"
             ).bind(token).first()
         )
@@ -233,6 +348,12 @@ class Repository:
             return None
         d = to_py(row)
         d["exposure_snapshot"] = json.loads(d.get("exposure_snapshot") or "{}")
+        # `[]`（Likert 対象なしのセッション）と NULL（U5 以前の旧セッション）は**意味が違う**:
+        # 前者は「対象なしが確定済み」、後者は「未保存ゆえ全件導出にフォールバック」。
+        # `[]` を None に潰すとフォールバックが走り、**本来ないはずの Likert 対象が生える**。
+        # よって truthy 判定ではなく `is not None` で厳密に分ける（PBT-02 で検出）。
+        raw_targets = d.get("likert_targets")
+        d["likert_targets"] = json.loads(raw_targets) if raw_targets is not None else None
         return Session.model_validate(d)
 
     async def get_pairs(self, token: str) -> list[Pair]:

@@ -66,3 +66,31 @@ class TokenIssueResult(BaseModel):
     issued_at: str | None = None
     # 現行プールが三点セット未達なら ok=false・tokens=[]・gate_errors に不足内訳（発行拒否）。
     gate_errors: list[str] = Field(default_factory=list)
+
+
+# ---- pool_retire（U5: 出題停止） ----
+
+class ItemRetireRequest(BaseModel):
+    """POST /admin/items/retire | /admin/items/unretire のリクエスト（U5, BR-U5-06/07）。
+
+    retire / unretire で共用（操作はルート名で明示＝ブール引数で意味を変えない, TSD-U5-04）。
+    **retired_at は受け取らない**: 廃止時刻はサーバが決め、クライアントは対象しか指定できない。
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    item_ids: list[str] = Field(min_length=1)
+
+
+class RetireResult(BaseModel):
+    """retire / unretire のレスポンス（BR-U5-06/07）。
+
+    冪等: 既に目的の状態なら no-op（retire では初回の retired_at を保持）。
+    `not_found` はエラーにせず部分成功として報告する（U5-NFR-11: 「既に存在しない＝
+    目的は達成」ゆえ CLI も exit 0。ただし警告は出す）。
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    ok: bool
+    retired: int = Field(default=0, ge=0)                        # 今回状態を変えた件数
+    already_retired: list[str] = Field(default_factory=list)     # no-op（unretire では既に現役）
+    not_found: list[str] = Field(default_factory=list)           # items に存在しない item_id

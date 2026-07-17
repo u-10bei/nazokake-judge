@@ -45,12 +45,18 @@ async def start_or_resume(repo, token: str, params: AssignmentParams) -> Session
         exposure = await repo.read_exposure_counts(
             now_iso=now, inactive_threshold_hours=params.inactive_threshold_hours
         )
-        pool = await repo.list_items()
+        # U5: 新規セッションは **現役のみ** から選ぶ（BR-U5-02a）。ペア列・練習ペア・Likert
+        # ターゲットのすべてが廃止 item を含まなくなる（練習は generate_pairs の同一呼び出し
+        # 由来ゆえ自動的に効く, BR-U5-02b）。
+        pool = await repo.list_active_items()
         seed = seed_from_token(token)
         pairs = generate_pairs(pool, exposure, seed, params)
+        # U5: Likert ターゲットも開始時に確定し、ペア列と**同じ batch で原子保存**する
+        # （DP-U5-02。別経路にすると「ペア列は保存されたが Likert 未保存」の窓が生じる）。
         new_session = Session(
             token=token, phase="practice", seed=seed,
             exposure_snapshot=exposure, created_at=now,
+            likert_targets=select_likert_targets(pool, seed, params),
         )
         await repo.save_pair_sequence(new_session, pairs)
         await repo.mark_token_in_progress(token, now)
@@ -60,6 +66,24 @@ async def start_or_resume(repo, token: str, params: AssignmentParams) -> Session
     return await build_view(repo, token, params)
 
 
+async def get_likert_targets(repo, token: str, params: AssignmentParams) -> list[str]:
+    """Likert ターゲットの**唯一の取得経路**（U5 / LC-U5-03 / BR-U5-04）。
+
+    保存値があればそれを返し、なければ **`list_items()`（全件）から導出**する
+    （＝U5 以前に開始した進行中セッションのフォールバック。従来挙動を完全再現し
+    「新規のみ反映」を守る）。
+
+    🔴 **3 箇所すべてが本関数を経由すること**（`build_view`=表示 / `check_complete`=完了判定 /
+    `survey.submit_likert`=検証）。一部だけ保存値に切り替えると表示=保存値・検証=導出値の
+    ずれが生じ、**参加者に表示されたターゲットを送信すると拒否される**。
+    """
+    session = await repo.get_session(token)
+    if session is not None and session.likert_targets is not None:
+        return session.likert_targets
+    # 旧セッション（likert_targets IS NULL）: 全件から導出＝従来挙動を完全再現。
+    return select_likert_targets(await repo.list_items(), seed_from_token(token), params)
+
+
 async def build_view(repo, token: str, params: AssignmentParams) -> SessionView:
     """DB 実データから SessionView を合成する（サーバ権威・再同期の単一経路）。"""
     tok = await repo.get_token(token)
@@ -67,10 +91,12 @@ async def build_view(repo, token: str, params: AssignmentParams) -> SessionView:
 
     pairs = await repo.get_pairs(token)
     answered = await repo.answered_pair_ids(token)
+    # U5: bodies は **全件**（`list_items()`）で解決する（BR-U5-02a）。進行中セッションの
+    # 既存ペア列が廃止 item を含みうるため、ここを active に絞ると画面が壊れる。
     pool = await repo.list_items()
     bodies = {it.item_id: it.body for it in pool}
     seed = seed_from_token(token)
-    likert_targets = select_likert_targets(pool, seed, params)
+    likert_targets = await get_likert_targets(repo, token, params)
     answered_likert = await repo.answered_likert_refs(token)
     survey_exists = await repo.survey_exists(token)
 
@@ -123,8 +149,7 @@ def _next_likert(phase, likert_targets, answered_likert) -> str | None:
 async def check_complete(repo, token: str, params: AssignmentParams) -> bool:
     pairs = await repo.get_pairs(token)
     answered = await repo.answered_pair_ids(token)
-    pool = await repo.list_items()
-    likert_targets = select_likert_targets(pool, seed_from_token(token), params)
+    likert_targets = await get_likert_targets(repo, token, params)  # U5: 単一アクセサ経由
     answered_likert = await repo.answered_likert_refs(token)
     survey_exists = await repo.survey_exists(token)
     return is_complete(pairs, answered, likert_targets, answered_likert, survey_exists)

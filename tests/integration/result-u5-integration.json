@@ -1,0 +1,71 @@
+{
+  "results": [
+    {
+      "name": "凍結ガード維持: 参照済み item の body 更新は拒否",
+      "pass": true,
+      "detail": "rejected=[{'item_id': 'frozen001', 'reason': '参照済み item への更新は拒否（プール凍結, BR-U4a-03）'}]"
+    },
+    {
+      "name": "BR-U5-05: 参照済み item でも廃止できる（凍結ガード対象外）",
+      "pass": true,
+      "detail": "body={'ok': True, 'retired': 1, 'already_retired': [], 'not_found': []}"
+    },
+    {
+      "name": "PU5-4: 廃止後も export の items に廃止 item が残る（自己完結性 BR-U3-07）",
+      "pass": true,
+      "detail": "items=['frozen001', 'other001']"
+    },
+    {
+      "name": "PU5-4: judgments の item ⊆ items（自己完結性が保たれる）",
+      "pass": true,
+      "detail": "未包含=[]"
+    },
+    {
+      "name": "PU5-4: export の items に retired_at が現れない（形式凍結 U5-NFR-04）",
+      "pass": true,
+      "detail": "keys=[['item_id', 'layer'], ['item_id', 'layer']]"
+    },
+    {
+      "name": "PU5-4: EXPORT_FORMAT_VERSION 据え置き（1.0.0）",
+      "pass": true,
+      "detail": "version=1.0.0"
+    },
+    {
+      "name": "PU5-3: 再廃止は no-op（already_retired に分類・retired=0）",
+      "pass": true,
+      "detail": "body={'ok': True, 'retired': 0, 'already_retired': ['frozen001'], 'not_found': []}"
+    },
+    {
+      "name": "U5-NFR-11: 存在しない item_id は not_found に分類（エラーにしない）",
+      "pass": true,
+      "detail": "body={'ok': True, 'retired': 0, 'already_retired': ['frozen001'], 'not_found': ['ghost999']}"
+    },
+    {
+      "name": "BR-U5-08: pool_ingest 再投入で retired_at は不変（廃止のまま）",
+      "pass": true,
+      "detail": "body={'ok': True, 'retired': 0, 'already_retired': ['other001'], 'not_found': []}"
+    },
+    {
+      "name": "BR-U5-07: unretire で復活（retired_at=NULL）",
+      "pass": true,
+      "detail": "body={'ok': True, 'retired': 1, 'already_retired': [], 'not_found': []}"
+    },
+    {
+      "name": "BR-U5-07: 復活も冪等（既に現役なら no-op）",
+      "pass": true,
+      "detail": "body={'ok': True, 'retired': 0, 'already_retired': ['other001'], 'not_found': []}"
+    },
+    {
+      "name": "BR-U5-09: 充足を割った状態では token_issue が拒否される",
+      "pass": true,
+      "detail": "gate_errors=['総数不足: 1 < 最小 27（ceil(2×session_pairs/k)）', '空の層: pro, edit, rule', '層間供給不足: (総数−最大層)0 × k3 = 0 < 必要 26（ceil(cross×session_pairs)）']"
+    },
+    {
+      "name": "U5-NFR-12: 未認証の廃止は 401",
+      "pass": true,
+      "detail": "status=401"
+    }
+  ],
+  "passed": 13,
+  "total": 13
+}

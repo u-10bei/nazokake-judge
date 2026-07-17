@@ -101,6 +101,12 @@ class Session(BaseModel):
     seed: int
     exposure_snapshot: dict[str, int] = Field(default_factory=dict)  # 割当時に参照した露出値
     created_at: str
+    # U5: 開始時に確定した Likert ターゲット（BR-U5-04 / DP-U5-02）。ペア列と同じ
+    # 「開始時確定」原則に揃え、save_pair_sequence の同一 batch で原子保存する。
+    # None = U5 以前に開始したセッション → list_items()（全件）から導出にフォールバック
+    # ＝従来挙動を完全再現（進行中セッションを壊さない＝「新規のみ反映」の保証）。
+    # 順序が意味を持つ（提示順）ため保存/復元は順序を保つこと（U5-NFR-07 / PBT-02）。
+    likert_targets: list[str] | None = None
 
 
 class Judgment(BaseModel):

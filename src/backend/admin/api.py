@@ -19,6 +19,7 @@ from backend.repo import Repository
 from schema import (
     AssignmentParams,
     IngestResult,
+    ItemRetireRequest,
     RejectedItem,
     TokenIssueRequest,
     TokenIssueResult,
@@ -65,6 +66,14 @@ async def handle_admin(request, env, path: str) -> Response:
         return await _handle_items(request, repo)
     if path == "/admin/tokens" and method == "POST":
         return await _handle_tokens(request, repo)
+
+    # POST（U5: 出題停止 / 復活）。ルート名で操作を明示（ブール引数で意味を変えない,
+    # TSD-U5-04）＝admin_log のイベントと 1:1 対応。凍結ガード（BR-U4a-03）は
+    # `_handle_items` 側にあり、こちらは別経路ゆえ参照済み item でも廃止できる（BR-U5-05）。
+    if path == "/admin/items/retire" and method == "POST":
+        return await _handle_retire(request, repo, retire=True)
+    if path == "/admin/items/unretire" and method == "POST":
+        return await _handle_retire(request, repo, retire=False)
 
     # GET（U3: 管理 UI / 進捗 / 暫定勝率 / エクスポート）
     if method == "GET":
@@ -119,6 +128,37 @@ async def _handle_export(request, repo) -> Response:
     return _download(body, content_type, filename)
 
 
+async def _handle_retire(request, repo: Repository, *, retire: bool) -> Response:
+    """出題停止 / 復活（U5, BR-U5-06/07 / LC-U5-04）。
+
+    冪等（既に目的の状態なら no-op・retire では初回の `retired_at` を保持）。`not_found` は
+    エラーにせず部分成功として報告する（U5-NFR-11）。`admin_log` が**廃止履歴の正**
+    （`retired_at` は現在状態のみ, BR-U5-13）。**本文（body）は出さない**（秘匿方針）。
+    """
+    event = "item_retire" if retire else "item_unretire"
+    endpoint = "/admin/items/retire" if retire else "/admin/items/unretire"
+    raw = await request.text()
+    try:
+        req = ItemRetireRequest.model_validate(json.loads(str(raw)))
+    except (ValidationError, json.JSONDecodeError):
+        admin_log(f"{event}_bad_request", "error", endpoint=endpoint)
+        return _json_str(json.dumps(
+            {"ok": False, "error": "item_ids（1 件以上）が必要です"}), status=400)
+
+    result = (await repo.retire_items(req.item_ids, _now_iso())) if retire \
+        else (await repo.unretire_items(req.item_ids))
+
+    admin_log(event, "info", endpoint=endpoint,
+              item_ids=result_item_ids(req.item_ids), count=result.retired,
+              already=len(result.already_retired), not_found=len(result.not_found))
+    return _json(result)
+
+
+def result_item_ids(item_ids: list[str]) -> str:
+    """監査ログ用に item_id を列挙する（本文は含めない, U5-NFR-09）。"""
+    return ",".join(item_ids)
+
+
 async def _handle_items(request, repo: Repository) -> Response:
     raw = await request.text()
     payload = json.loads(str(raw))
@@ -140,8 +180,10 @@ async def _handle_items(request, repo: Repository) -> Response:
     rejected = rejected + list(ins["rejected"])
 
     # 投入後、マージ後プールで充足判定（warn のみ, BR-U4a-05）。
+    # U5: 母数は **現役のみ**（BR-U5-09）。出題できない作品を数に入れると「発行はできるが
+    # 割当が偏る/失敗する」状態を作る。入力は新規＝常に active ゆえ active ∪ 入力になる。
     params = AssignmentParams()
-    suff = pool_sufficiency(await repo.list_items(), params)
+    suff = pool_sufficiency(await repo.list_active_items(), params)
 
     ok = not rejected
     result = IngestResult(
@@ -163,8 +205,10 @@ async def _handle_tokens(request, repo: Repository) -> Response:
         return _json(TokenIssueResult(ok=False, gate_errors=["count は 1 以上の整数が必要"]))
 
     # 発行時充足ゲート（真のゲート, BR-U4a-12）。
+    # U5: 母数は **現役のみ**（BR-U5-09）。廃止の結果ゲートを割ったら発行拒否が正しい挙動
+    # ＝運用者に補充を促す。
     params = AssignmentParams()
-    suff = pool_sufficiency(await repo.list_items(), params)
+    suff = pool_sufficiency(await repo.list_active_items(), params)
     if not suff.ok:
         admin_log("token_issue_blocked", "error", endpoint="/admin/tokens", result="pool_insufficient")
         return _json(TokenIssueResult(ok=False, gate_errors=suff.shortfalls))
