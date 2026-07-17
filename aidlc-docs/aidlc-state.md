@@ -89,7 +89,7 @@
 - [x] Functional Design — **承認済み**（2026-07-17）。全 6 問 A。成果物 3 件（business-rules BR-U5-01〜13 / business-logic-model / domain-entities）。**レビュー指摘 3 点を反映**: ①**読み取り経路の分割を「関数の分割」で明文化**（BR-U5-02: `list_items()` 全件のまま凍結・`list_active_items()` 新設。`list_items()` 自体にフィルタを足すと **export 縮小→PU3-3 違反→U4b 破壊** と **旧セッションのフォールバック導出変化→「新規のみ反映」破れ** の**両輪が同時に壊れる**＝MM 式・α 適用位置と同系の明文固定案件）②**`retired_at`=現在状態 / `admin_log`=履歴の正**（BR-U5-13・unretire が NULL に戻すため）③**練習試行の経路を調査**（BR-U5-02b: 別経路なし・`generate_pairs` が同一プール同一呼び出しで先頭を練習とするだけ→active フィルタが自動で効き漏れなし）。**追加判明**: `select_likert_targets` の導出は **3 箇所**（build_view/check_complete/submit_likert）＝一部だけ切替で「表示されたターゲットの送信が拒否される」不整合→単一アクセサ集約必須。`pairs.item_left/right` に **FK** あり＝物理削除は FK 違反（論理削除が唯一の正解の構造的根拠）
 - [x] NFR Requirements — **承認済み**（2026-07-17）。全 5 問 A。U5-NFR-01〜13 + TSD-U5-01〜08。**PBT-02 を U5 で新たに該当と判断**（U4b は非該当明記だったが `sessions.likert_targets` の JSON 保存/復元を新設ゆえ＝順序を含むラウンドトリップ, U5-NFR-07・質問になかった論点ゆえ要確認）。論点: migration 0004 の安全性/後方互換・**PBT で要件の両輪に網**（PU5-1 新規から消える / PU5-2 旧セッション不変 / PU5-3 冪等 / **PU5-4 export が縮まない=BR-U5-02 の直接の検出網**・混在プールのジェネレータ）・EXPORT_FORMAT_VERSION 据え置きの保証（U3/U4b のテストを書き換えたら設計違反のシグナル）・監査ログの NFR 昇格・Security 差分なし
 - [x] NFR Design — **承認済み**（2026-07-17）。全 5 問 A。DP-U5-01〜04 + LC-U5-01〜07。**調査で前例発見**: `Session` には既に `exposure_snapshot`（JSON カラム ↔ 型付きフィールド・`save_pair_sequence` の同一 batch で原子保存）の前例があり、`likert_targets` は完全に同型 → Q1 の判断材料。論点: **likert_targets の型の置き場と保存の原子性**（★A=Session に載せ save_pair_sequence の同一 batch へ＝「ペア列は保存されたが Likert 未保存」の中間状態を原理的に排除・PBT-02/XC-02 に自然に載る）・`list_active_items()` の配置と呼び出し先の LC 固定・**`get_likert_targets` の層**（サービス層=session.py / domain は無改修＝層の逆流を作らない）・**冪等性を SQL の WHERE 句で作る**（`AND retired_at IS NULL` が初回時刻保持を保証）・適用性 N/A
-- [~] Infrastructure Design — **Part 1（Plan + 質問 4 問）生成・承認待ち**（2026-07-17）。差分ほぼゼロ = **migration 0004** + `/admin/items/retire|unretire` POST 追加のみ（`wrangler.toml`/`deploy.yml`/`frontend`/シークレット/CORS/assets すべて無変更・CLI は非デプロイ）。論点: 適用順 migration→deploy（`deploy.yml` の既存順で自動的に守られる）・**本番未デプロイゆえ初回デプロイで 0001〜0004 一括適用＝旧セッションは実在しない**（フォールバックは稼働後適用の保険）・**PU3-3 緑がデプロイの前提＝BR-U5-02 違反コードは本番に出られない**・beta/UI 目視不要
+- [~] Infrastructure Design — **Part 2 生成完了・承認待ち**（2026-07-17）。全 4 問 A。差分ほぼゼロ = **migration 0004** + `/admin/items/retire|unretire` POST 追加のみ（`wrangler.toml`/`deploy.yml`/`frontend`/シークレット/CORS/assets すべて無変更・CLI は非デプロイ）。論点: 適用順 migration→deploy（`deploy.yml` の既存順で自動的に守られる）・**本番未デプロイゆえ初回デプロイで 0001〜0004 一括適用＝旧セッションは実在しない**（フォールバックは稼働後適用の保険）・**PU3-3 緑がデプロイの前提＝BR-U5-02 違反コードは本番に出られない**・beta/UI 目視不要
 - 調査で判明した設計の前提: ①削除 API も廃止フラグも未実装（＝設計上の意図: 凍結ガード BR-U4a-03 が更新すら拒否）②**エクスポートは body 非含有ゆえ廃止 item を残せる → 自己完結性 BR-U3-07 維持 → U4b 無改修で「過去結果は有効」が成立**③ペア列は開始時に一括保存＝「新規のみ反映」なら配信段の改修不要 ④**⚠️ Likert ターゲットは未保存・毎回導出 → プールを絞ると進行中セッションのターゲットが変わる**（Q2 の核心）⑤**⚠️ 廃止フラグ付与は UPDATE ＝凍結ガード BR-U4a-03 と正面衝突**（Q3 の核心）。波及: migration 0004 / U4a / U1 / U2 / U3（確認のみ）/ **U4b 無変更**
 
 ### 🟡 OPERATIONS PHASE
@@ -103,7 +103,7 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION 再開（**U5 = 追加要件 2026-07-17**）。U1〜U4b は CLOSE 済み・運用文書 3 冊完備
-- **Current Stage**: **U5 出題停止 — Infrastructure Design Part 1 生成・承認待ち**（standardized 2-option GATE）
+- **Current Stage**: **U5 出題停止 — Infrastructure Design Part 2 生成完了・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
 - **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
 - **Next Stage**: U5 FD 承認 → NFR Requirements〈U5〉→ …（per-unit ループ）。本番デプロイは U5 完了後が望ましい（migration 0004 を同時に載せられる）

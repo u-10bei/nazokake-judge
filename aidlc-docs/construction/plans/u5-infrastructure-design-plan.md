@@ -7,8 +7,8 @@
 
 このドキュメントは **Part 1（Plan + 質問）**。回答・承認後に `construction/u5/infrastructure-design/infrastructure-design.md`（差分中心）を生成します（共有分は既存 `shared-infrastructure.md` を参照）。
 
-## 生成予定の成果物（Part 2）
-- [ ] `construction/u5/infrastructure-design/infrastructure-design.md`（LC-U5→インフラ差分＝migration 0004 + `/admin/*` POST 追加のみ・非デプロイ CLI・適用順・動作確認方針・Code Gen 申し送り）
+## 生成予定の成果物（Part 2）→ 生成済み（2026-07-17, 全 4 問 A）
+- [x] `construction/u5/infrastructure-design/infrastructure-design.md`（LC-U5→インフラ差分＝migration 0004 + `/admin/*` POST 追加のみ・非デプロイ CLI・適用順・動作確認方針・Code Gen 申し送り）
 
 ---
 
@@ -35,14 +35,14 @@
   - **dev で先に適用して検証**（既存の dev/prod 分離を流用）。**0004 は安全な no-op 移行**（NULL 許容の列追加のみ・既存行のデータ移送なし・適用しただけでは挙動不変, U5-NFR-01）。
 - **B**: 0004 を別タイミングで手動適用。→ `deploy.yml` の自動適用と二重管理になり適用順の保証が崩れる。不採用。
 
-[Answer]:
+[Answer]:A
 
 ### Q2【Compute】retire/unretire ルートと CLI のホスティング
 - **★A（推奨）**: **`/admin/items/retire` / `/admin/items/unretire` の POST ルートを既存 Worker・同一サブドメインに追加**（別 Worker に分離しない, U4a-NFR-02 と同方針）。**既存 AuthGuard（Basic 認証）の背後**＝U4a の単一チョークポイントを通す。**新規シークレット・CORS 変更なし**。
   - **`pool_retire` CLI は非デプロイ**（`scripts/` 配下・手元/CI の pure-Python・`_bootstrap` で src 解決・`scripts/_client` 流用）＝U4a `token_issue`/`pool_ingest` と同型。**Worker バンドルに含めない**。
 - **B**: 廃止操作を別 Worker / 別サブドメインに分離。→ デプロイ・証明書の二重化。小規模に過剰。不採用。
 
-[Answer]:
+[Answer]:A
 
 ### Q3【CI/CD】`deploy.yml` と品質ゲート
 - **★A（推奨）**: **`deploy.yml` は無変更**。既存フロー `uv sync → test（unit+PBT, 前置ゲート）→ d1 migrations apply --remote（0001〜**0004**）→ deploy` がそのまま機能する（versioned 自動適用ゆえ 0004 を書き足す必要すらない）。
@@ -50,7 +50,7 @@
   - 特に **PU3-3（export 自己完結性）が緑であることがデプロイの前提**＝**BR-U5-02 の禁止事項を踏んだコードは本番に出られない**（U5-NFR-04/13）。
 - **B**: `deploy.yml` に 0004 用のステップを追加。→ versioned 自動適用と二重になり不要。不採用。
 
-[Answer]:
+[Answer]:A
 
 ### Q4【動作確認】検証方針
 - **★A（推奨）**:
@@ -60,8 +60,10 @@
   - **本番デプロイ後の確認**: `pool_retire` の疎通（`/admin/items/retire` が 200・未認証が 401）と `wrangler tail` で `item_retire` ログが出ること。
 - **B**: beta 検証や UI 目視を要求。→ 新規ランタイム機構・UI 変更がなく対象が存在しない。不採用。
 
-[Answer]:
+[Answer]:A
 
 ---
 
-**回答後の流れ**: 曖昧点を点検（あれば追加質問）→ Part 2 で `infrastructure-design.md`（差分中心・共有分は `shared-infrastructure.md` 参照）を生成 → 標準 2 択（Request Changes / Continue → **Code Generation〈U5〉**）。回答は本 plan の各 `[Answer]:` 欄へ書き戻す。
+**回答サマリ**: 全 4 問 A。差分は **migration 0004 + `/admin/items/retire|unretire` POST 追加のみ**。適用順は `deploy.yml` の既存順（test → migrations → deploy）で**自動的に守られる**。本番未デプロイゆえ **0001〜0004 一括適用＝旧セッション不在**。**PU3-3 緑がデプロイの前提＝BR-U5-02 違反コードは本番に出られない**（仕様の明文・PBT の網・デプロイゲートの三重）。beta/UI 目視は不要。
+
+**次**: 標準 2 択（Request Changes / Continue → **Code Generation〈U5〉**）。
