@@ -84,6 +84,10 @@
 - [x] Code Generation（Part 1+2）— **承認済み・完了**（2026-07-15, 全 10 Step）。`src/schema/bt.py`（BTResult/BTItemScore/Calibration）+ `scripts/bt_aggregate/`（aggregate/graph/mm/calibrate/assemble/__main__ = LC-U4b-01〜07 一対一）。unit+PBT **57 緑**（U1/U2/U3/U4a 回帰含む・ci profile）。**PBT 反例で 1 発見**: PU4b-1 単調性は正則化 ON では**次数対称な完全総当たり**でのみ堅牢（不規則グラフは α が疎 item を非対称に縮め順位入替＝BR-U4b-01「疎な新作ほど強く縮む」の実証）→ ジェネレータを完全総当たりに限定。**α 適用位置の不変条件**を aggregate/mm/assemble 3 箇所 + PU4b-6 で二重固定。**migration/wrangler.toml/deploy.yml/src/backend 変更なし**。実機 CLI 一巡確認（pro→rank1・新作→最下位・孤立 item=null・Σθ=0・calibrated が Likert 尺度へ写像・版検証 exit 1/0）
 - [x] Build & Test — **承認済み・完了**（2026-07-15, 最終確認承認）。unit+PBT **61 緑** + 実データ CLI 一巡・終了コード契約・非連結/較正/除外 item 検証。**Request Changes 1 件反映（クローズ前必須・承認済み）**: `--alpha 0/負値`で `math.log(0)` 未捕捉例外（生トレースバック漏れ）/ 負値は θ 全 0 の無意味結果を exit 0 返却 → **CLI 境界でパラメータ検証**（`--alpha>0`/`--max-iter≥1`/`--tol>0` を強制・違反は EXIT_FAIL＝U4b-NFR-11 の非0リストに「パラメータ不正」追加, DP-U4b-03）+ unit テスト 4 ケース追加。README 終了コード表更新。U4b は非デプロイ・実機確認対象なし（U4b-NFR-13）ゆえ PBT+unit で検証完結。**U4b 完了 = 全ユニット完了**
 
+#### U5: 出題停止（item retirement・追加要件 2026-07-17）
+**背景**: **著作権上の配慮**で投入済み作品の一部を今後出題しない必要が発生。運用者の確定要件: **物理削除は不要 / それまでの判定結果は有効のまま / 進行中セッションへの反映は不要（新規セッションのみ）**。
+- [~] Functional Design — **Part 1（Plan + 質問 6 問）生成・承認待ち**（2026-07-17）。調査で判明: ①削除 API も廃止フラグも未実装（＝設計上の意図: 凍結ガード BR-U4a-03 が更新すら拒否）②**エクスポートは body 非含有ゆえ廃止 item を残せる → 自己完結性 BR-U3-07 維持 → U4b 無改修で「過去結果は有効」が成立**③ペア列は開始時に一括保存＝「新規のみ反映」なら配信段の改修不要 ④**⚠️ Likert ターゲットは未保存・毎回導出 → プールを絞ると進行中セッションのターゲットが変わる**（Q2 の核心）⑤**⚠️ 廃止フラグ付与は UPDATE ＝凍結ガード BR-U4a-03 と正面衝突**（Q3 の核心）。波及: migration 0004 / U4a / U1 / U2 / U3（確認のみ）/ **U4b 無変更**
+
 ### 🟡 OPERATIONS PHASE
 - [x] **Operations — 方法論上は実行対象なし**（`aidlc-workflows/.../operations/operations.md`: "This phase is currently a placeholder"・"The AI-DLC workflow currently ends after the Build and Test phase in CONSTRUCTION"）。plan/質問/ゲートの規定は存在せず、**AI-DLC は U4b Build & Test 承認をもって完走済み**。
 - [x] **運用 Runbook 作成**（2026-07-15）— 定義の Future Scope（production readiness / maintenance）に相当する実運用手順書 `aidlc-docs/operations/runbook.md`。初回セットアップ / デプロイ（品質ゲート順）/ 一巡手順（プール投入→発行→配布→参加→進捗→エクスポート→BT 集計→α 感度）/ 監視（wrangler tail・admin_log の秘匿方針）/ トラブルシューティング 9 症状 / 運用注意 / 未消化事項。実装済み CLI・API の一次情報に基づく
@@ -94,12 +98,12 @@
   - `runbook.md` 冒頭に 3 文書の使い分け表を追加
 
 ## Current Status
-- **Lifecycle Phase**: **AI-DLC 完走**（CONSTRUCTION 完了 = 全 5 ユニット CLOSE / Operations は方法論上プレースホルダ＝実行対象なし, 2026-07-15）
-- **Current Stage**: **全工程クローズ**。運用文書 3 冊完備（`operations/`: runbook.md 手順 / manual-p-rsch.md 研究者・結果の読み方 / manual-p-eval.md 参加者配布用）＝実運用の入口
+- **Lifecycle Phase**: CONSTRUCTION 再開（**U5 = 追加要件 2026-07-17**）。U1〜U4b は CLOSE 済み・運用文書 3 冊完備
+- **Current Stage**: **U5 出題停止 — Functional Design Part 1 生成・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
 - **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
-- **Next Stage**: OPERATIONS PHASE（あるいは本番デプロイ運用）。判定装置の一巡クローズ達成: 投入(U4a)→発行(U4a)→参加(U2)→進捗/エクスポート(U3)→BT 集計(U4b)→新作の位置確認
-- **Status**: **全ユニット完了**。U4b Code Generation 完了（10 Step / 全 4 問 A）。unit+PBT 61 緑・実機 CLI 一巡確認。α 適用位置の不変条件・rank 同値・単調性の適用範囲（完全総当たり）を明文固定。差分は `scripts/bt_aggregate/` + `src/schema/bt.py` のみ（Worker/D1/deploy/migration 無変更）
+- **Next Stage**: U5 FD 承認 → NFR Requirements〈U5〉→ …（per-unit ループ）。本番デプロイは U5 完了後が望ましい（migration 0004 を同時に載せられる）
+- **Status**: U1〜U4b 完了（判定装置の一巡クローズ達成: 投入→発行→参加→進捗/エクスポート→BT 集計→新作の位置確認）。運用文書 3 冊完備（`operations/`）。**U5 = 著作権配慮による出題停止**の Functional Design Part 1 生成（6 問 ★A）。核心 2 点: **Likert ターゲットの保存化**（未保存・毎回導出のため進行中セッションが壊れる）と **凍結ガード BR-U4a-03 との整理**（廃止=UPDATE が拒否される。body/layer 不変ゆえガードの趣旨に反しないと整理）
 
 ## Open Gates / Blockers
 （申し送り H-1/H-2/H-3 と同じ追跡方式）
