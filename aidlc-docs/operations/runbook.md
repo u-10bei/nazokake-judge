@@ -180,6 +180,62 @@ uv run python -m scripts.bt_aggregate export.json --alpha 2.0 --out bt_a2.0.json
 
 ---
 
+## 2.5 データのリセット（テスト後のクリーンアップ）
+
+**まず大前提**: 本システムは **dev/prod で D1 を分離**する設計（`wrangler.toml` の `[env.prod]`）。**テストは dev、本番実験は fresh な prod** で回せば、そもそもリセットは不要です。以下は「**本番 D1 でテストしてしまった / 同じ D1 を使い回したい**」場合の手順です。
+
+> **共通の注意**
+> - `--remote` を付けると**本番 D1**、付けないと **local(dev) D1** に効きます。本番に効かせるときだけ `--remote`。
+> - **`ADMIN_BASIC_*` シークレットは Worker 側**にあり、**D1 を消しても残ります**（再設定不要）。
+> - **本番リセット用のエンドポイントは意図的に実装していません**（ボタン一つの全消去は事故のもと）。リセットは下記の `wrangler` 明示コマンドが正。
+> - reset SQL の DELETE は **FK 安全な順（子 → 親）**。この順以外は FK 違反になる。
+
+### 方法A：回答データだけ消す（プール温存・最も軽い）
+
+同じ刺激プールで実験をやり直す。トークン・セッション・判定・Likert・アンケートを消し、`items` は残す → **トークン再発行だけで再開**。
+
+```bash
+npx wrangler d1 execute nazokake-judge --remote --file=scripts/reset-responses.sql
+```
+
+⚠️ `items.retired_at`（出題停止フラグ）も残ります。プールを完全初期化したいなら方法B。
+
+### 方法B：全データを消す（プールごと完全リセット）
+
+新しいプールで一から始める。全 7 テーブルを空にする（`items` も消す）。
+
+```bash
+npx wrangler d1 execute nazokake-judge --remote --file=scripts/reset-all.sql
+```
+
+→ その後 **プール投入（§2-①）→ トークン発行（§2-②）** から一巡をやり直す。
+**スキーマ・migration はそのまま＝再デプロイ不要**（`d1_migrations` にも触れない）。
+
+### 方法C：D1 データベースごと作り直す（最もクリーン・要再デプロイ）
+
+テーブル定義ごと真っさらにしたい場合のみ。
+
+```bash
+npx wrangler d1 delete nazokake-judge          # 削除
+npx wrangler d1 create nazokake-judge          # 再作成 → 新しい database_id が出る
+# → wrangler.toml の database_id を新しい値に書き換える
+npx wrangler d1 migrations apply nazokake-judge --remote   # 0001〜0004 を再適用
+# → deploy.yml を手動実行して再デプロイ（§1）
+```
+
+**代償**: `database_id` が変わるので `wrangler.toml` 書き換え + **再デプロイが必須**。方法A/B で足りるなら不要。
+
+### どれを選ぶか
+
+| 状況 | 方法 |
+|---|---|
+| テストは dev でやる（推奨） | リセット不要 |
+| 同じプールで本番やり直し | **方法A**（`reset-responses.sql`） |
+| 新プールで本番やり直し | **方法B**（`reset-all.sql`） |
+| テーブル定義ごと新品にしたい | 方法C |
+
+---
+
 ## 3. 監視・ログ
 
 ```bash
