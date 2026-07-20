@@ -17,10 +17,28 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+
 from schema import Item, PlanVerification
 
 from scripts.plan_generate.constraints import Constraints
 from scripts.plan_generate.graph_build import connected_components, degree_of
+
+
+def content_hash(rows: list[dict], likert_targets: list[str]) -> str:
+    """プラン内容のハッシュ（DP-U6-07）。
+
+    **名前（`plan_set`）だけの証跡では改竄・取り違えを検出できない**ため、**内容に紐づく
+    識別子**を残す。`admin_log` に記録された値がコミット済みハッシュと一致することで
+    「コミットされたものが投入された」が閉じる。
+    """
+    payload = json.dumps(
+        {"rows": [[r["plan_index"], r["idx"], r["item_left"], r["item_right"],
+                   bool(r["is_practice"])] for r in rows],
+         "likert_targets": list(likert_targets)},
+        ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def verify_plan(pool: list[Item], rows: list[dict], cons: Constraints, *,

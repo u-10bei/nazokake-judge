@@ -79,6 +79,33 @@ uv run python -m scripts.pool_ingest items.json --base-url "$ADMIN_API_BASE"
 - **段階投入可**: プール未充足でも投入自体は成功し `sufficiency_warnings` が出る（充足はトークン発行時に強制）。
 - **終了コード**: 拒否 or クライアント検証不正があれば **1**。
 
+### ①-b プラン生成 → 投入 → 有効化（U6・事前生成割当）
+
+**U6 以降、トークン発行の前にプランの有効化が必要です**（発行時に `(plan_set, plan_index)` を
+束縛するため。**先に発行すると束縛先が未定**になります）。
+
+```bash
+# 生成（D1 に触れずファイルを書くだけ）→ verification.md を確認 → **コミット**
+uv run python -m scripts.plan_generate --pool items_real.json \
+    --composition plans/primary/composition.json \
+    --constraints plans/primary/constraints.json \
+    --out-dir plans/primary --seed 20260720
+git add plans/primary && git commit -m "plan: primary set fixed"
+
+# 投入 → 有効化（★content_hash を再計算して照合してから POST。不一致なら投入せず exit 1）
+uv run python -m scripts.plan_ingest plans/primary --activate
+```
+
+**生成と投入が別 CLI なのは、間に `git commit` が挟まるため**（BR-U6-12）。1 コマンドだと
+コミット前のプランを投入でき、「コミットされたものが投入された」という証跡が成立しません。
+
+**⚠️ 有効化は収集開始前に限られます** — 判定が 1 件でも入ると **409 で拒否**されます
+（プランセットの切替は実験の作り直しに相当するため）。切り替えたい場合は §2.5 の方法A で
+回答データをリセットしてください。
+
+**⚠️ migration 0005 の適用は「発行済み未消化トークンが無い時点」に限ります**（U6-NFR-04）。
+→ 手順の一巡は `dry-run-dev.md` §3.5 で dev リハーサルできます。
+
 ### ② トークン発行（token_issue・充足ゲートあり）
 
 ```bash

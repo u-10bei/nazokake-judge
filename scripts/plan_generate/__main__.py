@@ -5,7 +5,7 @@
         --constraints plans/primary/constraints.json --out-dir plans/primary --seed 20260720
 
 **生成と投入は分ける**（U6 Code Gen Q1=A）: 本 CLI は**ファイルを書くだけ**で D1 には
-触れない。投入は `scripts/plan_ingest`。BR-U6-12 が「**両セットはリポジトリにコミットして
+触れない。投入は `scripts/plan_ingest`（**生成と投入は別 CLI**: BR-U6-12 の「コミット」が間に挟まるため）。BR-U6-12 が「**両セットはリポジトリにコミットして
 固定 → D1 には選択セットのみ投入**」を要求する以上、**生成と投入の間に「コミット」という
 人間の行為が挟まる**ためである（U4b の「取得と推定の分離」と同型）。
 
@@ -25,7 +25,6 @@ except ImportError:  # pragma: no cover
     import _bootstrap  # noqa: F401
 
 import argparse
-import hashlib
 import json
 import os
 import sys
@@ -47,7 +46,7 @@ from scripts.plan_generate.partition import (
 )
 from scripts.plan_generate.placement import search_placement
 from scripts.plan_generate.sequencing import build_slot_rows
-from scripts.plan_generate.verify import render_report, verify_plan
+from scripts.plan_generate.verify import content_hash, render_report, verify_plan
 
 EXIT_OK = 0
 EXIT_FAIL = 1
@@ -59,21 +58,6 @@ def _load_pool(path: str) -> list[Item]:
     raw = json.loads(text) if text.lstrip().startswith("[") else [
         json.loads(line) for line in text.splitlines() if line.strip()]
     return [Item.model_validate(r) for r in raw]
-
-
-def content_hash(rows: list[dict], likert_targets: list[str]) -> str:
-    """プラン内容のハッシュ（DP-U6-07）。
-
-    **名前（`plan_set`）だけの証跡では改竄・取り違えを検出できない**ため、**内容に紐づく
-    識別子**を残す。`admin_log` に記録された値がコミット済みハッシュと一致することで
-    「コミットされたものが投入された」が閉じる。
-    """
-    payload = json.dumps(
-        {"rows": [[r["plan_index"], r["idx"], r["item_left"], r["item_right"],
-                   bool(r["is_practice"])] for r in rows],
-         "likert_targets": list(likert_targets)},
-        ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def main(argv: list[str] | None = None) -> int:

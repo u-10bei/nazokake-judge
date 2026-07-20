@@ -280,7 +280,8 @@ uv run python -m scripts.plan_generate --pool items_real.json \
     --out-dir plans/primary --seed 20260720
 git add plans/primary && git commit -m "plan: primary set fixed"
 
-# ④ 投入 → 有効化（plan.json / plan.meta.json を POST）
+# ④ 投入 → 有効化（★ハッシュ照合つき。不一致なら投入せず exit 1）
+uv run python -m scripts.plan_ingest plans/primary --activate
 # ⑤ トークン発行（★ここで (plan_set, plan_index) が束縛される。④の後でなければ束縛先が未定）
 uv run python -m scripts.token_issue 8 --url-template 'http://127.0.0.1:8787/?token={token}' --out tokens.dist.txt
 
@@ -292,6 +293,8 @@ uv run python -m scripts.token_issue 8 --url-template 'http://127.0.0.1:8787/?to
 - [ ] プラン生成が `verification.md` を出力し **gap=0 / 連結成分 1 / ブロック連結 [1,1]**
 - [ ] 発行したトークンで開始すると**ペア列がプランと一致**（練習が先頭）
 - [ ] **Likert がプラン記載の固定リストと一致**（ラウンドロビンに落ちていない）
+- [ ] **`plan_ingest` が「✅ ハッシュ照合 OK」を出してから投入している**
+      （試しに `plan.json` を 1 文字書き換えて**投入が止まること**も確認しておくと安心です）
 - [ ] `plans/<set>/` を**コミット済み**（両セットの事前固定が commit 履歴とハッシュで残る）
 
 ---

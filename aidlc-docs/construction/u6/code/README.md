@@ -20,11 +20,16 @@
 | `verify.py` | LC-06 | BR-U6-10 ①〜⑥ + PU6-8 + Likert の検証（**投入前ゲート**） |
 | `__main__.py` | LC-07 | CLI（構成 → 検証 → **seed 再試行** → 明示失敗） |
 
+`scripts/plan_ingest.py` が**投入側の CLI**（生成と投入で 2 本＝Code Gen Q1=A）。分離の理由は
+**両者の間に `git commit` が挟まる**こと（BR-U6-12）——1 コマンドだと**コミット前のプランを
+投入できてしまい**、「コミットされたものが投入された」という証跡が成立しない。
+
 ### 実行時（`src/backend/`）
 
 | 箇所 | 変更 |
 |---|---|
 | `repo/repository.py` | `get_token_plan`（**組で返す**）/ `get_plan_pairs` / `get_plan_meta` / `insert_plan` / `activate_plan` / `count_judgments_for_plan_set` / `answered_pair_ids_for_slot` / `existing_item_ids`。**`list_items()` は凍結** |
+| `scripts/plan_ingest.py` | **投入 CLI**: ★ハッシュ照合 → `POST /admin/plan` → `--activate` |
 | `admin/api.py` | `POST /admin/plan`・`/admin/plan/activate`（**activate ガード**）/ 充足は `list_active_items` / `token_issue` に**プラン束縛** |
 | `participant/session.py` | **★置換点**: プラン引き当て or フォールバック。**`save_pair_sequence` 以降は無変更** |
 | `domain/` | **`assignment.py`・`likert.py` とも無改修** |
@@ -47,8 +52,8 @@ uv run python -m scripts.plan_generate \
     --out-dir plans/primary --seed 20260720
 git add plans/primary && git commit -m "plan: primary set fixed"
 
-# ④ 投入 → 有効化
-#    （plan.json / plan.meta.json を POST /admin/plan → POST /admin/plan/activate）
+# ④ 投入 → 有効化（★content_hash を再計算して照合してから POST する）
+uv run python -m scripts.plan_ingest plans/primary --activate
 
 # ⑤ トークン発行（★この時点で (plan_set, plan_index) が束縛される）
 uv run python -m scripts.token_issue 8 --url-template 'https://<host>/?token={token}' --out tokens.dist.txt
@@ -104,7 +109,22 @@ Session + PairSequence + `likert_targets` の**同一 batch 原子保存**は U5
 
 **練習だけは常に全量再提示**（補充者は別人ゆえ読み返しテストの習得が必要・出力段除外で二重カウントの害ゼロ）。
 
-### 7. `assignment_plan` に FK を張らない（Infra Q1=A′）
+### 7. 🔒 投入前の内容ハッシュ照合（DP-U6-07）
+
+`plan_ingest` は `plan.json` の行 + `plan.meta.json` の `likert_targets` から
+**`content_hash` を再計算**し、メタ記載値と一致しなければ **POST せず exit 1**。検出できるもの:
+
+| 事象 | 検出のしかた |
+|---|---|
+| 生成後の手直し・マージ事故 | 行の 1 箇所の変更でハッシュが変わる |
+| `plan.json` と `plan.meta.json` が**別々の生成実行に由来** | ハッシュが `likert_targets` も含むため、行が同じでも検出できる |
+| 投入経路での取り違え | サーバが記録したハッシュとも突き合わせる |
+
+**`content_hash` は `plan_generate` と同一の実装を import している**——再実装すると
+「自分の計算どうしが一致する」だけになり、**生成器とのずれを検出できない**（照合が自己満足になる）。
+unit で `plan_ingest.content_hash is generator_hash` を固定している。
+
+### 8. `assignment_plan` に FK を張らない（Infra Q1=A′）
 
 (i) items 参照 FK を 2→4 本に増やすと**将来の items 再構築の退避対象が増える** (ii) プラン投入をプール構成から独立させる。**整合性は生成時（`verify`）+ 投入時（アプリ層の実在検証）で二重に担保**。
 
@@ -122,7 +142,7 @@ Session + PairSequence + `likert_targets` の**同一 batch 原子保存**は U5
 
 ### 実行結果（2026-07-20）
 
-- **unit + PBT: 99 緑**（U1〜U5 回帰含む・ci profile）
+- **unit + PBT: 108 緑**（U1〜U5 回帰含む・ci profile）
 - **integration（実 D1・0005 適用後）: 52/52 PASS** — U6 **15/15** / 回帰 U2 9・U3 8・U4a 7・U5 13
 
 ### 🔍 テストが見つけた実装の穴 3 件
