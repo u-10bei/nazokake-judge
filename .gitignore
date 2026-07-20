@@ -38,6 +38,12 @@ dist/
 pool_*.json
 items_*.json
 
+# U3/U4b: エクスポートと BT 結果（研究データ・**export は token を含む**ため参加者紐付き）。
+# runbook §5「ローカル保管は運用責任・リポジトリ管理外」を gitignore でも強制する。
+export*.json
+bt_result*.json
+bt_a*.json
+
 # Python build 生成物
 *.egg-info/
 
