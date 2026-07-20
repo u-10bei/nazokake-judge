@@ -227,19 +227,40 @@ class Repository:
             "layer=excluded.layer, body=excluded.body, body_ref=excluded.body_ref"
         ).bind(it.item_id, it.layer.value, it.body, it.body_ref)
 
-    async def insert_tokens(self, tokens: list[str], now_iso: str) -> int:
+    async def insert_tokens(self, tokens: list[str], now_iso: str,
+                            plan_bindings: list[tuple[str, int]] | None = None) -> int:
         """トークンを bulk 投入（status=unused, issued_at, DP-U4a-03/BR-U4a-10）。
 
         衝突の事前排除は呼び出し側（AdminApi, BR-U4a-06）。PK 衝突で batch 失敗時は
         呼び出し側が全体リトライする。戻り値: 投入件数。
+
+        **U6（DP-U6-06）**: `plan_bindings` を渡すと **`(plan_set, plan_index)` を「組」で
+        束縛**する。`plan_index` 単独にしないのは、単独だと `plan_set` が「その時点の有効
+        セット」参照になり、**発行 → セッション開始の間に activate が切り替わるとトークンの
+        意味が変わる競合窓**が生じるため。組で束縛すればこの窓が消え、activate ガードの
+        述語も「当該セットを参照するトークン/judgment の存在」として一意に定まる。
+        `None` のときは従来どおり NULL（＝オンライン生成へフォールバック, U6-NFR-14）。
         """
-        stmts = [
-            self._db.prepare(
-                "INSERT INTO tokens (token, status, issued_at, last_active_at) "
-                "VALUES (?, 'unused', ?, NULL)"
-            ).bind(tok, now_iso)
-            for tok in tokens
-        ]
+        if plan_bindings is not None and len(plan_bindings) != len(tokens):
+            raise ValueError("plan_bindings の件数が tokens と一致しません")
+
+        if plan_bindings is None:
+            stmts = [
+                self._db.prepare(
+                    "INSERT INTO tokens (token, status, issued_at, last_active_at) "
+                    "VALUES (?, 'unused', ?, NULL)"
+                ).bind(tok, now_iso)
+                for tok in tokens
+            ]
+        else:
+            stmts = [
+                self._db.prepare(
+                    "INSERT INTO tokens "
+                    "(token, status, issued_at, last_active_at, plan_set, plan_index) "
+                    "VALUES (?, 'unused', ?, NULL, ?, ?)"
+                ).bind(tok, now_iso, ps, pi)
+                for tok, (ps, pi) in zip(tokens, plan_bindings)
+            ]
         if stmts:
             await self._db.batch(to_js_maybe(stmts))
         return len(tokens)
@@ -281,6 +302,157 @@ class Repository:
         return derive_exposure(
             sessions, now_iso=now_iso, inactive_threshold_hours=inactive_threshold_hours
         )
+
+    # ---------------------------------------------------------- 事前生成割当（U6）
+
+    async def get_token_plan(self, token: str) -> tuple[str, int] | None:
+        """トークンに束縛された **`(plan_set, plan_index)` の組**を返す（DP-U6-06）。
+
+        `None` = 未束縛（U6 以前のトークン / ドライラン用の即席トークン）→ 呼び出し側は
+        **従来のオンライン生成にフォールバック**する（U6-NFR-14・dev 専用）。
+        ★「その時点の有効セット」を参照せず**トークン自身の `plan_set`** を読むことで、
+        発行 → セッション開始の間に activate が切り替わる競合窓を消す。
+        """
+        row = await (
+            self._db.prepare(
+                "SELECT plan_set, plan_index FROM tokens WHERE token = ?"
+            ).bind(token).first()
+        )
+        if row is None:
+            return None
+        d = to_py(row)
+        ps, pi = d.get("plan_set"), d.get("plan_index")
+        if ps is None or pi is None:
+            return None
+        return (ps, int(pi))
+
+    async def get_plan_pairs(self, plan_set: str, plan_index: int) -> list[Pair]:
+        """あるスロットのペア列を `idx` 順で返す（**練習を含む**・先頭が練習）。
+
+        `pair_id` はプラン由来で決定論に組む（`p{idx:04d}`）。実行時に抽選は起きない。
+        """
+        res = await (
+            self._db.prepare(
+                "SELECT idx, item_left, item_right, is_practice FROM assignment_plan "
+                "WHERE plan_set = ? AND plan_index = ? ORDER BY idx"
+            ).bind(plan_set, plan_index).all()
+        )
+        rows = to_py(res)["results"]
+        return [
+            Pair(pair_id=f"p{int(r['idx']):04d}", index=int(r["idx"]),
+                 item_left=r["item_left"], item_right=r["item_right"],
+                 is_practice=bool(r["is_practice"]))
+            for r in rows
+        ]
+
+    async def get_plan_meta(self, plan_set: str) -> dict | None:
+        """プランのメタ（`likert_targets` を含む）を返す。"""
+        row = await (
+            self._db.prepare(
+                "SELECT plan_set, seed, attempt, content_hash, n_items, n_slots, n_pairs, "
+                "m_per_item, likert_targets, generated_at, is_active "
+                "FROM assignment_plan_meta WHERE plan_set = ?"
+            ).bind(plan_set).first()
+        )
+        if row is None:
+            return None
+        d = to_py(row)
+        d["likert_targets"] = json.loads(d.get("likert_targets") or "[]")
+        return d
+
+    async def get_active_plan_set(self) -> str | None:
+        """有効なプランセット（`is_active=1`）。activate 済みが 1 つだけである前提。"""
+        row = await (
+            self._db.prepare(
+                "SELECT plan_set FROM assignment_plan_meta WHERE is_active = 1 LIMIT 1"
+            ).first()
+        )
+        return to_py(row)["plan_set"] if row is not None else None
+
+    async def insert_plan(self, meta: dict, rows: list[dict]) -> None:
+        """プランを投入する（**同一 `plan_set` は置換**・単一 batch で原子的に）。
+
+        **FK は張っていない**（U6 Infra Q1=A′）ため、**参照 item の実在検証は呼び出し側
+        （PlanApi）が行う**＝FK と同じ保護を投入順序の柔軟性を保ったまま得る。
+        """
+        stmts = [
+            self._db.prepare("DELETE FROM assignment_plan WHERE plan_set = ?")
+            .bind(meta["plan_set"]),
+            self._db.prepare("DELETE FROM assignment_plan_meta WHERE plan_set = ?")
+            .bind(meta["plan_set"]),
+            self._db.prepare(
+                "INSERT INTO assignment_plan_meta (plan_set, seed, attempt, content_hash, "
+                "n_items, n_slots, n_pairs, m_per_item, likert_targets, generated_at, is_active) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"
+            ).bind(
+                meta["plan_set"], int(meta["seed"]), int(meta["attempt"]),
+                meta["content_hash"], int(meta["n_items"]), int(meta["n_slots"]),
+                int(meta["n_pairs"]), int(meta["m_per_item"]),
+                json.dumps(meta.get("likert_targets") or []), meta["generated_at"],
+            ),
+        ]
+        for r in rows:
+            stmts.append(
+                self._db.prepare(
+                    "INSERT INTO assignment_plan "
+                    "(plan_set, plan_index, idx, item_left, item_right, is_practice) "
+                    "VALUES (?, ?, ?, ?, ?, ?)"
+                ).bind(meta["plan_set"], int(r["plan_index"]), int(r["idx"]),
+                       r["item_left"], r["item_right"], 1 if r["is_practice"] else 0)
+            )
+        await self._db.batch(to_js_maybe(stmts))
+
+    async def activate_plan(self, plan_set: str) -> None:
+        """指定セットのみを有効化する（**常に 1 セット**, BR-U6-12）。"""
+        await self._db.batch(to_js_maybe([
+            self._db.prepare("UPDATE assignment_plan_meta SET is_active = 0"),
+            self._db.prepare(
+                "UPDATE assignment_plan_meta SET is_active = 1 WHERE plan_set = ?"
+            ).bind(plan_set),
+        ]))
+
+    async def count_judgments_for_plan_set(self, plan_set: str) -> int:
+        """当該セットで発行されたトークンに紐づく judgment 件数（activate ガード用）。
+
+        **収集開始後の activate 切替を拒否**する述語（U6-NFR-20）。切替が必要な事態は
+        **実験の作り直し**であり、API で簡便にやれてはいけない。
+        """
+        row = await (
+            self._db.prepare(
+                "SELECT COUNT(*) AS c FROM judgments j "
+                "JOIN tokens t ON t.token = j.token WHERE t.plan_set = ?"
+            ).bind(plan_set).first()
+        )
+        return int(to_py(row)["c"]) if row is not None else 0
+
+    async def answered_pair_ids_for_slot(self, plan_set: str, plan_index: int) -> set[str]:
+        """**同一スロット上で既に回答済み**の pair_id（補充トークンの引き継ぎ用, BR-U6-15）。
+
+        `pair_id` はプラン由来（`p{idx:04d}`）ゆえ**スロット内で一意**であり、脱落者と
+        補充者で同じ値を指す。→ 補充トークンには**未回答の本番ペアだけ**を配れる。
+        **これが m=12 を保つ唯一の方法**（スロット全体をやり直すと既回答分が二重に判定され
+        該当 item の比較数が m を超えて露出 gap≠0 になる＝事前生成の前提が壊れる）。
+        """
+        res = await (
+            self._db.prepare(
+                "SELECT DISTINCT j.pair_id AS pair_id FROM judgments j "
+                "JOIN tokens t ON t.token = j.token "
+                "WHERE t.plan_set = ? AND t.plan_index = ?"
+            ).bind(plan_set, plan_index).all()
+        )
+        return {r["pair_id"] for r in to_py(res)["results"]}
+
+    async def existing_item_ids(self, item_ids: list[str]) -> set[str]:
+        """指定 item_id のうち実在するものを返す（プラン投入時の実在検証・FK の代替）。"""
+        ids = list(dict.fromkeys(item_ids))
+        if not ids:
+            return set()
+        ph = ", ".join("?" for _ in ids)
+        res = await (
+            self._db.prepare(f"SELECT item_id FROM items WHERE item_id IN ({ph})")
+            .bind(*ids).all()
+        )
+        return {r["item_id"] for r in to_py(res)["results"]}
 
     # ---------------------------------------------------------- 原子確定（DP-01）
 

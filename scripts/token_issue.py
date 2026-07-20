@@ -36,12 +36,18 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--url-template", required=True,
                     help="配布 URL テンプレート（{token} を含める。例: 'https://<host>/?token={token}'）")
     ap.add_argument("--out", default=None, help="URL 一覧の出力ファイル（配布用・gitignore 対象）")
+    ap.add_argument("--plan-index", type=int, default=None,
+                    help="補充トークン用（U6, BR-U6-15）: 指定スロットに束縛して発行する。"
+                         "脱落者の代替。未回答の本番ペアのみ引き継ぎ、練習は全量再提示される")
     args = ap.parse_args(argv)
 
     if "{token}" not in args.url_template:
         raise SystemExit("--url-template は {token} を含めてください")
 
-    result = post_json(f"{base_url(args.base_url)}/admin/tokens", {"count": args.count})
+    payload = {"count": args.count}
+    if args.plan_index is not None:
+        payload["plan_index"] = args.plan_index
+    result = post_json(f"{base_url(args.base_url)}/admin/tokens", payload)
 
     if not result.get("ok"):
         print(f"[error] 発行拒否（プール未充足ゲート BR-U4a-12）: {result.get('gate_errors')}",

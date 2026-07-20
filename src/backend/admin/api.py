@@ -20,6 +20,8 @@ from schema import (
     AssignmentParams,
     IngestResult,
     ItemRetireRequest,
+    PlanActivateRequest,
+    PlanIngestRequest,
     RejectedItem,
     TokenIssueRequest,
     TokenIssueResult,
@@ -75,6 +77,12 @@ async def handle_admin(request, env, path: str) -> Response:
     if path == "/admin/items/unretire" and method == "POST":
         return await _handle_retire(request, repo, retire=False)
 
+    # POST（U6: 事前生成割当プランの投入 / 有効化）。ルート名で操作を明示。
+    if path == "/admin/plan" and method == "POST":
+        return await _handle_plan_ingest(request, repo)
+    if path == "/admin/plan/activate" and method == "POST":
+        return await _handle_plan_activate(request, repo)
+
     # GET（U3: 管理 UI / 進捗 / 暫定勝率 / エクスポート）
     if method == "GET":
         if path == "/admin/" or path == "/admin":
@@ -126,6 +134,94 @@ async def _handle_export(request, repo) -> Response:
     admin_log("admin_export", "info", endpoint="/admin/export",
               result=f"{fmt_kind}:{entity or 'bundle'}")
     return _download(body, content_type, filename)
+
+
+async def _handle_plan_ingest(request, repo: Repository) -> Response:
+    """プラン投入（U6, LC-U6-09）。
+
+    **参照 item の実在をアプリ層で検証する**（`assignment_plan` に FK を張らない設計の
+    代替, U6 Infra Q1=A′）。FK を張らない理由は (i) items 参照 FK を 2→4 本に増やすと
+    **将来 items を再構築する migration の退避対象が増える** (ii) プラン投入をプール構成
+    から独立させる、の 2 点。
+    **`likert_targets` も同時に検証**する（プラン item 集合 ⊆ 実在・BR-U6-06 の運搬経路）。
+    """
+    raw = await request.text()
+    try:
+        req = PlanIngestRequest.model_validate(json.loads(str(raw)))
+    except (ValidationError, json.JSONDecodeError) as e:
+        admin_log("plan_ingest_bad_request", "error", endpoint="/admin/plan")
+        return _json_str(json.dumps({"ok": False, "error": f"検証エラー: {e}"}), status=400)
+
+    meta = req.meta
+    referenced = set()
+    for r in req.rows:
+        referenced.add(r.item_left)
+        referenced.add(r.item_right)
+    referenced |= set(meta.likert_targets)
+
+    existing = await repo.existing_item_ids(sorted(referenced))
+    missing = sorted(referenced - existing)
+    if missing:
+        admin_log("plan_ingest_rejected", "error", endpoint="/admin/plan",
+                  plan_set=meta.plan_set, missing=len(missing))
+        return _json_str(json.dumps({
+            "ok": False,
+            "error": f"プランが参照する item がプールに不在（{len(missing)} 件）: "
+                     f"{', '.join(missing[:10])}",
+        }, ensure_ascii=False), status=400)
+
+    await repo.insert_plan(meta.model_dump(), [r.model_dump() for r in req.rows])
+    # ★証跡は「内容」に紐づける（DP-U6-07）: plan_set 名だけでは改竄・取り違えを検出できない。
+    admin_log("plan_ingest", "info", endpoint="/admin/plan", plan_set=meta.plan_set,
+              seed=meta.seed, attempt=meta.attempt, content_hash=meta.content_hash,
+              rows=len(req.rows), likert=len(meta.likert_targets))
+    return _json_str(json.dumps({"ok": True, "plan_set": meta.plan_set,
+                                 "rows": len(req.rows),
+                                 "content_hash": meta.content_hash}, ensure_ascii=False))
+
+
+async def _handle_plan_activate(request, repo: Repository) -> Response:
+    """プラン有効化（U6, BR-U6-12 / U6-NFR-19/20）。
+
+    **★収集開始後の切替は拒否する（ハード）**: 有効化しようとするセット、または現在
+    有効なセットに **judgment が 1 件でも存在したら 4xx**。切替が必要な事態は**実験の
+    作り直し**であり、API で簡便にやれてはいけない操作。
+    **DB 制約では表現できない**（`judgments` と `assignment_plan_meta` をまたぐ条件）ため
+    **アプリ層の事前検証**で実装する。
+    """
+    raw = await request.text()
+    try:
+        req = PlanActivateRequest.model_validate(json.loads(str(raw)))
+    except (ValidationError, json.JSONDecodeError) as e:
+        admin_log("plan_activate_bad_request", "error", endpoint="/admin/plan/activate")
+        return _json_str(json.dumps({"ok": False, "error": f"検証エラー: {e}"}), status=400)
+
+    meta = await repo.get_plan_meta(req.plan_set)
+    if meta is None:
+        admin_log("plan_activate_rejected", "error", endpoint="/admin/plan/activate",
+                  plan_set=req.plan_set, reason="not_found")
+        return _json_str(json.dumps({
+            "ok": False, "error": f"プランセットが未投入: {req.plan_set}"}, ensure_ascii=False),
+            status=400)
+
+    # 収集開始後のガード（現行有効セット・切替先の両方を見る）。
+    current = await repo.get_active_plan_set()
+    for ps in {x for x in (current, req.plan_set) if x}:
+        n = await repo.count_judgments_for_plan_set(ps)
+        if n > 0:
+            admin_log("plan_activate_rejected", "error", endpoint="/admin/plan/activate",
+                      plan_set=req.plan_set, reason="judgments_exist", blocking_set=ps, count=n)
+            return _json_str(json.dumps({
+                "ok": False,
+                "error": f"収集開始後の切替は拒否されました（{ps} に judgment {n} 件）。"
+                         "プランセットの切替は実験の作り直しに相当します（BR-U6-12/U6-NFR-20）",
+            }, ensure_ascii=False), status=409)
+
+    await repo.activate_plan(req.plan_set)
+    admin_log("plan_activate", "info", endpoint="/admin/plan/activate",
+              plan_set=req.plan_set, seed=meta["seed"], content_hash=meta["content_hash"])
+    return _json_str(json.dumps({"ok": True, "plan_set": req.plan_set,
+                                 "content_hash": meta["content_hash"]}, ensure_ascii=False))
 
 
 async def _handle_retire(request, repo: Repository, *, retire: bool) -> Response:
@@ -225,6 +321,34 @@ async def _handle_tokens(request, repo: Repository) -> Response:
         guard += 1
 
     now = _now_iso()
-    await repo.insert_tokens(tokens, now)
-    admin_log("token_issue", "info", endpoint="/admin/tokens", count=len(tokens))
+
+    # ---- U6（Step 15 / DP-U6-06）: 発行時に (plan_set, plan_index) を「組」で束縛 ----
+    # 有効プランが無ければ束縛しない（NULL＝オンライン生成へフォールバック, U6-NFR-14）。
+    bindings: list[tuple[str, int]] | None = None
+    active = await repo.get_active_plan_set()
+    if active is not None:
+        meta = await repo.get_plan_meta(active)
+        n_slots = int((meta or {}).get("n_slots") or 0)
+        if req.plan_index is not None:
+            # 補充トークン（BR-U6-15）: 指定スロットに束縛する（脱落者の代替）。
+            # 未回答の本番ペアだけが配られ、練習は全量再提示される（session.start_or_resume）。
+            if req.plan_index >= n_slots:
+                return _json(TokenIssueResult(
+                    ok=False,
+                    gate_errors=[f"plan_index={req.plan_index} が範囲外（スロット数 {n_slots}）"]))
+            bindings = [(active, req.plan_index)] * len(tokens)
+        else:
+            # 初回発行: スロット 0..count-1 を順に束縛。★スロット数を超える発行は拒否
+            #   （J はスロットへの完全分割ゆえ、余分なトークンは束縛先を持てない）。
+            if len(tokens) > n_slots:
+                return _json(TokenIssueResult(
+                    ok=False,
+                    gate_errors=[f"count={len(tokens)} が有効プランのスロット数 {n_slots} を超過"
+                                 "（補充は --plan-index で対象スロットを指定してください）"]))
+            bindings = [(active, i) for i in range(len(tokens))]
+
+    await repo.insert_tokens(tokens, now, bindings)
+    admin_log("token_issue", "info", endpoint="/admin/tokens", count=len(tokens),
+              plan_set=active or "-",
+              plan_index=req.plan_index if req.plan_index is not None else "-")
     return _json(TokenIssueResult(ok=True, tokens=tokens, issued_at=now))

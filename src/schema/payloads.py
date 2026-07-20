@@ -55,6 +55,10 @@ class TokenIssueRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     count: int = Field(ge=1)
+    # U6: 補充トークン用（BR-U6-15）。指定すると**そのスロットに束縛**して発行する
+    # （脱落者の代替）。None のときは有効プランのスロット 0..count-1 を順に束縛する。
+    # 有効プランが無ければ束縛せず NULL（＝オンライン生成へフォールバック, U6-NFR-14）。
+    plan_index: int | None = Field(default=None, ge=0)
 
 
 class TokenIssueResult(BaseModel):

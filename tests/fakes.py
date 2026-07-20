@@ -34,6 +34,12 @@ class FakeRepo:
         self.answered_pairs: dict[str, set[str]] = {}
         self.answered_likert: dict[str, set[str]] = {}
         self.surveys: set[str] = set()
+        # U6: プラン関連（未設定＝フォールバック経路）
+        self.plan_bindings: dict[str, tuple[str, int]] = {}
+        self.plans: dict[str, dict[int, list[Pair]]] = {}
+        self.plan_meta: dict[str, dict] = {}
+        self.active_plan_set: str | None = None
+        self.slot_answered: dict[tuple[str, int], set[str]] = {}
 
     # ---- プール（★U5 の中心: 二本立ての読み取り経路） ----
     async def list_items(self) -> list[Item]:
@@ -50,6 +56,27 @@ class FakeRepo:
 
     def unretire(self, *item_ids: str) -> None:
         self._retired.difference_update(item_ids)
+
+    # ---- U6: 事前生成割当（プラン）----
+    # `plan_bindings[token] = (plan_set, plan_index)` / `plans[plan_set][plan_index] = [Pair]`
+    # / `plan_meta[plan_set] = {...}`。未設定なら `get_token_plan` は None を返し、
+    # `start_or_resume` は**従来のオンライン生成にフォールバック**する（U6-NFR-14）。
+
+    async def get_token_plan(self, token: str) -> tuple[str, int] | None:
+        return self.plan_bindings.get(token)
+
+    async def get_plan_pairs(self, plan_set: str, plan_index: int) -> list[Pair]:
+        return list(self.plans.get(plan_set, {}).get(plan_index, []))
+
+    async def get_plan_meta(self, plan_set: str) -> dict | None:
+        return self.plan_meta.get(plan_set)
+
+    async def get_active_plan_set(self) -> str | None:
+        return self.active_plan_set
+
+    async def answered_pair_ids_for_slot(self, plan_set: str, plan_index: int) -> set[str]:
+        """スロット上で回答済みの pair_id（補充トークンの引き継ぎ検証用）。"""
+        return set(self.slot_answered.get((plan_set, plan_index), set()))
 
     # ---- セッション ----
     async def get_session(self, token: str) -> Session | None:

@@ -47,14 +47,14 @@
 
 ### ■ 実行時（`src/backend/`）
 
-- [ ] **Step 11 — `Repository` 拡張（LC-U6-08）**: `get_plan_pairs(plan_set, plan_index)` / **`get_token_plan(token) → (plan_set, plan_index)`**（★組で返す）/ `insert_plan(rows, meta)` / `activate_plan(plan_set)` / `count_judgments_for_plan_set(plan_set)`。**🔒 `list_items()` の凍結（U5 BR-U5-02）は維持**。
-- [ ] **Step 12 — `PlanApi`（LC-U6-09）**: `POST /admin/plan`（投入・**参照 item の実在をアプリ層で検証**＝FK を張らない代替。**★追補: `likert_targets` も `PlanIngestRequest` に含め、`likert_targets ⊆ プラン item 集合` と実在を同時に検証**＝FK なし設計の代替検証を Likert 側にも閉じる）/ `POST /admin/plan/activate`（**judgment 存在で 4xx 拒否**）。`admin_log` に `plan_ingest` / `plan_activate` / `plan_activate_rejected`（**`plan_set` + `seed` + 内容ハッシュ**）。
-- [ ] **Step 13 — `start_or_resume` の分岐（LC-U6-10・★置換点）**: `get_token_plan` が **NULL ならフォールバック**（`generate_pairs` 無改修）/ **非 NULL ならプラン引き当て**。**`save_pair_sequence` 以降は一切変更しない**（U5 DP-U5-02 の原子保存）。
+- [x] **Step 11 — `Repository` 拡張（LC-U6-08）**: `get_plan_pairs(plan_set, plan_index)` / **`get_token_plan(token) → (plan_set, plan_index)`**（★組で返す）/ `insert_plan(rows, meta)` / `activate_plan(plan_set)` / `count_judgments_for_plan_set(plan_set)`。**🔒 `list_items()` の凍結（U5 BR-U5-02）は維持**。
+- [x] **Step 12 — `PlanApi`（LC-U6-09）**: `POST /admin/plan`（投入・**参照 item の実在をアプリ層で検証**＝FK を張らない代替。**★追補: `likert_targets` も `PlanIngestRequest` に含め、`likert_targets ⊆ プラン item 集合` と実在を同時に検証**＝FK なし設計の代替検証を Likert 側にも閉じる）/ `POST /admin/plan/activate`（**judgment 存在で 4xx 拒否**）。`admin_log` に `plan_ingest` / `plan_activate` / `plan_activate_rejected`（**`plan_set` + `seed` + 内容ハッシュ**）。
+- [x] **Step 13 — `start_or_resume` の分岐（LC-U6-10・★置換点）**: `get_token_plan` が **NULL ならフォールバック**（`generate_pairs` 無改修）/ **非 NULL ならプラン引き当て**。**`save_pair_sequence` 以降は一切変更しない**（U5 DP-U5-02 の原子保存）。
   **★追補（Likert 配線・最重要）**: **プラン経路では `AssignmentParams(likert_fixed_targets=<プランの 10 件>)` を渡す**。→ `select_likert_targets` の**固定アンカー優先ロジックが全 10 件を採用し即 return**（`likert.py` は**無改修**・ラウンドロビンは走らない）。
   **配線しないと何が起きるか**: `api.py:53` は `AssignmentParams()` を既定値で生成し **`likert_fixed_targets=None`**（実装確認済み）→ **5 層ラウンドロビンにフォールバック**＝**FD Q2 で否決した挙動が本番経路で復活する**。
   **フォールバック経路（`plan_index IS NULL`）は既定パラメータのまま**（dev/ドライラン専用・統計的性質は非目標, U6-NFR 非目標欄）＝既決の切り分けを維持。
-- [ ] **Step 14 — 補充トークン（LC-U6-11）**: 同一 `(plan_set, plan_index)` を束縛し、**本番の未回答ペアのみ**引き継ぐ（`judgments` との差分）。**★練習ペアは常に全量再提示**（補充者は別人・出力段除外で二重カウントの害ゼロ）。
-- [ ] **Step 15 — `token_issue` 拡張**: 発行時に **`(plan_set, plan_index)` の組を束縛**（`plan_index` 単独にしない＝competition 窓の除去）。**activate 済みセットから**割り当てる。
+- [x] **Step 14 — 補充トークン（LC-U6-11）**: 同一 `(plan_set, plan_index)` を束縛し、**本番の未回答ペアのみ**引き継ぐ（`judgments` との差分）。**★練習ペアは常に全量再提示**（補充者は別人・出力段除外で二重カウントの害ゼロ）。
+- [x] **Step 15 — `token_issue` 拡張**: 発行時に **`(plan_set, plan_index)` の組を束縛**（`plan_index` 単独にしない＝competition 窓の除去）。**activate 済みセットから**割り当てる。
 
 ### ■ テスト・文書
 
@@ -242,3 +242,30 @@ unit+PBT **76 緑**（回帰なし）。
 | **制約ファイルの typo** | 「未知のキー: forbidden_pair（typo による制約の黙殺を防ぐため拒否）」 |
 
 **「制約が黙って無効化される」経路を塞げていることを実証**（未知キー拒否・plan_set 内包）。
+
+
+---
+
+## Part 2 進捗 — ブロック 3（実行時: Step 11〜15）完了（2026-07-20）
+
+unit+PBT **76 緑**。**`save_pair_sequence` 以降は無変更**（U5 DP-U5-02 の原子保存を維持）。
+
+### 動作確認（`FakeRepo` によるワイヤリング検証）
+
+| 検証 | 結果 |
+|---|---|
+| **★Likert 固定リストの配線** | プラン経路で保存された `likert_targets` が**プラン記載の 10 件と完全一致** ✅（**ラウンドロビンに落ちていない**＝FD Q2 で否決した挙動が復活していない） |
+| フォールバック経路（`plan_index` NULL） | オンライン生成が従来どおり動作 ✅（U6-NFR-14・dev 専用） |
+| **補充トークン**（BR-U6-15） | 練習 **全量再提示** ✅ / 本番は**未回答分のみ**（回答済み 3 件を除外）✅ |
+
+### 設計上の工夫: 補充トークンを「特別扱い」にしなかった
+
+`start_or_resume` は**常に**「そのスロットで**まだ回答されていない本番ペア**だけを配る」規則で動く:
+- **初回トークン**: 回答済みゼロ → 全量（分岐不要）
+- **補充トークン**: 脱落者の未回答分のみ → **m=12 が保たれる**
+
+→ **「補充かどうか」を判定する分岐が要らない**。`pair_id` がプラン由来（`p{idx:04d}`）で**スロット内一意**ゆえ、脱落者と補充者が同じ値を指すことを利用している。**練習だけは常に全量**（補充者は別人ゆえ読み返しテストの習得が必要・出力段除外で二重カウントの害ゼロ）。
+
+### `FakeRepo` の拡張
+
+U6 のプラン系メソッド（`get_token_plan` / `get_plan_pairs` / `get_plan_meta` / `answered_pair_ids_for_slot`）を追加。**未設定ならフォールバック経路**になるので、既存 U5 テストは無改修で通る。

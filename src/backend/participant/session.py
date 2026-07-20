@@ -42,21 +42,59 @@ async def start_or_resume(repo, token: str, params: AssignmentParams) -> Session
     session = await repo.get_session(token)
     if session is None:
         # 新規開始（unused）: ペア列を確定・原子保存し in_progress へ。
-        exposure = await repo.read_exposure_counts(
-            now_iso=now, inactive_threshold_hours=params.inactive_threshold_hours
-        )
-        # U5: 新規セッションは **現役のみ** から選ぶ（BR-U5-02a）。ペア列・練習ペア・Likert
-        # ターゲットのすべてが廃止 item を含まなくなる（練習は generate_pairs の同一呼び出し
-        # 由来ゆえ自動的に効く, BR-U5-02b）。
-        pool = await repo.list_active_items()
         seed = seed_from_token(token)
-        pairs = generate_pairs(pool, exposure, seed, params)
-        # U5: Likert ターゲットも開始時に確定し、ペア列と**同じ batch で原子保存**する
-        # （DP-U5-02。別経路にすると「ペア列は保存されたが Likert 未保存」の窓が生じる）。
+        # ---- U6（LC-U6-10・★置換点）: 割当を「実行時の抽選」から「設計時の固定プラン」へ ----
+        # トークン自身に束縛された (plan_set, plan_index) を読む（DP-U6-06）。
+        # 「その時点の有効セット」を参照しないので、発行 → セッション開始の間に activate が
+        # 切り替わってもトークンの意味が変わらない。
+        plan = await repo.get_token_plan(token)
+
+        if plan is None:
+            # フォールバック（U6-NFR-14）: U6 以前のトークン / ドライラン用の即席トークン。
+            # ★dev 専用。n=38 プール + 5 層値環境での露出均衡・層間比率は**保証外**
+            #   （較正 p=3/α=0.7/S=30 は n=95 由来）。本実験データには使わない。
+            exposure = await repo.read_exposure_counts(
+                now_iso=now, inactive_threshold_hours=params.inactive_threshold_hours
+            )
+            # U5: 新規セッションは **現役のみ** から選ぶ（BR-U5-02a）。
+            pool = await repo.list_active_items()
+            pairs = generate_pairs(pool, exposure, seed, params)
+            likert_targets = select_likert_targets(pool, seed, params)
+        else:
+            # プラン経路: **実行時に抽選しない**。ペア列（練習含む・先頭が練習）を引くだけ。
+            plan_set, plan_index = plan
+            exposure = {}          # 事前生成では露出は設計時に確定済み（導出不要）
+            pairs = await repo.get_plan_pairs(plan_set, plan_index)
+            # ★補充トークンの引き継ぎ（BR-U6-15）を**一様な規則**で表現する:
+            #   「そのスロットで**まだ回答されていない本番ペア**だけを配る」。
+            #   - 初回トークン: 回答済みゼロ → 全量（特別扱い不要）
+            #   - 補充トークン: 脱落者の未回答分のみ → **m=12 が保たれる**
+            #     （スロット全体をやり直すと既回答分が二重判定され露出 gap≠0 になる）
+            #   ★**練習ペアは常に全量再提示**する——補充者は**別人**であり、読み返しテストの
+            #     習得なしに本番を判定させてはならない。練習は出力段で除外される（is_practice=1）
+            #     ため**二重カウントの害はゼロ**。
+            answered_on_slot = await repo.answered_pair_ids_for_slot(plan_set, plan_index)
+            pairs = [p for p in pairs
+                     if p.is_practice or p.pair_id not in answered_on_slot]
+            # ★Likert 固定リストの配線（BR-U6-06 / FD Q2=D）。
+            #   これが無いと `AssignmentParams()` の既定（likert_fixed_targets=None）のまま
+            #   `select_likert_targets` が走り、**5 層ラウンドロビンにフォールバック**する
+            #   ＝FD Q2 で否決した挙動が本番経路で復活してしまう。
+            #   固定 10 件を渡せば `likert.py` の**固定アンカー優先ロジックが全件を採用して
+            #   即 return** する（`likert.py` は無改修）。
+            meta = await repo.get_plan_meta(plan_set)
+            fixed = tuple((meta or {}).get("likert_targets") or ())
+            pool = await repo.list_active_items()
+            likert_targets = select_likert_targets(
+                pool, seed, params.model_copy(update={"likert_fixed_targets": fixed})
+            )
+
+        # U5: Likert ターゲットはペア列と**同じ batch で原子保存**する（DP-U5-02。別経路に
+        # すると「ペア列は保存されたが Likert 未保存」の窓が生じる）。★U6 でもここは不変。
         new_session = Session(
             token=token, phase="practice", seed=seed,
             exposure_snapshot=exposure, created_at=now,
-            likert_targets=select_likert_targets(pool, seed, params),
+            likert_targets=likert_targets,
         )
         await repo.save_pair_sequence(new_session, pairs)
         await repo.mark_token_in_progress(token, now)
