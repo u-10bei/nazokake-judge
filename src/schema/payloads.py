@@ -94,3 +94,72 @@ class RetireResult(BaseModel):
     retired: int = Field(default=0, ge=0)                        # 今回状態を変えた件数
     already_retired: list[str] = Field(default_factory=list)     # no-op（unretire では既に現役）
     not_found: list[str] = Field(default_factory=list)           # items に存在しない item_id
+
+
+# ---- plan_generate / PlanApi（U6: 事前生成割当） ----
+
+class AssignmentPlanRow(BaseModel):
+    """プラン 1 行（スロット内の 1 ペア）。**FK は張らない**（U6 Infra Q1=A′）。"""
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    plan_index: int = Field(ge=0)          # 0..E-1（スロット = 評価者枠）
+    idx: int = Field(ge=0)                 # スロット内の提示順（練習が先頭, BR-U6-16）
+    item_left: str = Field(min_length=1)
+    item_right: str = Field(min_length=1)
+    is_practice: bool = False
+
+
+class AssignmentPlanMeta(BaseModel):
+    """生成メタ（監査再現性 BR-U6-11 / 証跡 DP-U6-07）。
+
+    `attempt` を持つ理由: 生成は「構成 → 検証 → 失敗なら seed を進めて再試行」ゆえ、
+    **初期 seed だけでは再現できない**（何回目の試行が成功したかの情報が要る）。
+    `content_hash` を持つ理由: **名前（plan_set）だけの証跡では改竄・取り違えを検出できない**。
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    plan_set: str = Field(min_length=1)
+    seed: int                              # 初期 seed
+    attempt: int = Field(ge=0)             # 成功試行番号
+    content_hash: str = Field(min_length=1)
+    n_items: int = Field(ge=2)
+    n_slots: int = Field(ge=1)             # E
+    n_pairs: int = Field(ge=1)             # J（本番のみ）
+    m_per_item: int = Field(ge=1)          # m
+    # ★ Likert 固定リストの運搬経路（BR-U6-06 全固定運用）。これが無いと実行時に
+    #   likert_fixed_targets=None となり 5 層ラウンドロビンへ落ちる（FD Q2 で否決した挙動）。
+    likert_targets: list[str] = Field(default_factory=list)
+    generated_at: str
+
+
+class PlanIngestRequest(BaseModel):
+    """POST /admin/plan のリクエスト（U6）。"""
+    model_config = ConfigDict(extra="forbid")
+
+    meta: AssignmentPlanMeta
+    rows: list[AssignmentPlanRow] = Field(min_length=1)
+
+
+class PlanActivateRequest(BaseModel):
+    """POST /admin/plan/activate のリクエスト（U6, BR-U6-12）。"""
+    model_config = ConfigDict(extra="forbid")
+
+    plan_set: str = Field(min_length=1)
+
+
+class PlanVerification(BaseModel):
+    """プラン検証結果（BR-U6-10 の①〜⑥ + PU6-8）。投入前ゲート（LC-U6-06）。"""
+    model_config = ConfigDict(extra="forbid")
+
+    ok: bool
+    exposure_gap: int = Field(ge=0)        # ① 0 でなければ違反
+    n_components: int = Field(ge=0)        # ② 1 でなければ違反
+    max_occurrence: int = Field(ge=0)      # ③ k 超過なら違反
+    duplicate_pairs: int = Field(ge=0)     # ④ 0 でなければ違反
+    cross_layer_ratio: float = Field(ge=0.0, le=1.0)   # ⑤
+    block_components: list[int] = Field(default_factory=list)  # ⑥ 各ブロックの成分数
+    forbidden_violations: list[str] = Field(default_factory=list)  # PU6-8
+    # 忌避（ソフト）は**失敗させずレポートのみ**（BR-U6-21）。
+    discouraged_violations: list[str] = Field(default_factory=list)
+    enrichment_achieved: dict[str, int] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)

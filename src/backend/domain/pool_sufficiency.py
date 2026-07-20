@@ -10,16 +10,22 @@ from __future__ import annotations
 
 import math
 
-from schema import AssignmentParams, Item, Layer, SufficiencyResult
+from schema import POOL_LAYERS, REQUIRED_LAYERS, AssignmentParams, Item, Layer, SufficiencyResult
 
 
 def pool_sufficiency(items: list[Item], params: AssignmentParams) -> SufficiencyResult:
     """三点セットを評価し `SufficiencyResult{ok, shortfalls}` を返す（純粋）。
 
     ① 総数 ≥ ceil(2 × session_pairs / k)
-    ② 4 層すべて非空
+    ② REQUIRED_LAYERS すべて非空（U6: anchor は含めない, BR-U6-05）
     ③ (総数 − 最大層件数) × k ≥ ceil(cross_layer_min_ratio × session_pairs)
     """
+    # U6（BR-U6-05）: 母数は POOL_LAYERS のみ。`practice`（練習素材）は本番プールでは
+    # ないため充足の母数に入れない。★`for layer in Layer` の全走査は使わない——走査だと
+    # 層値を足すたびに「非空」要求が自動で増え、`practice` を足した瞬間に
+    # 「practice 非空」まで要求する誤動作になる。
+    items = [it for it in items if it.layer in POOL_LAYERS]
+
     shortfalls: list[str] = []
     total = len(items)
 
@@ -32,7 +38,12 @@ def pool_sufficiency(items: list[Item], params: AssignmentParams) -> Sufficiency
     by_layer: dict[Layer, int] = {}
     for it in items:
         by_layer[it.layer] = by_layer.get(it.layer, 0) + 1
-    empty = [layer.value for layer in Layer if by_layer.get(layer, 0) == 0]
+    # U6（BR-U6-05）: 非空を要求するのは REQUIRED_LAYERS のみ。**`anchor` は含めない**
+    # ——下帯アンカーは**研究上の要請**であって**割当アルゴリズムの成立条件ではない**
+    # （4 層あれば層間ペアは組める）。含めると `anchor` 不在のプール（ドライラン・将来の
+    # 構成変更）でゲートが落ちる。`anchor` の投入忘れは plan_generate の期待組成チェック
+    # で検出する（BR-U6-22）。
+    empty = [layer.value for layer in REQUIRED_LAYERS if by_layer.get(layer, 0) == 0]
     if empty:
         shortfalls.append(f"空の層: {', '.join(empty)}")
 

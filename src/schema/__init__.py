@@ -8,6 +8,8 @@
 from __future__ import annotations
 
 from schema.models import (
+    POOL_LAYERS,
+    REQUIRED_LAYERS,
     AssignmentParams,
     Choice,
     ExposureCounts,
@@ -25,9 +27,14 @@ from schema.models import (
     TokenStatus,
 )
 from schema.payloads import (
+    AssignmentPlanMeta,
+    AssignmentPlanRow,
     IngestResult,
     ItemIngestRequest,
     ItemRetireRequest,
+    PlanActivateRequest,
+    PlanIngestRequest,
+    PlanVerification,
     RejectedItem,
     RetireResult,
     SufficiencyResult,
@@ -77,6 +84,11 @@ __all__ = [
     "TokenIssueRequest", "TokenIssueResult",
     # U5 出題停止（retire/unretire）ペイロードモデル
     "ItemRetireRequest", "RetireResult",
+    # U6 事前生成割当（プラン）
+    "AssignmentPlanRow", "AssignmentPlanMeta", "PlanIngestRequest",
+    "PlanActivateRequest", "PlanVerification",
+    # U6 層の用途別リスト（BR-U6-05）
+    "POOL_LAYERS", "REQUIRED_LAYERS",
     # U2 ビュー型（参加者 API レスポンス契約）
     "ItemView", "PairView", "LikertScale", "LikertTargetView", "Progress",
     "SessionView", "SubmitResult", "ApiError",

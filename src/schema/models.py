@@ -22,6 +22,28 @@ class Layer(str, Enum):
     AI = "ai"          # AI 生成層
     EDIT = "edit"      # 編集・自作層
     RULE = "rule"      # ルールベース生成層
+    # U6: 第5・第6層値（BR-U6-01/04）。
+    ANCHOR = "anchor"      # 下帯アンカー（★役割層）。S03・S13。尺度の床を定義する指名アンカー。
+                           # 出自ベース命名（classic 等）を採らない理由: S04・S10 も人手古典で
+                           # ありながら pro に居るため、出自では区別できない。区別している実体は
+                           # 役割（床アンカー vs バー本体）。層順序予測には含めない（BR-U6-02）。
+    PRACTICE = "practice"  # 練習専用（BR-U6-04）。開示セット。is_practice=1 で出力段除外ゆえ
+                           # 分析的に不活性。★POOL_LAYERS に含めない（充足の母数外, BR-U6-05）。
+
+
+# ---- U6: 層の用途別リスト（BR-U6-05）----
+# ★ `for layer in Layer` の enum 全走査を置換するための明示定数。
+#    走査のままだと**層値を足すたびに「非空」要求が自動で増える**（practice を足すと
+#    「practice 非空」まで要求する誤動作になる）。用途で 2 つに分ける:
+
+#: 充足判定の**母数**（BR-U6-05）。`practice` を除外する（練習素材は本番プールではない）。
+POOL_LAYERS: tuple[Layer, ...] = (Layer.PRO, Layer.AI, Layer.EDIT, Layer.RULE, Layer.ANCHOR)
+
+#: **非空を要求する層**。`anchor` を含めない——**下帯アンカーは研究上の要請であって
+#: 割当アルゴリズムの成立条件ではない**（4 層あれば層間ペアは組める）。含めると
+#: `anchor` 不在のプール（ドライラン・将来の構成変更）でゲートが落ちる。
+#: `anchor` の投入忘れは `plan_generate` の期待組成チェックで検出する（BR-U6-22）。
+REQUIRED_LAYERS: tuple[Layer, ...] = (Layer.PRO, Layer.AI, Layer.EDIT, Layer.RULE)
 
 
 class TokenStatus(str, Enum):

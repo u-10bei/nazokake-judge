@@ -57,10 +57,16 @@ def test_fixed_targets_not_in_pool_ignored(pool, seed):
 @given(pool=pools(min_items=16, max_items=24),
        seed=st.integers(min_value=0, max_value=2**63 - 1))
 def test_layer_coverage_when_enough(pool, seed):
-    """補充のみ・件数 >= 層数 のとき全 4 層から最低 1 件は選ばれる（層網羅, BR-U2-15）。"""
+    """補充のみ・件数 >= 層数 のとき**プール内の全層**から最低 1 件は選ばれる（層網羅, BR-U2-15）。
+
+    U6: 層数を**ハードコードせずプールから導出**する。`list(Layer)` を前提に「4」と
+    書いていたため、U6 で層値を 2 つ足した際に落ちた。**プール由来にすれば層構成が
+    変わっても壊れない**（BR-U6-05 と同じ「暗黙走査を明示に置き換える」規律）。
+    """
     params = AssignmentParams(likert_items=8)        # fixed なし・全補充
     res = select_likert_targets(pool, seed, params)
     by_id = {it.item_id: it.layer.value for it in pool}
     layers_hit = {by_id[t] for t in res}
-    # プールは全 4 層を含む（generators.pools）。8 >= 4 ゆえラウンドロビンで全層に触れる。
-    assert len(layers_hit) == 4
+    layers_in_pool = {it.layer.value for it in pool}
+    # likert_items(8) >= 層数 ゆえラウンドロビンでプール内の全層に触れる。
+    assert layers_hit == layers_in_pool

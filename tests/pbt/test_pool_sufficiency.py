@@ -12,7 +12,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from backend.domain import pool_sufficiency
-from schema import AssignmentParams, Item, Layer
+from schema import POOL_LAYERS, REQUIRED_LAYERS, AssignmentParams, Item, Layer
 from tests.pbt import generators
 
 
@@ -32,12 +32,18 @@ def _pool(counts: dict[Layer, int]) -> list[Item]:
 
 @given(pool=generators.pools(), params=generators.params())
 def test_ok_iff_three_conditions(pool, params):
-    """ok は三点セットがすべて成立するとき、かつそのときに限る。"""
+    """ok は三点セットがすべて成立するとき、かつそのときに限る。
+
+    U6: オラクルも**実装と同じ用途別リスト**を使う（`for L in Layer` の全走査だと
+    層値を足した瞬間に「足した層も非空」を要求してしまい実装と乖離する, BR-U6-05）。
+    母数 = `POOL_LAYERS` / 非空要求 = `REQUIRED_LAYERS`。
+    """
     res = pool_sufficiency(pool, params)
-    total = len(pool)
-    by_layer = {L: sum(1 for it in pool if it.layer == L) for L in Layer}
+    in_pool = [it for it in pool if it.layer in POOL_LAYERS]   # 母数（practice を除外）
+    total = len(in_pool)
+    by_layer = {L: sum(1 for it in in_pool if it.layer == L) for L in POOL_LAYERS}
     cond1 = total >= math.ceil(2 * params.session_pairs / params.max_item_occurrence_k)
-    cond2 = all(by_layer[L] > 0 for L in Layer)
+    cond2 = all(by_layer[L] > 0 for L in REQUIRED_LAYERS)
     cond3 = (total - max(by_layer.values())) * params.max_item_occurrence_k \
         >= math.ceil(params.cross_layer_min_ratio * params.session_pairs)
     assert res.ok == (cond1 and cond2 and cond3)
@@ -46,7 +52,7 @@ def test_ok_iff_three_conditions(pool, params):
 
 # ---------------------------------------------------------------- 単調性
 
-@given(extra_layer=st.sampled_from(list(Layer)), n=st.integers(1, 5))
+@given(extra_layer=st.sampled_from(list(POOL_LAYERS)), n=st.integers(1, 5))
 def test_monotonic_adding_items_keeps_sufficient(extra_layer, n):
     """充足プールに item を足しても充足のまま（total・層間供給は減らない）。"""
     params = AssignmentParams()

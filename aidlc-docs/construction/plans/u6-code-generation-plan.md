@@ -26,12 +26,12 @@
 
 ### ■ スキーマ・マイグレーション
 
-- [ ] **Step 1 — migration 0005**: `migrations/0005_layer_anchor_plan.sql`。
+- [x] **Step 1 — migration 0005**: `migrations/0005_layer_anchor_plan.sql`。
   **★子行退避方式**（単純再構築は FK 違反で失敗・実測）: `pairs_bak` 退避 → `DELETE FROM pairs` → `items` 再構築（CHECK に `anchor`/`practice` 追加・**`retired_at` を必ず引き継ぐ**）→ **列を明示して**復元 → `pairs_bak` 破棄。
   `assignment_plan`（**FK を張らない**）/ `assignment_plan_meta`（`seed`・`content_hash`・`is_active`・**`likert_targets`（JSON 配列・★追補**））/ `tokens` に **`plan_set` + `plan_index`**（NULL 許容）。
   **ヘッダコメントに**: FK 全数調査結果（`pairs` の 2 本のみ・`likert_responses.target_ref` は FK 非設定・`judgments` は `tokens` のみ）+ **`assignment_plan` に FK を張らない設計判断**。
-- [ ] **Step 2 — schema 層定数と型**: `Layer` に `ANCHOR`/`PRACTICE` 追加。**`POOL_LAYERS`**（母数・`practice` 除外）/ **`REQUIRED_LAYERS`**（非空要求・`anchor` 除外）を `schema` に追加（**`scripts` から使うため `backend` には置けない**）。`AssignmentPlanRow` / `AssignmentPlanMeta` / `PlanVerification` / `PlanIngestRequest` を追加。**🔒 `Item`/`ExportItem`/`EXPORT_FORMAT_VERSION` は不変**。
-- [ ] **Step 3 — `pool_sufficiency` 置換**: **`for layer in Layer` の走査を廃し**、`POOL_LAYERS` で母数を絞り `REQUIRED_LAYERS` で非空検査。**「充足判定の唯一の実装」を維持**（置換はこの 1 関数内で完結）。
+- [x] **Step 2 — schema 層定数と型**: `Layer` に `ANCHOR`/`PRACTICE` 追加。**`POOL_LAYERS`**（母数・`practice` 除外）/ **`REQUIRED_LAYERS`**（非空要求・`anchor` 除外）を `schema` に追加（**`scripts` から使うため `backend` には置けない**）。`AssignmentPlanRow` / `AssignmentPlanMeta` / `PlanVerification` / `PlanIngestRequest` を追加。**🔒 `Item`/`ExportItem`/`EXPORT_FORMAT_VERSION` は不変**。
+- [x] **Step 3 — `pool_sufficiency` 置換**: **`for layer in Layer` の走査を廃し**、`POOL_LAYERS` で母数を絞り `REQUIRED_LAYERS` で非空検査。**「充足判定の唯一の実装」を維持**（置換はこの 1 関数内で完結）。
 
 ### ■ プラン生成器（`scripts/plan_generate/` — 非デプロイ）
 
@@ -179,3 +179,28 @@
 - **Step 19**: **FD Q7 / BR-U6-19 の分析仕様が `manual-p-rsch.md` に未記載**（実測: 「出現回数」0 ヒット）→ 本 Step で記載（出現回数の導出方法・分析計画の必須確認項目・同一ペア再提示ゼロ）。
 
 **次**: Part 2（Generation）へ。**スキーマ/生成器/実行時/テストの 4 ブロックに分けて進捗を報告する**。
+
+
+---
+
+## Part 2 進捗 — ブロック 1（スキーマ・マイグレーション）完了（2026-07-20）
+
+**Step 1〜3 完了**。unit+PBT **76 緑**。
+
+**Step 1 の実機検証**（データ + FK 参照 + `retired_at` がある状態で 0005 を適用）:
+- 12 statements 成功 / **適用後検証 3 点すべて通過**（items 3→3・pairs 2→2・`retired_at` 非 NULL 1→1・`foreign_key_check` 違反なし）
+- `anchor`/`practice` の投入可・**不正層値の拒否は維持**・`assignment_plan`/`assignment_plan_meta` 作成・`tokens.plan_set`/`plan_index` 追加を確認
+
+**Step 3 の動作確認**（4 ケース）: 実データ n=38 ✅ / **`anchor` 不在でもゲートが落ちない** ✅ / **`practice` を 50 件足しても母数外** ✅ / `REQUIRED` 層欠落は正しく拒否 ✅
+
+### 🔍 ブロック 1 で判明: **enum 全走査の前提はテスト基盤にも潜んでいた**
+
+BR-U6-05 は**実装（`pool_sufficiency`）だけ**を対象にしていたが、`Layer` に 2 値を足した結果、**同じ前提を置いた箇所が他に 2 つ**あり回帰した:
+
+| 箇所 | 内容 | 修正 |
+|---|---|---|
+| `tests/pbt/generators.py` | **`LAYERS = list(Layer)`** でプール生成 → 生成プールが 6 層になり `test_layer_coverage_when_enough` が落ちた | **`list(POOL_LAYERS)`** に置換（`pools()` は本番プールを生成するため母数と同じリストを使う） |
+| `tests/pbt/test_pool_sufficiency.py` | オラクルが **`for L in Layer`** で三点セットを再実装 → 実装と乖離し `test_ok_iff_three_conditions` が落ちた | 母数=`POOL_LAYERS` / 非空要求=`REQUIRED_LAYERS` に揃える。`extra_layer` の生成も `POOL_LAYERS` から |
+| `tests/pbt/test_likert_selection.py` | **層数を「4」とハードコード** | **プールから導出**（`layers_hit == layers_in_pool`）＝層構成が変わっても壊れない形に |
+
+**教訓**: 「暗黙の全走査を明示リストに置き換える」規律は**実装だけでなくテスト基盤・オラクルにも適用が要る**。今回は**enum 拡張が検出器として働いた**（3 箇所すべてテストが落ちて発覚）。

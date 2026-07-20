@@ -7,9 +7,14 @@ from __future__ import annotations
 
 from hypothesis import strategies as st
 
-from schema import AssignmentParams, Item, Layer
+from schema import POOL_LAYERS, AssignmentParams, Item
 
-LAYERS = list(Layer)
+# U6: ★`list(Layer)` の enum 全走査は使わない。走査だと**層値を足した瞬間に生成される
+# プールの層構成が変わり**、層数を前提にしたアサーションが壊れる（実際 U6 で `anchor`・
+# `practice` を足したとき `test_layer_coverage_when_enough` が落ちた）。
+# `pools()` は**本番プール**を生成するので母数と同じ `POOL_LAYERS` を使う
+# （`practice` は練習専用ゆえ本番プールには入らない, BR-U6-05）。
+LAYERS = list(POOL_LAYERS)
 
 
 @st.composite
