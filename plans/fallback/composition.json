@@ -1,0 +1,14 @@
+{
+  "plan_set": "fallback",
+  "n_items": 34,
+  "n_slots": 8,
+  "n_pairs": 204,
+  "m_per_item": 12,
+  "layers": {
+    "pro": 6,
+    "anchor": 2,
+    "edit": 14,
+    "ai": 9,
+    "rule": 3
+  }
+}

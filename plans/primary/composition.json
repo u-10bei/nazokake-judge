@@ -1,0 +1,14 @@
+{
+  "plan_set": "primary",
+  "n_items": 38,
+  "n_slots": 8,
+  "n_pairs": 228,
+  "m_per_item": 12,
+  "layers": {
+    "pro": 10,
+    "anchor": 2,
+    "edit": 14,
+    "ai": 9,
+    "rule": 3
+  }
+}

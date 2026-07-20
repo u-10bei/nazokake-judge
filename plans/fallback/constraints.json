@@ -1,0 +1,33 @@
+{
+  "plan_set": "fallback",
+  "likert_targets": [
+    "<item_id を **ちょうど 10 件**>"
+  ],
+  "forbidden_pairs": [
+    [
+      "<item_id>",
+      "<item_id>"
+    ]
+  ],
+  "discouraged_pairs": [
+    [
+      "<item_id>",
+      "<item_id>"
+    ]
+  ],
+  "enrichment": [
+    {
+      "anchor": "<item_id>",
+      "counterparts": [
+        "<item_id>"
+      ],
+      "target": 0
+    }
+  ],
+  "avoid_adjacent_groups": [
+    [
+      "<item_id>",
+      "<item_id>"
+    ]
+  ]
+}
