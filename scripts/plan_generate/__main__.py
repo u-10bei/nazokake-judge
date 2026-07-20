@@ -39,7 +39,12 @@ from scripts.plan_generate.constraints import (
     validate_inputs,
 )
 from scripts.plan_generate.graph_build import build_regular_edges
-from scripts.plan_generate.partition import PartitionError, partition_edges, split_sizes
+from scripts.plan_generate.partition import (
+    PartitionError,
+    check_block_feasibility,
+    partition_edges,
+    split_sizes,
+)
 from scripts.plan_generate.placement import search_placement
 from scripts.plan_generate.sequencing import build_slot_rows
 from scripts.plan_generate.verify import render_report, verify_plan
@@ -105,6 +110,14 @@ def main(argv: list[str] | None = None) -> int:
 
     in_pool = [it for it in pool if it.layer in POOL_LAYERS]
     sizes = split_sizes(comp.n_pairs, comp.n_slots)
+
+    # ★実行可能性の事前検査（U6-NFR-11）: ブロック連結が原理的に不可能な組合せは
+    #   **リトライせず即座に明示失敗**する（「seed 運が悪い」との誤認を防ぐ）。
+    try:
+        check_block_feasibility(comp.n_items, comp.n_pairs, comp.n_slots, args.blocks)
+    except PartitionError as e:
+        print(f"[error] パラメータが実行不能: {e}", file=sys.stderr)
+        return EXIT_FAIL
 
     # ---- 構成 → 検証 → seed 再試行 ----
     last_report = None

@@ -58,10 +58,10 @@
 
 ### ■ テスト・文書
 
-- [ ] **Step 16 — PBT（PU6-1〜8）**: `tests/pbt/`。PU6-1 露出 gap=0 / PU6-2 全体連結 / PU6-3 k≤3 / PU6-4 同一ペア 0 / PU6-5 層間 ≥0.65 / PU6-6 決定論 / **PU6-7 ブロック連結** / **PU6-8 禁止辺の不在**。**ジェネレータは n・E・J を振る**（1 点だけでは「その組合せでたまたま通る」ことしか示せない）。**失敗系**（正則不能・分割総和≠J）も検証。
-- [ ] **Step 17 — unit**: `tests/unit/u6/`。`POOL_LAYERS`/`REQUIRED_LAYERS` の層フィルタ（**`practice` が母数外**・**`anchor` 不在でもゲートが落ちない**）/ `(plan_set, plan_index)` 引き当て / 補充トークンの引き継ぎ（**練習全量**）/ activate ガード / `admin_log` 出力。**★追補: プラン経路で保存される `session.likert_targets` がプラン記載の 10 件と一致**（＝ラウンドロビンに落ちていないことの直接の検出網）。
-- [ ] **Step 18 — integration（実 D1）**: `tests/integration/drive_u6.py`。**0005 を「データがある状態」で適用** + **適用後検証 3 点**（`foreign_key_check` / 行数一致 / `retired_at` 非 NULL 件数一致）/ プラン投入 → activate → セッション開始 → **ペア列がプランと一致** / **`plan_index IS NULL` のフォールバック経路が緑** / **activate ガードが judgment 存在で拒否** / **U2/U3/U4a/U5 の既存シナリオが緑**。
-- [ ] **Step 19 — 回帰 + Documentation**: **U1〜U5 の既存 unit+PBT を全緑**。`aidlc-docs/construction/u6/code/README.md`。**`dry-run-dev.md` に U6 カットオーバー手順（⓪〜⑥）を追補**（「データがある状態での 0005 適用」検証を含む）。`manual-p-rsch.md` に**層 `anchor` の意味**と**バーの定義（指名アンカーの β 位置）**を追記。
+- [x] **Step 16 — PBT（PU6-1〜8）**: `tests/pbt/`。PU6-1 露出 gap=0 / PU6-2 全体連結 / PU6-3 k≤3 / PU6-4 同一ペア 0 / PU6-5 層間 ≥0.65 / PU6-6 決定論 / **PU6-7 ブロック連結** / **PU6-8 禁止辺の不在**。**ジェネレータは n・E・J を振る**（1 点だけでは「その組合せでたまたま通る」ことしか示せない）。**失敗系**（正則不能・分割総和≠J）も検証。
+- [x] **Step 17 — unit**: `tests/unit/u6/`。`POOL_LAYERS`/`REQUIRED_LAYERS` の層フィルタ（**`practice` が母数外**・**`anchor` 不在でもゲートが落ちない**）/ `(plan_set, plan_index)` 引き当て / 補充トークンの引き継ぎ（**練習全量**）/ activate ガード / `admin_log` 出力。**★追補: プラン経路で保存される `session.likert_targets` がプラン記載の 10 件と一致**（＝ラウンドロビンに落ちていないことの直接の検出網）。
+- [x] **Step 18 — integration（実 D1）**: `tests/integration/drive_u6.py`。**0005 を「データがある状態」で適用** + **適用後検証 3 点**（`foreign_key_check` / 行数一致 / `retired_at` 非 NULL 件数一致）/ プラン投入 → activate → セッション開始 → **ペア列がプランと一致** / **`plan_index IS NULL` のフォールバック経路が緑** / **activate ガードが judgment 存在で拒否** / **U2/U3/U4a/U5 の既存シナリオが緑**。
+- [x] **Step 19 — 回帰 + Documentation**: **U1〜U5 の既存 unit+PBT を全緑**。`aidlc-docs/construction/u6/code/README.md`。**`dry-run-dev.md` に U6 カットオーバー手順（⓪〜⑥）を追補**（「データがある状態での 0005 適用」検証を含む）。`manual-p-rsch.md` に**層 `anchor` の意味**と**バーの定義（指名アンカーの β 位置）**を追記。
   **★追補**: **FD Q7 / BR-U6-19 の分析仕様が `manual-p-rsch.md` に未記載**（実測: 「出現回数」0 ヒット）。**ここが最後の機会**ゆえ本 Step で記載する: **出現回数（初見/再見）は `token` + `pair_index` の累積カウントで導出可能**（スキーマ追加なし）・**「出現回数の主効果が β 推定に乗るか」を分析計画の必須確認項目**とする・**同一ペア再提示ゼロはハード制約**（BR-U6-18）。
 
 ---
@@ -136,14 +136,14 @@
 ---
 
 ## 4. 完了基準
-- [ ] 全 Step `[x]`。migration 0005・層定数・生成器 7 コンポーネント・API 2 本・引き当て置換・補充トークン・CLI 2 本が生成。
-- [ ] **U1〜U5 回帰含め全テスト緑**（PU6-1〜8 追加）、**integration（実 D1・0005 をデータがある状態で適用）実行実績**。
-- [ ] **🔒 `list_items()` が凍結**されている（U5 BR-U5-02）。
-- [ ] **🔒 `for layer in Layer` の走査が残っていない**（`POOL_LAYERS`/`REQUIRED_LAYERS` へ完全置換）。
-- [ ] **🔒 `save_pair_sequence` 以降が無変更**（U5 DP-U5-02）。
-- [ ] **🔒 Likert が固定リスト経路で通っている**（プラン経路で `session.likert_targets` = プラン記載の 10 件。**ラウンドロビンに落ちていない**）。
-- [ ] **`wrangler.toml` / `deploy.yml` / `frontend/` / `Item` / `ExportItem` / `EXPORT_FORMAT_VERSION` / U3・U4b のコードとテストの変更なし**を確認。
-- [ ] `construction/u6/code/README.md` + **`dry-run-dev.md` の U6 カットオーバー手順追補** + `manual-p-rsch.md` の層 `anchor` 追記。標準 2 択（Request Changes / Continue → Build & Test〈U6〉）。
+- [x] 全 Step `[x]`。migration 0005・層定数・生成器 7 コンポーネント・API 2 本・引き当て置換・補充トークン・CLI 2 本が生成。
+- [x] **U1〜U5 回帰含め全テスト緑**（PU6-1〜8 追加）、**integration（実 D1・0005 をデータがある状態で適用）実行実績**。
+- [x] **🔒 `list_items()` が凍結**されている（U5 BR-U5-02）。
+- [x] **🔒 `for layer in Layer` の走査が残っていない**（`POOL_LAYERS`/`REQUIRED_LAYERS` へ完全置換）。
+- [x] **🔒 `save_pair_sequence` 以降が無変更**（U5 DP-U5-02）。
+- [x] **🔒 Likert が固定リスト経路で通っている**（プラン経路で `session.likert_targets` = プラン記載の 10 件。**ラウンドロビンに落ちていない**）。
+- [x] **`wrangler.toml` / `deploy.yml` / `frontend/` / `Item` / `ExportItem` / `EXPORT_FORMAT_VERSION` / U3・U4b のコードとテストの変更なし**を確認。
+- [x] `construction/u6/code/README.md` + **`dry-run-dev.md` の U6 カットオーバー手順追補** + `manual-p-rsch.md` の層 `anchor` 追記。標準 2 択（Request Changes / Continue → Build & Test〈U6〉）。
 
 ---
 

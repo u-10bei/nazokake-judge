@@ -1,0 +1,81 @@
+{
+  "results": [
+    {
+      "name": "0005 適用: anchor / practice 層の投入が成功する",
+      "pass": true,
+      "detail": "inserted=32 rejected=0"
+    },
+    {
+      "name": "★BR-U6-05: practice が充足母数に入らない（32 件投入・母数 30 で充足）",
+      "pass": true,
+      "detail": "warnings=[]"
+    },
+    {
+      "name": "プラン投入が成功する",
+      "pass": true,
+      "detail": "rows=14 hash=hash-primary"
+    },
+    {
+      "name": "★参照 item 不在のプランを拒否（FK なし設計の代替検証）",
+      "pass": true,
+      "detail": "status=400 error=プランが参照する item がプールに不在（1 件）: ghost001"
+    },
+    {
+      "name": "★likert_targets の実在も検証される（BR-U6-06 の運搬経路）",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "activate が成功する",
+      "pass": true,
+      "detail": "hash=hash-primary"
+    },
+    {
+      "name": "未投入セットの activate は拒否",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "トークン発行がスロット数まで成功する",
+      "pass": true,
+      "detail": "tokens=2"
+    },
+    {
+      "name": "★スロット数を超える発行は拒否（束縛先が無い）",
+      "pass": true,
+      "detail": "gate_errors=['count=5 が有効プランのスロット数 2 を超過（補充は --plan-index で対象スロットを指定してください）']"
+    },
+    {
+      "name": "プラン束縛トークンでセッションが開始する",
+      "pass": true,
+      "detail": "phase=practice"
+    },
+    {
+      "name": "★ペア列がプランと一致（練習が先頭・本番 6 件）",
+      "pass": true,
+      "detail": "practice=1 production=6"
+    },
+    {
+      "name": "★Likert がプラン記載の固定リストと一致（BR-U6-06）",
+      "pass": true,
+      "detail": "got=['u6i003', 'u6i007', 'u6i011']"
+    },
+    {
+      "name": "★plan_index NULL のトークンはオンライン生成にフォールバック（U6-NFR-14）",
+      "pass": true,
+      "detail": "phase=practice production=40"
+    },
+    {
+      "name": "★収集開始後の activate は 409 で拒否（U6-NFR-20）",
+      "pass": true,
+      "detail": "status=409 error=収集開始後の切替は拒否されました（primary に judgment 1 件）。プランセットの切替は実験の作り直しに相当します（BR-U6"
+    },
+    {
+      "name": "未認証のプラン投入は 401",
+      "pass": true,
+      "detail": "status=401"
+    }
+  ],
+  "passed": 15,
+  "total": 15
+}

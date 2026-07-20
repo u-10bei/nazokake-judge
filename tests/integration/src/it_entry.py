@@ -19,6 +19,10 @@ _TABLES = ("judgments", "pairs", "sessions", "likert_responses",
            "survey_responses", "tokens", "items")
 
 
+def _j2(obj):
+    return _j(obj)
+
+
 def _j(obj):
     return Response(json.dumps(obj, ensure_ascii=False),
                    headers={"content-type": "application/json"})
@@ -56,6 +60,16 @@ async def on_fetch(request, env):
         from backend.repo import Repository
         exp = await Repository(env.DB).read_exposure_counts(now_iso="2026-07-14T00:00:00Z")
         return _j({"exposure": exp, "total_exposure": sum(exp.values())})
+
+    # U6: セッションに保存された likert_targets を読む（★固定リスト配線の検証用）。
+    if path == "/it/session-likert":
+        from urllib.parse import parse_qs
+        q = parse_qs(urlparse(request.url).query)
+        tok = q.get("token", [""])[0]
+        row = await env.DB.prepare(
+            "SELECT likert_targets FROM sessions WHERE token = ?").bind(tok).first("likert_targets")
+        import json as _j
+        return _j2({"likert_targets": _j.loads(row) if row else None})
 
     if path == "/it/seed-frozen":
         # frozen001 を pairs から参照させる（= 凍結対象）。other001 は相方。

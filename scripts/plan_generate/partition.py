@@ -80,6 +80,35 @@ def partition_edges(edges: list[tuple[str, str]], sizes: list[int], *, k: int,
     )
 
 
+def check_block_feasibility(n_items: int, n_pairs: int, n_slots: int,
+                            n_blocks: int = 2) -> None:
+    """**ブロック連結性（BR-U6-20）が原理的に達成可能か**を事前検査する（U6-NFR-11）。
+
+    **n 頂点を連結するには最低 n−1 辺が必要**。ブロックあたりの辺数がこれを下回ると
+    **どんな seed でもブロック連結にできない**——リトライは無駄であり、**明示失敗**して
+    パラメータの誤りを伝えるべき。
+
+    （PBT `test_pu6_7_block_connectivity` の反例 `n=10, m=4, E=3` で発覚。ブロック1 が
+    1 スロット 7 辺しか持たず 10 頂点を連結できなかった。事前検査がないと「seed 運が
+    悪い」と誤認して max_attempts 回リトライし、曖昧なメッセージで失敗する。）
+    """
+    if n_blocks < 1:
+        raise PartitionError(f"ブロック数 {n_blocks} が不正")
+    sizes = split_sizes(n_pairs, n_slots)
+    per = n_slots // n_blocks
+    for b in range(n_blocks):
+        lo = b * per
+        hi = n_slots if b == n_blocks - 1 else (b + 1) * per
+        edges_in_block = sum(sizes[lo:hi])
+        if edges_in_block < n_items - 1:
+            raise PartitionError(
+                f"ブロック{b + 1} の辺数 {edges_in_block} < n−1 = {n_items - 1}"
+                "（n 頂点の連結には最低 n−1 辺が必要。**どの seed でもブロック連結に"
+                "できない**ためリトライせず明示失敗する。E を増やすか J/n を見直すこと, "
+                "BR-U6-20）"
+            )
+
+
 def blocks_of(slots: list[list[tuple[str, str]]], n_blocks: int = 2
               ) -> list[list[tuple[str, str]]]:
     """スロットをブロックへまとめる（既定は前半/後半の 2 ブロック）。

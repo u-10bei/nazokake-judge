@@ -85,9 +85,17 @@ async def start_or_resume(repo, token: str, params: AssignmentParams) -> Session
             meta = await repo.get_plan_meta(plan_set)
             fixed = tuple((meta or {}).get("likert_targets") or ())
             pool = await repo.list_active_items()
+            # ★件数も**プランを権威**にする（`likert_items` を固定リストの長さに合わせる）。
+            #   これをしないと `want = min(likert_items, |pool|)` が既定 10 のままとなり、
+            #   **固定リストが 10 件未満のとき不足分をラウンドロビンが補充**してしまう
+            #   ＝FD Q2 で否決した挙動が部分的に復活する（integration で実測・検出）。
+            #   長さを合わせれば `select_likert_targets` は固定分を採り切った時点で即 return し、
+            #   **補充ループに入らない**（`likert.py` は無改修のまま）。
             likert_targets = select_likert_targets(
-                pool, seed, params.model_copy(update={"likert_fixed_targets": fixed})
-            )
+                pool, seed,
+                params.model_copy(update={"likert_fixed_targets": fixed,
+                                          "likert_items": len(fixed)}),
+            ) if fixed else []
 
         # U5: Likert ターゲットはペア列と**同じ batch で原子保存**する（DP-U5-02。別経路に
         # すると「ペア列は保存されたが Likert 未保存」の窓が生じる）。★U6 でもここは不変。

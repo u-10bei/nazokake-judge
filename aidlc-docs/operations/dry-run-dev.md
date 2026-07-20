@@ -251,6 +251,51 @@ uv run python -m scripts.pool_retire pro001 --unretire
 
 ---
 
+## 3.5 U6 カットオーバー手順のリハーサル（★実験前に一度通す）
+
+U6（層拡張 + 事前生成割当）では **migration 0005 の適用タイミングに制約**があり、
+**プラン投入 → activate → トークン発行の順序を誤ると静かに壊れます**。**dev で全順序を
+一度リハーサル**してください。
+
+```bash
+# ⓪ 許諾成立/不成立の決定と使用セットを記録（研究側記録・admin_log 外）
+
+# ① 0005 を「データがある状態」で適用できるか検証（U6-NFR-01/05）
+#    ⚠️ 本番では「発行済み未消化トークンが存在しない時点」に限る（U6-NFR-04）
+uv run pywrangler d1 migrations apply nazokake-judge --local
+#    適用後検証 3 点:
+uv run pywrangler d1 execute nazokake-judge --local --command "PRAGMA foreign_key_check"
+uv run pywrangler d1 execute nazokake-judge --local --command \
+  "SELECT (SELECT COUNT(*) FROM items) items, (SELECT COUNT(*) FROM pairs) pairs, \
+          (SELECT COUNT(*) FROM items WHERE retired_at IS NOT NULL) retired"
+#    → items / pairs の行数が適用前後で一致・retired_at 非 NULL 件数も一致すること
+
+# ② プール投入（anchor 2 件と practice 素材を含む）
+uv run python -m scripts.pool_ingest items_real.json
+
+# ③ プラン生成 → **コミット**（D1 には触れない）
+uv run python -m scripts.plan_generate --pool items_real.json \
+    --composition plans/primary/composition.json \
+    --constraints plans/primary/constraints.json \
+    --out-dir plans/primary --seed 20260720
+git add plans/primary && git commit -m "plan: primary set fixed"
+
+# ④ 投入 → 有効化（plan.json / plan.meta.json を POST）
+# ⑤ トークン発行（★ここで (plan_set, plan_index) が束縛される。④の後でなければ束縛先が未定）
+uv run python -m scripts.token_issue 8 --url-template 'http://127.0.0.1:8787/?token={token}' --out tokens.dist.txt
+
+# ⑥ 参加 → 進捗 → エクスポート → BT 集計（§2 の一巡）
+```
+
+**確認ポイント**:
+- [ ] 0005 適用後の 3 点検証がすべて一致
+- [ ] プラン生成が `verification.md` を出力し **gap=0 / 連結成分 1 / ブロック連結 [1,1]**
+- [ ] 発行したトークンで開始すると**ペア列がプランと一致**（練習が先頭）
+- [ ] **Likert がプラン記載の固定リストと一致**（ラウンドロビンに落ちていない）
+- [ ] `plans/<set>/` を**コミット済み**（両セットの事前固定が commit 履歴とハッシュで残る）
+
+---
+
 ## 4. 後片付け
 
 ### 4-1. ローカル D1 をリセット

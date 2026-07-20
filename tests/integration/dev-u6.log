@@ -1,0 +1,18 @@
+INFO     Passing command to npx wrangler: npx --yes wrangler dev --port 8788    
+
+ ⛅️ wrangler 4.112.0
+────────────────────
+Using secrets defined in .dev.vars
+Your Worker has access to the following bindings:
+Binding                                     Resource                  Mode
+env.DB (nazokake-it)                        D1 Database               local
+env.ADMIN_BASIC_USER ("(hidden)")           Environment Variable      local
+env.ADMIN_BASIC_PASSWORD ("(hidden)")       Environment Variable      local
+
+*** Fatal uncaught kj::Exception: kj/async-io-unix.c++:941: failed: ::bind(sockfd, &addr.generic, addrlen): Address already in use; toString() = 127.0.0.1:8788
+stack: /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@53fdad6 /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@53fd8a9 /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@53fbbfc /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@2068a6c /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@20693d1 /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@2069efd /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@206b57a /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@1fb1339 /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5432855 /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5432d78 /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@543082e /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@543062e /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@1f98d17 /lib/x86_64-linux-gnu/libc.so.6@2a1c9 /lib/x86_64-linux-gnu/libc.so.6@2a28a /home/llm-user/.npm/_npx/32026684e21afda6/node_modules/@cloudflare/workerd-linux-64/bin/workerd@1f98024
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mAddress already in use (127.0.0.1:8788). Please check that you are not already running a server on this address or specify a different port with --port.[0m
+
+
+🪵  Logs were written to "/home/llm-user/.config/.wrangler/logs/wrangler-2026-07-20_12-37-38_619.log"
