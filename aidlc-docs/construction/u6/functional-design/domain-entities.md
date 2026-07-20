@@ -8,24 +8,47 @@
 
 ### 1-1. `items.layer` の CHECK 制約更新（**テーブル再構築が必要**）
 
-**SQLite は CHECK 制約を ALTER できない**ため、**0002 と同型のテーブル再構築**を行う（当初の「データ投入だけで済む」見立ては誤り）。
+**SQLite は CHECK 制約を ALTER できない**ため、テーブル再構築を行う（当初の「データ投入だけで済む」見立ては誤り）。
+
+> ## 🚨 訂正（2026-07-20・実機検証）: 0002 と同型の単純再構築では**失敗する**
+>
+> **`pairs` が `items` を FK 参照している行を持つ状態では `DROP TABLE items` が `FOREIGN KEY constraint failed` になる**（local D1 で実測）。0002 が通ったのは「**新規プロジェクトで既存行なし**」だったため（0002 のコメントに明記）。**0005 は初めて「データがある状態での親テーブル再構築」になる。**
+>
+> `PRAGMA foreign_keys=OFF` / `PRAGMA defer_foreign_keys=ON` はいずれも **D1 の migration 実行環境では効かない**（実測）。→ **子行の退避方式**が必要。
 
 ```sql
 -- U6: layer に 'anchor'（下帯アンカー）と 'practice'（練習専用）を追加。
+--
+-- ⚠️ items を参照する FK は pairs の 2 本のみ（item_left / item_right）。
+--    judgments.pair_id は FK ではない（0001 で確認済み）ため退避対象は pairs だけ。
+-- ⚠️ DROP TABLE items は pairs に行があると FK 違反になるため、子行を退避してから行う。
+--    PRAGMA による FK 無効化は D1 では効かない（実測）。
+
+CREATE TABLE pairs_bak AS SELECT * FROM pairs;   -- 子行を退避
+DELETE FROM pairs;                                -- 参照を外す
+
 CREATE TABLE items_new (
   item_id    TEXT PRIMARY KEY,
   layer      TEXT NOT NULL
                CHECK (layer IN ('pro','ai','edit','rule','anchor','practice')),
   body       TEXT NOT NULL,
   body_ref   TEXT,
-  retired_at TEXT                       -- U5（0004）から引き継ぐ
+  retired_at TEXT                       -- ★ U5（0004）から必ず引き継ぐ
 );
 INSERT INTO items_new SELECT item_id, layer, body, body_ref, retired_at FROM items;
 DROP TABLE items;
 ALTER TABLE items_new RENAME TO items;
+
+-- 子行を復元（列は明示。SELECT * に依存しない）
+INSERT INTO pairs (token, pair_id, idx, item_left, item_right, is_practice)
+  SELECT token, pair_id, idx, item_left, item_right, is_practice FROM pairs_bak;
+DROP TABLE pairs_bak;
 ```
 
+**実機検証済み**（local D1・データ + FK 参照 + `retired_at` あり）: 8 statements 成功 / `retired_at` 保全 ✅ / `pairs` 復元 ✅ / `PRAGMA foreign_key_check` 違反なし ✅ / `anchor`・`practice` 投入可 ✅ / 不正層値の拒否維持 ✅。
+
 > ⚠️ **`retired_at`（0004）の引き継ぎを忘れないこと**。再構築時の列欠落は U5 の廃止状態を消失させる。
+> ℹ️ **D1 は migration を原子的にロールバックする**（失敗時に `items_new` の残骸が残らないことを実測確認）。
 
 ### 1-2. 割当プラン（新規テーブル）
 
