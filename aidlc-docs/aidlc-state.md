@@ -99,6 +99,12 @@
 - [x] Build & Test — **承認済み・完了**（2026-07-17, Code Generation 内で実施）。unit+PBT **76 緑** + integration 実 D1 **37/37 PASS**（U5 13 + 回帰 U2 9/U3 8/U4a 7・migration 0004 適用後）。beta 検証・参加者 UI 目視は不要（新規ランタイム機構なし・画面不変）。**U5 完了**
 - 調査で判明した設計の前提: ①削除 API も廃止フラグも未実装（＝設計上の意図: 凍結ガード BR-U4a-03 が更新すら拒否）②**エクスポートは body 非含有ゆえ廃止 item を残せる → 自己完結性 BR-U3-07 維持 → U4b 無改修で「過去結果は有効」が成立**③ペア列は開始時に一括保存＝「新規のみ反映」なら配信段の改修不要 ④**⚠️ Likert ターゲットは未保存・毎回導出 → プールを絞ると進行中セッションのターゲットが変わる**（Q2 の核心）⑤**⚠️ 廃止フラグ付与は UPDATE ＝凍結ガード BR-U4a-03 と正面衝突**（Q3 の核心）。波及: migration 0004 / U4a / U1 / U2 / U3（確認のみ）/ **U4b 無変更**
 
+#### U6: 層拡張（下帯アンカー）+ 事前生成割当（追加要件 2026-07-20）
+**背景**: 実データ確定（**n=38 / E=8 / J=228 / m=12**）。層別 = プロ作 10（N1〜N8 許諾待ち+S04・S10）/ **下帯アンカー 2（S03・S13）** / 編集・自作 14 / AI 生成 9 / ルールベース 3。
+**決定済み**: 許諾は待たずに開始（NG なら U5 の `pool_retire`。エクスポートに本文は含まれないため収集済みデータに著作物は残らない）／**E=8 維持 + 事前生成リスト方式**。
+- [~] Functional Design — **Part 1（Plan + 質問 7 問）生成・承認待ち**（2026-07-20）。**実測で確定した事実**: ①`items.layer` に **CHECK 制約が実在**→migration 0005 でテーブル再構築必須（「データ投入だけ」では済まない）②`ExportItem.layer`/`WinrateRow.layer` は **`str` で値域列挙なし**→**EXPORT_FORMAT_VERSION 版上げ不要**・U3/U4b 無対応 ③`pool_sufficiency` が `for layer in Layer` ゆえ「4層非空」が自動的に「5層非空」に ④**`select_likert_targets` は層ラウンドロビン**→5層化で下帯 2 件（プールの5%）が**較正アンカーの20%**を占め回帰を歪める ⑤`generate_pairs` の呼び出しは **`session.py:53` の 1 箇所のみ**＝外科的置換可 ⑥**同一ペア再提示ゼロは `used: set[frozenset]` で既にハード制約** ⑦練習ペアは本番と同一プール由来＝**初見性が損なわれる** ⑧**出現回数は `token`+`pair_index` から導出可能**＝スキーマ追加なしで共変量検証できる
+  - **事前生成の実現可能性を実測**: **J=228 は n=38 の 12-正則グラフ（38×12/2=228）と完全一致** → 構成して 8 評価者へ配分成功（**露出 gap=0.000**・評価者内同一項目 ≤3・同一ペア重複 0）。対比: オンライン方式は連結成分=1 は 20/20 達成も**相対 gap 最悪 0.66〜0.75**（露出 min=8/max=17＝**項目間 2 倍の精度差**）＝**較正 α=0.7 の境界上**（p=3/α=0.7/S=30 は n=95 での較正値ゆえ n=38 では保証されない）→ **事前生成により較正が不要になる**
+
 ### 🟡 OPERATIONS PHASE
 - [x] **Operations — 方法論上は実行対象なし**（`aidlc-workflows/.../operations/operations.md`: "This phase is currently a placeholder"・"The AI-DLC workflow currently ends after the Build and Test phase in CONSTRUCTION"）。plan/質問/ゲートの規定は存在せず、**AI-DLC は U4b Build & Test 承認をもって完走済み**。
 - [x] **運用 Runbook 作成**（2026-07-15）— 定義の Future Scope（production readiness / maintenance）に相当する実運用手順書 `aidlc-docs/operations/runbook.md`。初回セットアップ / デプロイ（品質ゲート順）/ 一巡手順（プール投入→発行→配布→参加→進捗→エクスポート→BT 集計→α 感度）/ 監視（wrangler tail・admin_log の秘匿方針）/ トラブルシューティング 9 症状 / 運用注意 / 未消化事項。実装済み CLI・API の一次情報に基づく
@@ -109,11 +115,11 @@
   - `runbook.md` 冒頭に 3 文書の使い分け表を追加
 
 ## Current Status
-- **Lifecycle Phase**: **AI-DLC 完走**（U1〜U4b + **U5 = 全 6 ユニット CLOSE**。Operations は方法論上プレースホルダ＝実行対象なし）
-- **Current Stage**: **全工程クローズ**（U5 完了 2026-07-17）。運用文書 3 冊完備（廃止手順を反映済み）＝実運用の入口
+- **Lifecycle Phase**: CONSTRUCTION 再開（**U6 = 追加要件 2026-07-20**）。U1〜U5 は CLOSE 済み・運用文書 4 冊完備
+- **Current Stage**: **U6 層拡張+事前生成割当 — Functional Design Part 1 生成・承認待ち**（standardized 2-option GATE）
 - **Units**: U1 基盤 / U2 参加者 / U3 研究者管理 / U4 スクリプト（実装順序 U1→U4a→U2→U3→U4b）**全て CLOSE**
 - **Completed**: U1／U4a（2026-07-13）／U2（2026-07-14）／U3（2026-07-15）／**U4b（2026-07-15 完了）**
-- **Next Stage**: **本番デプロイ**（初回デプロイで migrations 0001〜0004 が一括適用される）。その後 U2 beta 最終 CLOSE（prod curl 疎通 3 点）・G-1 の smoke 撤去（任意）
+- **Next Stage**: U6 FD 承認 → NFR Requirements〈U6〉→ …（per-unit ループ）。**本番デプロイは U6 完了後**（migration 0005 を同時に載せられる）
 - **Status**: U1〜U4b 完了（判定装置の一巡クローズ達成）。運用文書 3 冊完備（`operations/`）。**U5 = 著作権配慮による出題停止**の FD Part 2 生成（全 6 問 A / BR-U5-01〜13）。核心 3 点: **読み取り経路を関数分割で固定**（list_items 凍結 / list_active_items 新設）・**Likert ターゲットの保存化**（3 箇所の導出を単一アクセサに集約）・**凍結ガード BR-U4a-03 との整理**（body/layer 不変ゆえ対象外）。**U3/U4b 無変更・EXPORT_FORMAT_VERSION 1.0.0 据え置き**
 
 ## Open Gates / Blockers
