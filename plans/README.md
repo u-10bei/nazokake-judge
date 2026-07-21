@@ -22,6 +22,12 @@ plans/
 | **プール** (`items_*.json`) | 実データ | ⚠️ **gitignore 対象**（本文を含むため） |
 | **期待組成** (`composition.json`) | 設計定数 | ✅ **記入済み**（下表） |
 | **制約** (`constraints.json`) | 研究側（タスク5 §3） | ⛔ **雛形のまま — 記入が必要** |
+| **練習ペア** (`practice.json`) | 研究側 | ⛔ **要作成** — `--practice` で渡す。**省略するとエラーにならず「練習なし」で生成される** |
+
+（「三つ組」は**整合検証の単位**を指します。練習ペアは検証対象外の付加入力ですが、
+**実験には必須**です——`[["PR1","PR2"], …]` の形式で標準 3 ペア。）
+
+→ **提供元向けの記入手引き**: `aidlc-docs/operations/manual-p-data.md`
 
 三つ組は**セット別で流用できません**。制約ファイルは `plan_set` を内包し、期待組成と
 一致しなければ**明示失敗**します（成立版の制約をフォールバック版に誤適用する事故を防ぐ）。
@@ -73,6 +79,7 @@ uv run python -m scripts.plan_generate \
     --pool items_real.json \
     --composition plans/primary/composition.json \
     --constraints plans/primary/constraints.json \
+    --practice plans/primary/practice.json \
     --out-dir plans/primary --seed 20260720
 
 # verification.md を確認してから **コミット**

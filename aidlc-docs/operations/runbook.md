@@ -89,12 +89,16 @@ uv run python -m scripts.pool_ingest items.json --base-url "$ADMIN_API_BASE"
 uv run python -m scripts.plan_generate --pool items_real.json \
     --composition plans/primary/composition.json \
     --constraints plans/primary/constraints.json \
+    --practice plans/primary/practice.json \
     --out-dir plans/primary --seed 20260720
 git add plans/primary && git commit -m "plan: primary set fixed"
 
 # 投入 → 有効化（★content_hash を再計算して照合してから POST。不一致なら投入せず exit 1）
 uv run python -m scripts.plan_ingest plans/primary --activate
 ```
+
+**⚠️ `--practice` を省略するとエラーにならず「練習なし」のプランが生成されます**（標準 3 ペア）。
+`verification.md` と生成ログで練習ペアが入っていることを確認してください。
 
 **生成と投入が別 CLI なのは、間に `git commit` が挟まるため**（BR-U6-12）。1 コマンドだと
 コミット前のプランを投入でき、「コミットされたものが投入された」という証跡が成立しません。

@@ -302,6 +302,7 @@ uv run python -m scripts.pool_ingest items_real.json
 uv run python -m scripts.plan_generate --pool items_real.json \
     --composition plans/primary/composition.json \
     --constraints plans/primary/constraints.json \
+    --practice plans/primary/practice.json \
     --out-dir plans/primary --seed 20260720
 git add plans/primary && git commit -m "plan: primary set fixed"
 
@@ -318,6 +319,7 @@ uv run python -m scripts.token_issue 8 --url-template 'http://127.0.0.1:8787/?to
 - [ ] プラン生成が `verification.md` を出力し **gap=0 / 連結成分 1 / ブロック連結 [1,1]**
 - [ ] 発行したトークンで開始すると**ペア列がプランと一致**（練習が先頭）
 - [ ] **Likert がプラン記載の固定リストと一致**（ラウンドロビンに落ちていない）
+- [ ] **練習ペアがプランに入っている**（`--practice` の渡し忘れは**エラーにならない**）
 - [ ] **`plan_ingest` が「✅ ハッシュ照合 OK」を出してから投入している**
       （試しに `plan.json` を 1 文字書き換えて**投入が止まること**も確認しておくと安心です）
 - [ ] `plans/<set>/` を**コミット済み**（両セットの事前固定が commit 履歴とハッシュで残る）

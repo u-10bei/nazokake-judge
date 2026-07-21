@@ -17281,3 +17281,56 @@ Attaching additional modules:
 [wrangler:info] POST /admin/tokens 200 OK (7ms)
 {"ts": "2026-07-20T13:03:03Z", "level": "error", "unit": "U4a", "event": "admin_auth_failed", "endpoint": "/admin/items/retire"}
 [wrangler:info] POST /admin/items/retire 401 Unauthorized (2ms)
+[wrangler:info] GET /health 200 OK (2ms)
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught PythonError: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   Error
+      at new_error (pyodideRuntime-internal:emscriptenSetup:753:14)
+      at [object Object]
+      at [object Object]
+      at _PyEM_TrampolineCall_JS (pyodideRuntime-internal:emscriptenSetup:5417:33)
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at Module.callPyObjectKwargs (pyodideRuntime-internal:emscriptenSetup:3191:54)
+      at Module.callPyObject (pyodideRuntime-internal:emscriptenSetup:3229:25)
+      at wrapper (pyodideRuntime-internal:emscriptenSetup:1840:27)
+      at wrappedHandler (pyodide-internal:python:85:13)
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught Error: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   
+
+
+[wrangler:info] GET /it/reset 500 Internal Server Error (42ms)
+{"ts": "2026-07-21T03:06:56Z", "level": "info", "unit": "U4a", "event": "pool_ingest", "endpoint": "/admin/items", "inserted": 32, "updated": 0, "rejected_count": 0}
+[wrangler:info] POST /admin/items 200 OK (29ms)
+{"ts": "2026-07-21T03:06:56Z", "level": "info", "unit": "U4a", "event": "plan_ingest", "endpoint": "/admin/plan"}
+[wrangler:info] POST /admin/plan 200 OK (17ms)
+{"ts": "2026-07-21T03:06:56Z", "level": "info", "unit": "U4a", "event": "plan_activate", "endpoint": "/admin/plan/activate"}
+[wrangler:info] POST /admin/plan/activate 200 OK (21ms)
+{"ts": "2026-07-21T03:06:56Z", "level": "info", "unit": "U4a", "event": "pool_ingest", "endpoint": "/admin/items", "inserted": 0, "updated": 1, "rejected_count": 0}
+[wrangler:info] POST /admin/items 200 OK (22ms)
+{"ts": "2026-07-21T03:06:56Z", "level": "info", "unit": "U4a", "event": "token_issue", "endpoint": "/admin/tokens", "count": 1}
+[wrangler:info] POST /admin/tokens 200 OK (23ms)
+{"ts": "2026-07-21T03:06:57Z", "level": "info", "unit": "U2", "event": "session_view", "endpoint": "/api/session", "token_h": "48054592", "phase": "practice", "status": "in_progress"}
+[wrangler:info] GET /api/session 200 OK (70ms)
+{"ts": "2026-07-21T03:06:57Z", "level": "error", "unit": "U4a", "event": "pool_ingest", "endpoint": "/admin/items", "inserted": 0, "updated": 0, "rejected_count": 1}
+[wrangler:info] POST /admin/items 200 OK (18ms)
