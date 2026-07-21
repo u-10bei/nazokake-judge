@@ -177,12 +177,20 @@ curl -su "$ADMIN_BASIC_USER:$ADMIN_BASIC_PASSWORD" \
 **著作権上の配慮**などで、投入済み作品を**今後出題しない**ようにする（**論理削除**）。
 
 ```bash
-# 出題停止
-uv run python -m scripts.pool_retire i001 i002
+# 出題停止（★--reason を必ず付ける。証跡に残る）
+uv run python -m scripts.pool_retire i001 i002 --reason "著作権配慮・許諾不成立"
 
 # 復活（誤操作の回復）
-uv run python -m scripts.pool_retire i001 --unretire
+uv run python -m scripts.pool_retire i001 --unretire --reason "許諾成立"
+
+# ★証跡をコミットする（操作のたびに）
+git add retirement-log.jsonl && git commit -m "retire: i001 i002（著作権配慮）"
 ```
+
+**証跡は `retirement-log.jsonl`**（CLI が 1 操作 1 行で追記）。**`item_id` のみで本文を含まない**
+ため**コミットできます**——git 履歴が永続性と改竄検知を兼ねます。**サーバの `admin_log` は
+`wrangler tail` で追っている間しか流れず永続化されない**ので、後から「いつ・何を・なぜ止めたか」
+を示す責任はこのファイルが負います。
 
 **反映範囲（重要）**:
 
@@ -195,7 +203,7 @@ uv run python -m scripts.pool_retire i001 --unretire
 
 - **物理削除ではありません**（行は残る）。`pairs` の FK と ExportBundle の自己完結性のため、物理削除は**してはいけません**。
 - **D1 直操作（`wrangler d1 execute` での UPDATE）は使わないでください**——**監査ログが残りません**。廃止は **API/CLI 経由が正**（著作権対応の証跡）。
-- **廃止履歴は `wrangler tail` の `item_retire` / `item_unretire`** が正（DB の `retired_at` は現在状態のみ）。
+- **廃止履歴は `retirement-log.jsonl` が正**（DB の `retired_at` は現在状態のみ＝履歴ではない）。`wrangler tail` の `item_retire` / `item_unretire` は**リアルタイム確認用**であって記録ではありません。
 - 冪等: 既に廃止済みなら no-op（**初回の廃止時刻を保持**）。存在しない `item_id` は警告のみで exit 0。
 - 廃止済み item を `pool_ingest` で再投入しても**廃止のまま**（復活は `--unretire` のみ）。
 

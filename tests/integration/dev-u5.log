@@ -21262,3 +21262,86 @@ Attaching additional modules:
 [wrangler:info] POST /admin/tokens 200 OK (7ms)
 {"ts": "2026-07-21T04:42:32Z", "level": "error", "unit": "U4a", "event": "admin_auth_failed", "endpoint": "/admin/items/retire"}
 [wrangler:info] POST /admin/items/retire 401 Unauthorized (2ms)
+[wrangler:info] GET /health 200 OK (4ms)
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught PythonError: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   Error
+      at new_error (pyodideRuntime-internal:emscriptenSetup:753:14)
+      at [object Object]
+      at [object Object]
+      at _PyEM_TrampolineCall_JS (pyodideRuntime-internal:emscriptenSetup:5417:33)
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at Module.callPyObjectKwargs (pyodideRuntime-internal:emscriptenSetup:3191:54)
+      at Module.callPyObject (pyodideRuntime-internal:emscriptenSetup:3229:25)
+      at wrapper (pyodideRuntime-internal:emscriptenSetup:1840:27)
+      at wrappedHandler (pyodide-internal:python:85:13)
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught Error: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   
+
+
+[wrangler:info] GET /it/reset 500 Internal Server Error (189437ms)
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught PythonError: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   Error
+      at new_error (pyodideRuntime-internal:emscriptenSetup:753:14)
+      at [object Object]
+      at [object Object]
+      at _PyEM_TrampolineCall_JS (pyodideRuntime-internal:emscriptenSetup:5417:33)
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at Module.callPyObjectKwargs (pyodideRuntime-internal:emscriptenSetup:3191:54)
+      at Module.callPyObject (pyodideRuntime-internal:emscriptenSetup:3229:25)
+      at wrapper (pyodideRuntime-internal:emscriptenSetup:1840:27)
+      at wrappedHandler (pyodide-internal:python:85:13)
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught Error: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   
+
+
+[wrangler:info] GET /it/reset 500 Internal Server Error (71ms)
+{"ts": "2026-07-21T04:45:41Z", "level": "info", "unit": "U4a", "event": "pool_ingest", "endpoint": "/admin/items", "inserted": 32, "updated": 0, "rejected_count": 0}
+[wrangler:info] POST /admin/items 200 OK (22ms)
+{"ts": "2026-07-21T04:45:48Z", "level": "info", "unit": "U4a", "event": "item_retire", "endpoint": "/admin/items/retire", "item_ids": "u6i003,u6i007", "count": 2, "already": 0, "not_found": 0}
+[wrangler:info] POST /admin/items/retire 200 OK (17ms)
+{"ts": "2026-07-21T04:45:49Z", "level": "info", "unit": "U4a", "event": "item_unretire", "endpoint": "/admin/items/unretire", "item_ids": "u6i003", "count": 1, "already": 0, "not_found": 0}
+[wrangler:info] POST /admin/items/unretire 200 OK (13ms)
