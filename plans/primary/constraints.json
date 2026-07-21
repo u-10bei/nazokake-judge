@@ -1,33 +1,122 @@
 {
   "plan_set": "primary",
   "likert_targets": [
-    "<item_id を **ちょうど 10 件**>"
+    "S03",
+    "RB3",
+    "C12",
+    "C13",
+    "E06",
+    "E11",
+    "E14",
+    "SS4",
+    "S04",
+    "N08"
   ],
   "forbidden_pairs": [
     [
-      "<item_id>",
-      "<item_id>"
+      "E09",
+      "E10"
+    ],
+    [
+      "E09",
+      "E11"
+    ],
+    [
+      "E10",
+      "E11"
+    ],
+    [
+      "E05",
+      "E06"
+    ],
+    [
+      "E05",
+      "E07"
+    ],
+    [
+      "E05",
+      "E08"
+    ],
+    [
+      "E06",
+      "E07"
+    ],
+    [
+      "E06",
+      "E08"
+    ],
+    [
+      "E07",
+      "E08"
     ]
   ],
   "discouraged_pairs": [
     [
-      "<item_id>",
-      "<item_id>"
+      "N07",
+      "C06"
+    ],
+    [
+      "RB2",
+      "C10"
+    ],
+    [
+      "SS1",
+      "SS2"
+    ],
+    [
+      "SS1",
+      "SS3"
+    ],
+    [
+      "SS2",
+      "SS3"
     ]
   ],
   "enrichment": [
     {
-      "anchor": "<item_id>",
+      "anchor": "N08",
       "counterparts": [
-        "<item_id>"
+        "SS1",
+        "SS2",
+        "SS3",
+        "SS4",
+        "E08",
+        "E11",
+        "E13",
+        "E14",
+        "E15"
       ],
-      "target": 0
+      "target": 6
     }
   ],
   "avoid_adjacent_groups": [
     [
-      "<item_id>",
-      "<item_id>"
+      "SS1",
+      "SS4"
+    ],
+    [
+      "SS1",
+      "C13"
+    ],
+    [
+      "N06",
+      "SS3"
+    ],
+    [
+      "RB1",
+      "RB2",
+      "RB3"
+    ],
+    [
+      "E09",
+      "E10",
+      "E11"
+    ],
+    [
+      "E05",
+      "E06",
+      "E07",
+      "E08"
     ]
   ]
 }
