@@ -245,16 +245,22 @@ npx wrangler d1 execute nazokake-judge --remote --file=scripts/reset-responses.s
 ```
 
 ⚠️ `items.retired_at`（出題停止フラグ）も残ります。プールを完全初期化したいなら方法B。
+**U6: プラン（`assignment_plan`）は意図的に残ります**——同じプール・同じプランでやり直すのが
+本手順の趣旨です。判定が消えるので **activate ガード（409）も解除**され、切替が必要なら可能に
+なります。トークンは消えるため、プランへの束縛は **`token_issue` の再発行で張り直されます**。
 
 ### 方法B：全データを消す（プールごと完全リセット）
 
-新しいプールで一から始める。全 7 テーブルを空にする（`items` も消す）。
+新しいプールで一から始める。全 9 テーブルを空にする（`items` と**プランも**消す）。
 
 ```bash
 npx wrangler d1 execute nazokake-judge --remote --file=scripts/reset-all.sql
 ```
 
-→ その後 **プール投入（§2-①）→ トークン発行（§2-②）** から一巡をやり直す。
+→ その後 **プール投入（§2-①）→ プラン生成・投入（§2-①-b）→ トークン発行（§2-②）** から
+一巡をやり直す。**プランも消えているので再生成が必要です**（items だけ消してプランを残すと
+「存在しない作品を指す有効プラン」が生き残り、セッション開始時に壊れます——`assignment_plan`
+には FK を張っていないので DB は止めてくれません）。
 **スキーマ・migration はそのまま＝再デプロイ不要**（`d1_migrations` にも触れない）。
 
 ### 方法C：D1 データベースごと作り直す（最もクリーン・要再デプロイ）
@@ -265,17 +271,34 @@ npx wrangler d1 execute nazokake-judge --remote --file=scripts/reset-all.sql
 npx wrangler d1 delete nazokake-judge          # 削除
 npx wrangler d1 create nazokake-judge          # 再作成 → 新しい database_id が出る
 # → wrangler.toml の database_id を新しい値に書き換える
-npx wrangler d1 migrations apply nazokake-judge --remote   # 0001〜0004 を再適用
+npx wrangler d1 migrations apply nazokake-judge --remote   # 0001〜0005 を再適用
 # → deploy.yml を手動実行して再デプロイ（§1）
 ```
 
 **代償**: `database_id` が変わるので `wrangler.toml` 書き換え + **再デプロイが必須**。方法A/B で足りるなら不要。
+
+### 方法D：ローカル(dev) D1 を作り直す
+
+dev の実データ確認をやり直すときはこれが最短です（`database_id` は変わりません）。
+
+```bash
+rm -rf .wrangler/state/v3/d1                              # ローカル D1 の実体
+uv run pywrangler d1 migrations apply nazokake-judge --local   # 0001〜0005 を再適用
+```
+
+**⚠️ `duplicate column name: plan_set` で失敗する場合**は、**マイグレーション機構を通さずに
+DDL を直接流した**痕跡です（`d1_migrations` の記録とスキーマがずれている）。上記の方法D で
+作り直せば解消します。**台帳を手で書き換えないでください**——ずれの原因が残ったままになります。
+
+**⚠️ `.wrangler/state/` にはローカル D1 が平文の SQLite として残ります。** 実データで
+ドライランしたら、テスト後にこれを消す（= 方法D）のが確実です。
 
 ### どれを選ぶか
 
 | 状況 | 方法 |
 |---|---|
 | テストは dev でやる（推奨） | リセット不要 |
+| **dev をやり直す / dev に実データを残したくない** | **方法D** |
 | 同じプールで本番やり直し | **方法A**（`reset-responses.sql`） |
 | 新プールで本番やり直し | **方法B**（`reset-all.sql`） |
 | テーブル定義ごと新品にしたい | 方法C |

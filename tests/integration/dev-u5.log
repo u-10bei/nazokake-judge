@@ -21345,3 +21345,48 @@ Attaching additional modules:
 [wrangler:info] POST /admin/items/retire 200 OK (17ms)
 {"ts": "2026-07-21T04:45:49Z", "level": "info", "unit": "U4a", "event": "item_unretire", "endpoint": "/admin/items/unretire", "item_ids": "u6i003", "count": 1, "already": 0, "not_found": 0}
 [wrangler:info] POST /admin/items/unretire 200 OK (13ms)
+[wrangler:info] GET /health 200 OK (2ms)
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught PythonError: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   Error
+      at new_error (pyodideRuntime-internal:emscriptenSetup:753:14)
+      at [object Object]
+      at [object Object]
+      at _PyEM_TrampolineCall_JS (pyodideRuntime-internal:emscriptenSetup:5417:33)
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at [object Object]
+      at Module.callPyObjectKwargs (pyodideRuntime-internal:emscriptenSetup:3191:54)
+      at Module.callPyObject (pyodideRuntime-internal:emscriptenSetup:3229:25)
+      at wrapper (pyodideRuntime-internal:emscriptenSetup:1840:27)
+      at wrappedHandler (pyodide-internal:python:85:13)
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mUncaught Error: Traceback (most recent call last):[0m
+
+    File "/session/metadata/it_entry.py", line 37, in on_fetch
+      return _j({"reset": True})
+             ^^
+  UnboundLocalError: cannot access local variable '_j' where it is not associated with a value
+   
+
+
+[wrangler:info] GET /it/reset 500 Internal Server Error (47ms)
+{"ts": "2026-07-21T04:55:13Z", "level": "info", "unit": "U4a", "event": "pool_ingest", "endpoint": "/admin/items", "inserted": 32, "updated": 0, "rejected_count": 0}
+[wrangler:info] POST /admin/items 200 OK (34ms)
+{"ts": "2026-07-21T04:55:13Z", "level": "info", "unit": "U4a", "event": "plan_ingest", "endpoint": "/admin/plan", "plan_set": "primary", "seed": 20260720, "attempt": 0, "content_hash": "4ea50567f09b4fd350ad0a05ba560233ff5d92ebb5026192e98b8d4e497005c2", "rows": 14, "likert": 3}
+[wrangler:info] POST /admin/plan 200 OK (21ms)
+{"ts": "2026-07-21T04:55:13Z", "level": "info", "unit": "U4a", "event": "plan_activate", "endpoint": "/admin/plan/activate", "plan_set": "primary", "seed": 20260720, "content_hash": "4ea50567f09b4fd350ad0a05ba560233ff5d92ebb5026192e98b8d4e497005c2"}
+[wrangler:info] POST /admin/plan/activate 200 OK (22ms)

@@ -14,6 +14,11 @@
 -- DELETE は **FK 安全な順（子 → 親）** で並べる。この順以外は FK 違反になる
 --   （pairs/judgments/likert/survey/sessions → tokens、pairs → items）。
 
+-- ★U6: assignment_plan / assignment_plan_meta は**意図的に残す**。同じプール・同じプランで
+--   やり直すのが本手順の趣旨であり、プランを消すと再生成・再投入が必要になる。
+--   judgments が消えるため **activate ガード（409）も解除**され、切替が必要なら可能になる。
+--   トークンは消えるので、プランへの束縛は token_issue の再発行で張り直される。
+
 DELETE FROM judgments;
 DELETE FROM pairs;
 DELETE FROM sessions;
