@@ -226,8 +226,15 @@ function renderSurvey(view) {
     <label class="field" for="age_band">年代</label>
     <select id="age_band" data-testid="survey-age-input">
       <option value="">選択してください</option>
-      <option>10s</option><option>20s</option><option>30s</option>
-      <option>40s</option><option>50s</option><option>60s+</option>
+      <!-- 表示は日本語・**保存値は英字のまま**（experience と同じ作り）。値を日本語に
+           変えると既存の集計・テスト・手順書の例示（"30s"）と食い違うため、
+           参加者に見える文言だけを変える。 -->
+      <option value="10s">10代</option>
+      <option value="20s">20代</option>
+      <option value="30s">30代</option>
+      <option value="40s">40代</option>
+      <option value="50s">50代</option>
+      <option value="60s+">60代以上</option>
     </select>
     <button class="primary" id="submit" data-testid="survey-submit-button">回答して完了する</button>
   `;
