@@ -1,0 +1,23 @@
+{
+  "plan_set": "primary",
+  "seed": 20260720,
+  "attempt": 0,
+  "content_hash": "934bebe8c005c6839bb1eca1852e07c5bc7f7c639d01755c165259b46841bc32",
+  "n_items": 38,
+  "n_slots": 8,
+  "n_pairs": 228,
+  "m_per_item": 12,
+  "likert_targets": [
+    "S03",
+    "RB3",
+    "C12",
+    "C13",
+    "E06",
+    "E11",
+    "E14",
+    "SS4",
+    "S04",
+    "N08"
+  ],
+  "generated_at": "GENERATED_AT_PLACEHOLDER"
+}
