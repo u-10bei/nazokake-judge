@@ -105,18 +105,28 @@ uv run pywrangler dev --port 8787
 別ターミナルで疎通確認（**4 点とも通ること**）:
 
 ```bash
-curl -s http://127.0.0.1:8787/health                                    # → {"status":"ok",...}
+curl -s http://127.0.0.1:8787/health   # → {"status":"ok","schema":"0005_layer_anchor_plan.sql"}
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8787/         # → 200（参加者フロント）
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8787/admin/   # → 401（未認証）
-curl -su devadmin:devsecret -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8787/admin/  # → 200
+curl -su "$ADMIN_BASIC_USER:$ADMIN_BASIC_PASSWORD" -o /dev/null -w '%{http_code}\n' \
+     http://127.0.0.1:8787/admin/                                       # → 200
 ```
+
+**★`schema` が `0005_layer_anchor_plan.sql` であることを必ず確認**してください。ここが
+`0004` 以前なら**マイグレーション未適用**、応答自体が無いなら**古い dev サーバが残っています**
+（`ps -eo pid,cmd | grep "wrangler dev"` で確認 → `kill`）。実データのドライランでは
+**どちらも静かに間違ったデータを作る**ので、この 1 行を毎回見てから先へ進みます。
+
+> **ポートが `Address already in use` になったら**、前回の dev サーバが生きています。
+> `pkill -f "pywrangler dev"` では**止まりません**（実体は `npm exec wrangler dev`）。
+> `pkill -f "wrangler dev"` を使ってください。
 
 以降のコマンド用に環境変数を設定します:
 
 ```bash
 export ADMIN_API_BASE=http://127.0.0.1:8787
-export ADMIN_BASIC_USER=devadmin
-export ADMIN_BASIC_PASSWORD=devsecret
+export ADMIN_BASIC_USER=...        # ★.dev.vars に設定した値と一致させる
+export ADMIN_BASIC_PASSWORD=...
 ```
 
 ---

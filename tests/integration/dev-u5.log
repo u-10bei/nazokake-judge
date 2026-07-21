@@ -21390,3 +21390,4 @@ Attaching additional modules:
 [wrangler:info] POST /admin/plan 200 OK (21ms)
 {"ts": "2026-07-21T04:55:13Z", "level": "info", "unit": "U4a", "event": "plan_activate", "endpoint": "/admin/plan/activate", "plan_set": "primary", "seed": 20260720, "content_hash": "4ea50567f09b4fd350ad0a05ba560233ff5d92ebb5026192e98b8d4e497005c2"}
 [wrangler:info] POST /admin/plan/activate 200 OK (22ms)
+🪵  Logs were written to "/home/llm-user/.config/.wrangler/logs/wrangler-2026-07-17_08-57-19_136.log"

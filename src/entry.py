@@ -32,8 +32,26 @@ async def on_fetch(request, env):
         return await handle_participant(request, env, path)
 
     # ヘルスチェック（U1）は専用パス `/health` のみ（catch-all にしない）。
+    #
+    # ★`unit: "U1+U4a+U2"` という**手で保守するユニット一覧を出していたが、U3 以降
+    #   更新されず 4 ユニット分ずれていた**（実データのドライラン中に「サーバが古い」と
+    #   誤診させた）。手書きの版表示は必ず腐るので、**DB から取れる事実**に置き換える。
+    #
+    # `schema` = 適用済み migration の先頭（例 `0005_layer_anchor_plan.sql`）。
+    # 「このサーバが話している D1 のスキーマ世代」が分かる＝**デプロイとマイグレーションの
+    # ずれ**（今日 2 回踏んだ事故）をこの 1 本で検出できる。
+    # **取得に失敗しても status は "ok" のまま**——ヘルスチェックを DB 依存にはしない。
     if path == "/health":
-        body = {"service": "nazokake-judge", "status": "ok", "unit": "U1+U4a+U2"}
+        schema = None
+        try:
+            from backend.repo._d1 import to_py   # 関数内 import（起動 CPU 制限 10021）
+            row = await env.DB.prepare(
+                "SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1").first()
+            if row is not None:
+                schema = to_py(row).get("name")
+        except Exception:            # noqa: BLE001 — 健全性の報告を DB 障害で落とさない
+            schema = None
+        body = {"service": "nazokake-judge", "status": "ok", "schema": schema}
         return Response(json.dumps(body, ensure_ascii=False),
                         headers={"content-type": "application/json"})
 

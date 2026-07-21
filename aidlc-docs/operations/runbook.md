@@ -48,10 +48,12 @@ uv sync → pytest tests/unit tests/pbt（HYPOTHESIS_PROFILE=ci）→ d1 migrati
 ```
 
 - **テスト失敗ならデプロイされない**（migrations/deploy は後続ステップ）。
-- migrations: `0001_init` / `0002_item_body` / `0003_likert_unique`（適用済みなら no-op）。
+- migrations: `0001_init` 〜 `0005_layer_anchor_plan`（適用済みなら no-op）。
 - デプロイ後の確認:
   ```bash
-  curl -s https://<host>/health                    # → {"status":"ok",...}
+  curl -s https://<host>/health   # → {"status":"ok","schema":"0005_layer_anchor_plan.sql"}
+  #   ★schema が期待の migration 世代か確認する。**デプロイとマイグレーションのずれ**
+  #     （コードは新しいがスキーマが古い / その逆）はこの 1 本で検出できる。
   curl -s -o /dev/null -w '%{http_code}\n' https://<host>/            # → 200（index.html）
   curl -s -o /dev/null -w '%{http_code}\n' https://<host>/nope        # → 404
   curl -s -o /dev/null -w '%{http_code}\n' https://<host>/admin/      # → 401（未認証）
