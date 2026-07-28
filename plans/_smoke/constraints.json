@@ -1,0 +1,12 @@
+{
+ "plan_set": "_smoke",
+ "likert_targets": [
+  "SMK-pro01",
+  "SMK-pro02",
+  "SMK-pro03"
+ ],
+ "forbidden_pairs": [],
+ "discouraged_pairs": [],
+ "enrichment": [],
+ "avoid_adjacent_groups": []
+}

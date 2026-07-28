@@ -27,3 +27,21 @@ migrations_dir = "migrations"
 # prod は実験用サブドメインの Workers ルートに紐付け（運用時に確定）。
 [env.prod]
 workers_dev = true
+
+# ─────────────────────────────────────────────────────────────────────────
+# staging（使い捨て）: 本番デプロイ前の**参加者フロー動作確認**専用。
+#   本番とは別 Worker（nazokake-judge-staging）+ 別 D1（nazokake-judge-stg）ゆえ
+#   **本番 D1 を一切汚さない**。確認後は Worker ごと削除する（aidlc-docs/operations/smoke-prod.md）。
+#   ★名前付き env は d1/assets を継承しないため再宣言する（wrangler 仕様）。
+[env.staging]
+workers_dev = true
+
+[env.staging.assets]
+directory = "frontend"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "nazokake-judge-stg"
+# ↓ `wrangler d1 create nazokake-judge-stg` の出力を貼る（使い捨てゆえコミットしなくてよい）
+database_id = "REPLACE_WITH_STAGING_D1_ID"
+migrations_dir = "migrations"

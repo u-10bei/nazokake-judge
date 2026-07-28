@@ -50,3 +50,8 @@ bt_a*.json
 # ルートの uv lock（各ハーネスは個別管理。ルートは未追跡）
 /uv.lock
 /pylock.toml
+
+# staging スモークの生成物（入力の composition/constraints/practice のみ追跡）
+plans/_smoke/plan.json
+plans/_smoke/plan.meta.json
+plans/_smoke/verification.md

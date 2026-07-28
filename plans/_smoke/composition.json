@@ -1,0 +1,13 @@
+{
+ "plan_set": "_smoke",
+ "n_items": 27,
+ "n_slots": 2,
+ "n_pairs": 54,
+ "m_per_item": 4,
+ "layers": {
+  "pro": 7,
+  "ai": 7,
+  "edit": 7,
+  "rule": 6
+ }
+}
