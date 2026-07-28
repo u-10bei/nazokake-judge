@@ -9,7 +9,7 @@
 ## Workspace State
 - **Existing Code**: No
 - **Reverse Engineering Needed**: No
-- **Workspace Root**: /home/llm-user/nazokake-judge
+- **Workspace Root**: /datadrive2/nazokake-judge
 
 ## Code Location Rules
 - **Application Code**: Workspace root (NEVER in aidlc-docs/)
