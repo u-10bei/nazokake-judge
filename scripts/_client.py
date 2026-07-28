@@ -11,6 +11,12 @@ import json
 import os
 import urllib.request
 
+# ★User-Agent を明示する。urllib の既定 UA `Python-urllib/x.y` は Cloudflare の
+#   エッジで **error 1010（ブラウザ署名によるブロック）** の対象になり、デプロイ済み
+#   Worker（*.workers.dev）への POST が 403 で弾かれる（dev=localhost では露見しない）。
+#   一次ツールとして正直に名乗る（既知ライブラリ名を避ければ 1010 を回避できる）。
+_USER_AGENT = "nazokake-admin-cli/1.0 (+first-party ops tool)"
+
 
 def base_url(explicit: str | None = None) -> str:
     url = explicit or os.environ.get("ADMIN_API_BASE")
@@ -33,7 +39,8 @@ def post_json(url: str, payload: dict, timeout: int = 30) -> dict:
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         url, data=data, method="POST",
-        headers={"content-type": "application/json", "Authorization": _auth_header()},
+        headers={"content-type": "application/json", "Authorization": _auth_header(),
+                 "User-Agent": _USER_AGENT},
     )
     with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
         return json.loads(resp.read().decode("utf-8"))
